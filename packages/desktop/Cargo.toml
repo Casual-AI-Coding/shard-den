@@ -1,0 +1,49 @@
+[package]
+name = "shard-den-desktop"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Desktop app for ShardDen (Tauri + WASM + Storage)"
+build = "src-tauri/build.rs"
+
+[lib]
+name = "shard_den_desktop"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[[bin]]
+name = "shard-den-desktop"
+path = "src/main.rs"
+
+[dependencies]
+# Tauri
+tauri = { version = "2.0", features = [] }
+tauri-plugin-shell = "2.0"
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Core
+shard-den-core = { workspace = true }
+
+# Async
+tokio.workspace = true
+
+# Error handling
+thiserror.workspace = true
+anyhow.workspace = true
+
+# Logging
+tracing.workspace = true
+
+# Storage
+directories = "5.0"
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

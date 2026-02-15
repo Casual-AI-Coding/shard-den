@@ -1,0 +1,23 @@
+[package]
+name = "shard-den-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Shared core for ShardDen - config, errors, and history traits"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+chrono.workspace = true
+
+[dev-dependencies]
+mockall.workspace = true
+insta.workspace = true
+
+[lib]
+name = "shard_den_core"
+crate-type = ["lib"]

@@ -1,0 +1,26 @@
+[package]
+name = "shard-den-json"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "JSON Extractor tool for ShardDen"
+
+[dependencies]
+wasm-bindgen.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde-wasm-bindgen = "0.6"
+shard-den-core = { workspace = true }
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+wasm-bindgen-test.workspace = true
+mockall.workspace = true
+insta.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "shard_den_json"

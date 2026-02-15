@@ -1,0 +1,88 @@
+```mermaid
+sequenceDiagram
+    participant User
+    participant WebUI as Web UI (React)
+    participant WASM as WASM Module
+    participant Extractor as JsonExtractor
+    participant Formatter as Formatter
+    
+    Note over User,Formatter: JSON提取流程
+    
+    User->>WebUI: 1. 粘贴JSON文本
+    WebUI->>WebUI: 2. 本地JSON.parse验证
+    WebUI-->>User: 3. 显示验证状态
+    
+    User->>WebUI: 4. 输入Path表达式
+    WebUI->>WebUI: 5. 语法高亮/检查
+    
+    User->>WebUI: 6. 点击Extract按钮
+    WebUI->>WASM: 7. 调用initWasm()
+    WASM-->>WebUI: 8. WASM模块就绪
+    
+    WebUI->>WASM: 9. new JsonExtractor()
+    WASM->>Extractor: 10. 创建实例
+    WASM-->>WebUI: 11. 返回实例引用
+    
+    WebUI->>WASM: 12. extract(json, paths)
+    WASM->>Extractor: 13. 解析paths
+    Extractor->>Extractor: 14. 解析JSON
+    Extractor->>Extractor: 15. 按path提取字段
+    Extractor-->>WASM: 16. 返回提取结果
+    WASM-->>WebUI: 17. 序列化为JSON字符串
+    
+    WebUI->>Formatter: 18. 格式化输出
+    Formatter-->>WebUI: 19. 返回格式化文本
+    WebUI-->>User: 20. 显示结果
+    
+    alt 用户切换格式
+        User->>WebUI: 21. 选择新格式
+        WebUI->>Formatter: 22. 重新格式化
+        Formatter-->>WebUI: 23. 返回新格式
+        WebUI-->>User: 24. 更新显示
+    end
+    
+    alt 用户点击Copy
+        User->>WebUI: 25. 点击Copy
+        WebUI->>WebUI: 26. navigator.clipboard.writeText
+        WebUI-->>User: 27. 显示复制成功
+    end
+    
+    alt 用户点击Download
+        User->>WebUI: 28. 点击Download
+        WebUI->>WebUI: 29. 创建Blob, 生成URL
+        WebUI->>WebUI: 30. 触发下载
+    end
+```
+
+## 错误处理时序
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant WebUI
+    participant WASM
+    participant Extractor
+    
+    Note over User,Extractor: 错误处理流程
+    
+    alt JSON语法错误
+        User->>WebUI: 粘贴无效JSON
+        WebUI->>WebUI: JSON.parse失败
+        WebUI-->>User: 显示红色边框 + 错误提示
+    end
+    
+    alt Path语法错误
+        User->>WebUI: 输入无效Path
+        WebUI->>WebUI: 语法检查失败
+        WebUI-->>User: 路径框红色 + 语法提示
+    end
+    
+    alt 提取执行错误
+        User->>WebUI: 点击Extract
+        WebUI->>WASM: 调用extract
+        WASM->>Extractor: 执行提取
+        Extractor-->>WASM: 抛出错误
+        WASM-->>WebUI: 返回JsValue错误
+        WebUI-->>User: Toast通知 + 详情
+    end
+```

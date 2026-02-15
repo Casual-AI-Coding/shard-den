@@ -1,0 +1,35 @@
+{
+  "name": "shard-den",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A modular developer toolkit platform",
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "workspaces": [
+    "packages/web"
+  ],
+  "scripts": {
+    "build": "npm run build:wasm && npm run build:web",
+    "build:wasm": "cargo build --release -p shard-den-wasm && wasm-pack build packages/wasm --target web --out-dir pkg",
+    "build:web": "cd packages/web && npm run build",
+    "build:desktop": "cd packages/desktop && cargo tauri build",
+    "dev": "npm run dev:web",
+    "dev:web": "cd packages/web && npm run dev",
+    "dev:desktop": "cd packages/desktop && cargo tauri dev",
+    "test": "npm run test:rust && npm run test:web",
+    "test:rust": "cargo test --workspace",
+    "test:web": "cd packages/web && npm test",
+    "test:coverage": "npm run test:coverage:rust && npm run test:coverage:web",
+    "test:coverage:rust": "cargo tarpaulin --packages shard-den-core --packages shard-den-json --fail-under 85",
+    "test:coverage:web": "cd packages/web && npm run test:coverage -- --threshold=85",
+    "lint": "npm run lint:rust && npm run lint:web",
+    "lint:rust": "cargo fmt --all -- --check && cargo clippy --all-targets --all-features -- -D warnings",
+    "lint:web": "cd packages/web && npm run lint",
+    "fmt": "cargo fmt --all && cd packages/web && npm run fmt",
+    "clean": "cargo clean && rm -rf packages/web/.next packages/web/node_modules packages/wasm/pkg"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.0"
+  }
+}
