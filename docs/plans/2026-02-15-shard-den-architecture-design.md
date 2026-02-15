@@ -352,19 +352,7 @@ Desktop ──► [EMBED: web/dist] + Tauri Commands + Storage
 | Desktop | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ (shortcuts, tray) |
 | Extension | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ (browser API) |
 
-#### 2.4.2 Core Module Usage
-
-| Module | Used By | Purpose | Notes |
-|--------|---------|---------|-------|
-| **Config** | Desktop | Load/save user settings | Config types from Core |
-| **Error/Result** | Tool Libs + CLI + Desktop | Unified error handling | `ShardDenError`, `Result<T>` |
-| **History** | Desktop | History storage trait | Desktop implements `HistoryStore` |
-| **Logger** | CLI + Desktop | Initialize tracing | `init_logger()` function |
-| **Core Types** | Web (indirect) | Via WASM | Web loads WASM which contains Core types |
-
-**Important:** Web doesn't have a `shard-den-core` dependency in package.json. Web loads `shard-den-wasm`, which was compiled from Rust code that used Core types.
-
-#### 2.4.3 Package Dependency
+#### 2.4.2 Package Dependency
 
 ```
                               Workspace: shard-den
@@ -454,7 +442,7 @@ Core ◄── Tool Lib ◄── Tool CLI
   └──────────────────────────────┘ (Desktop embeds Web + uses Core for storage)
 ```
 
-#### 2.4.4 Build Dependency
+#### 2.4.3 Build Dependency
 
 ```
 Web Build:
@@ -658,7 +646,19 @@ Benefits:
 - ✅ Config can be shared between CLI and Desktop
 - ✅ History trait allows different storage backends (file, DB, etc.)
 
-### 4.4 Config Manager
+### 4.4 Core Module Usage
+
+| Module | Used By | Purpose | Notes |
+|--------|---------|---------|-------|
+| **Config** | Desktop | Load/save user settings | Config types from Core |
+| **Error/Result** | Tool Libs + CLI + Desktop | Unified error handling | `ShardDenError`, `Result<T>` |
+| **History** | Desktop | History storage trait | Desktop implements `HistoryStore` |
+| **Logger** | CLI + Desktop | Initialize tracing | `init_logger()` function |
+| **Core Types** | Web (indirect) | Via WASM | Web loads WASM which contains Core types |
+
+**Important:** Web doesn't have a `shard-den-core` dependency in package.json. Web loads `shard-den-wasm`, which was compiled from Rust code that used Core types.
+
+### 4.5 Config Manager
 
 ```rust
 // packages/core/src/config.rs
@@ -681,7 +681,7 @@ pub struct JsonExtractorConfig {
 }
 ```
 
-### 4.5 History Storage
+### 4.6 History Storage
 
 ```rust
 // packages/core/src/history.rs
@@ -922,7 +922,7 @@ clap = { version = "4", features = ["derive"] }
 
 ---
 
-## 9. Storage Design (Desktop Only)
+## 9. Storage (Desktop Only)
 
 **Note: Storage is only for Desktop. Web is stateless.**
 
@@ -953,11 +953,7 @@ clap = { version = "4", features = ["derive"] }
 - JSON 文件更易调试、迁移
 - 无需额外依赖
 
----
-
-## 10. Storage Implementation (Desktop Only)
-
-### 10.1 Storage Architecture
+### 9.3 Storage Architecture
 
 ```
 Desktop Client
@@ -968,19 +964,19 @@ Desktop Client
 │  Tauri Commands (Rust)                                    │
 │  • commands.rs - IPC handlers                              │
 │  • storage.rs - File storage implementation                │
-│  • Implements HistoryStore trait from Core                 │
+│  • Implements HistoryStore trait from Core                │
 └─────────────────────────────────────────────────────────────┘
       │
       ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Local Storage (JSON Files)                               │
-│  • ~/.shard-den/config.json   (User preferences)           │
+│  Local Storage (JSON Files)                                │
+│  • ~/.shard-den/config.json   (User preferences)          │
 │  • ~/.shard-den/history.json (Tool usage history)         │
-│  • ~/.shard-den/favorites.json (Saved items)              │
+│  • ~/.shard-den/favorites.json (Saved items)             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 10.2 Storage Operations
+### 9.4 Storage Operations
 
 | Operation | Command | Description |
 |-----------|---------|-------------|
@@ -991,7 +987,7 @@ Desktop Client
 | Add Favorite | `invoke('add_favorite', item)` | Save to favorites |
 | Get Favorites | `invoke('get_favorites', tool)` | Retrieve favorites |
 
-### 10.3 System Integration (Desktop Only)
+### 9.5 System Integration
 
 | Feature | Implementation | Description |
 |---------|---------------|-------------|
@@ -1001,7 +997,7 @@ Desktop Client
 
 ---
 
-## 11. UI Design
+## 10. UI Design
 
 ### 11.1 Design Principles
 
@@ -1136,7 +1132,7 @@ Design principles:
 
 ---
 
-## 12. Adding New Tools (Extensibility)
+## 11. Adding New Tools (Extensibility)
 
 ### 12.1 Tool Registration Flow
 
@@ -1317,7 +1313,7 @@ impl JsonExtractor {
 
 ---
 
-## 13. Open Questions
+## 12. Open Questions
 
 1. ✅ **Storage**: JSON files (Desktop only)
 2. ✅ **WASM vs Tauri**: WASM for Web, Tauri for Desktop (user decision)
@@ -1327,7 +1323,7 @@ impl JsonExtractor {
 
 ---
 
-## 14. Known Gaps / TODOs
+## 13. Known Gaps / TODOs
 
 ### 14.1 Missing Dependencies
 
@@ -1364,7 +1360,7 @@ impl JsonExtractor {
 
 ---
 
-## 15. Next Steps
+## 14. Next Steps
 
 1. ✅ Design approved → Commit this doc
 2. ✅ Initialize workspace structure
