@@ -44,12 +44,20 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["msi", "dmg", "appimage"],
-    "icon": [],
+    "targets": "all",
+    "icon": [
+      "icons/icon.png",
+      "icons/icon.ico"
+    ],
     "resources": [],
     "copyright": "Copyright (c) 2026",
     "category": "DeveloperTool",
     "shortDescription": "Developer toolkit platform",
-    "longDescription": "A modular developer toolkit platform with JSON extraction and more tools."
+    "longDescription": "A modular developer toolkit platform with JSON extraction and more tools.",
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
+    }
   }
 }

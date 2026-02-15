@@ -6,6 +6,10 @@ node_modules/
 # Build
 dist/
 build/
+.next/
+out/
+
+# Rust / Cargo
 target/
 *.exe
 *.dylib
@@ -13,14 +17,12 @@ target/
 *.so
 
 # WASM
-pkg/
+wasm/pkg/
 
 # Desktop (Tauri)
 packages/desktop/gen/
 packages/desktop/src-tauri/target/
-
-# WASM
-pkg/
+packages/desktop/src-tauri/icons/icon.ico
 
 # IDE
 .vscode/
@@ -54,3 +56,6 @@ coverage/
 
 # OpenCode
 .opencode/
+
+# misc
+*.tsbuildinfo

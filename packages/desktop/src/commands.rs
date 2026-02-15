@@ -4,6 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 use shard_den_core::{Config, HistoryEntry};
+use shard_den_json::JsonExtractorCore;
 use tauri::State;
 
 use crate::storage::Storage;
@@ -57,18 +58,36 @@ pub fn clear_history(state: State<'_, AppState>) -> Result<(), String> {
     state.storage.clear_history().map_err(|e| e.to_string())
 }
 
-/// Detect paths in JSON (uses WASM)
+/// Detect paths in JSON
 #[tauri::command]
 pub fn detect_paths(json: String) -> Result<Vec<String>, String> {
-    // TODO: Call WASM module
-    let _ = json;
-    Ok(vec![])
+    let extractor = JsonExtractorCore::new();
+    extractor.detect_paths(&json).map_err(|e| e.to_string())
 }
 
-/// Extract JSON using paths (uses WASM)
+/// Extract JSON using paths
 #[tauri::command]
-pub fn extract_json(json: String, paths: Vec<String>) -> Result<String, String> {
-    // TODO: Call WASM module
-    let _ = (json, paths);
-    Ok("{}".to_string())
+pub fn extract_json(json: String, paths: String) -> Result<String, String> {
+    let extractor = JsonExtractorCore::new();
+    extractor.extract(&json, &paths).map_err(|e| e.to_string())
+}
+
+/// Extract JSON with format
+#[tauri::command]
+pub fn extract_json_with_format(
+    json: String, paths: String, format: String,
+) -> Result<String, String> {
+    use shard_den_json::OutputFormat;
+
+    let output_format = match format.to_lowercase().as_str() {
+        "csv" => OutputFormat::Csv,
+        "text" => OutputFormat::Text,
+        "yaml" => OutputFormat::Yaml,
+        _ => OutputFormat::Json,
+    };
+
+    let extractor = JsonExtractorCore::new();
+    extractor
+        .extract_with_format(&json, &paths, output_format)
+        .map_err(|e| e.to_string())
 }

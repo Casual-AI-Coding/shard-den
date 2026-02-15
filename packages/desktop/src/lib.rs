@@ -19,6 +19,7 @@ pub fn run() {
             clear_history,
             detect_paths,
             extract_json,
+            extract_json_with_format,
         ])
         .setup(|app| {
             // Initialize storage directory

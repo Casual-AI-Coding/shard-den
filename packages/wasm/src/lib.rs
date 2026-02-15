@@ -10,8 +10,8 @@ use wasm_bindgen::prelude::*;
 // Re-export utils
 pub use utils::*;
 
-// When tools are implemented, they will be re-exported here:
-// pub mod json_extractor;
+// Re-export tools
+pub use shard_den_json::JsonExtractor;
 
 /// Initialize the WASM module
 #[wasm_bindgen(start)]

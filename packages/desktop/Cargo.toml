@@ -27,6 +27,7 @@ serde_json.workspace = true
 
 # Core
 shard-den-core = { workspace = true }
+shard-den-json = { workspace = true }
 
 # Async
 tokio.workspace = true

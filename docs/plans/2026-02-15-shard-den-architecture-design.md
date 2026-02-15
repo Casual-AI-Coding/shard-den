@@ -25,8 +25,6 @@ ShardDen (砾穴) is a **modular toolkit platform** for developers, starting wit
 
 ### 2.1 System Architecture
 
-#### 2.1.1 Correct Architecture Diagram
-
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                            ShardDen Platform                                     │
@@ -120,13 +118,13 @@ ShardDen (砾穴) is a **modular toolkit platform** for developers, starting wit
 │  ┌─────────────────────────────────────────────────────────────────────────┐   │
 │  │                     Desktop App (Tauri)                                 │   │
 │  │                    packages/desktop/                                    │   │
-│  │                                                                          │   │
+│  │                                                                         │   │
 │  │   ┌─────────────────────────────────────────────────────────────────┐   │   │
 │  │   │  UI Layer: EMBEDDED WEB FRONTEND                                │   │   │
-│  │   │  ─────────────────────────────────                               │   │   │
+│  │   │  ─────────────────────────────────                              │   │   │
 │  │   │  Same as Web: Next.js pages + WASM                              │   │   │
 │  │   │  Loaded from: packages/web/dist/                                │   │   │
-│  │   │                                                                   │   │   │
+│  │   │                                                                 │   │   │
 │  │   │  ⚠️  NO separate Desktop frontend!                              │   │   │
 │  │   │  Desktop = Web UI + Native capabilities                         │   │   │
 │  │   └─────────────────────────────────────────────────────────────────┘   │   │
@@ -146,15 +144,172 @@ ShardDen (砾穴) is a **modular toolkit platform** for developers, starting wit
 │  │   │  • ~/.shard-den/config.json                                     │   │   │
 │  │   │  • ~/.shard-den/history.json                                    │   │   │
 │  │   └─────────────────────────────────────────────────────────────────┘   │   │
-│  │                                                                          │   │
+│  │                                                                         │   │
 │  └─────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 2.2 Architecture Comparison
+
+#### 2.2.1 CLI
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              CLI (Native Rust)                                   │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
+│   ┌─────────────────────────────────────────────────────────────────────────┐   │
+│   │                    shard-den-core (Rust Library)                        │   │
+│   │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐  │   │
+│   │  │    Config    │  │ Error Types  │  │   History    │  │   Logger   │  │   │
+│   │  └──────────────┘  └──────────────┘  └──────────────┘  └────────────┘  │   │
+│   └───────────────────────────────┬─────────────────────────────────────────┘   │
+│                                   │ USES (Error types)                           │
+│                                   ▼                                              │
+│   ┌─────────────────────────────────────────────────────────────────────────┐   │
+│   │              shard-den-json (Tool Library + CLI Binary)                 │   │
+│   │  ┌─────────────────────────────────┐   ┌─────────────────────────────┐  │   │
+│   │  │         Library (lib.rs)        │   │     CLI Binary (main.rs)    │  │   │
+│   │  │  • extract.rs                   │   │  • Parses CLI args          │  │   │
+│   │  │  • path.rs                      │──►│  • Calls Tool methods       │  │   │
+│   │  │  • format.rs                    │   │  • Prints to stdout         │  │   │
+│   │  │  • lib.rs (wasm-bindgen)        │   │  • Uses Core for errors     │  │   │
+│   │  └─────────────────────────────────┘   └─────────────────────────────┘  │   │
+│   │                                                                          │   │
+│   │  CHARACTERISTICS:                                                        │   │
+│   │  • Compiled to native binary (NO WASM)                                   │   │
+│   │  • Fastest performance (no WASM overhead)                                │   │
+│   │  • No storage (Core has types but no persistence impl)                   │   │
+│   └─────────────────────────────────────────────────────────────────────────┘   │
 │                                                                                  │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### 2.1.2 Critical Clarifications
+#### 2.2.2 Web
 
-**❌ WRONG Understanding:**
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           Web (Browser)                                          │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
+│   ┌─────────────────────────────────────────────────────────────────────────┐   │
+│   │                    Web Frontend (packages/web)                          │   │
+│   │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                  │   │
+│   │  │  Next.js     │  │   React      │  │  Tailwind    │                  │   │
+│   │  │  pages       │  │   components │  │  CSS         │                  │   │
+│   │  └──────────────┘  └──────────────┘  └──────────────┘                  │   │
+│   │                                                                             │   │
+│   │  ┌─────────────────────────────────────────────────────────────────┐     │   │
+│   │  │  lib/core.ts - WASM Loader                                       │     │   │
+│   │  │  • initWasm(): Loads shard_den_wasm.wasm                        │     │   │
+│   │  │  • Provides: JsonExtractor class                                │     │   │
+│   │  └─────────────────────────────────────────────────────────────────┘     │   │
+│   └───────────────────────────────────┬───────────────────────────────────────┘   │
+│                                       │ LOADS                                    │
+│                                       ▼                                          │
+│   ┌─────────────────────────────────────────────────────────────────────────┐   │
+│   │              shard-den-wasm (WASM Bundle)                               │   │
+│   │  ┌─────────────────────────────────────────────────────────────────┐   │   │
+│   │  │  Compiles: shard-den-json library → WASM                        │   │   │
+│   │  │                                                                 │   │   │
+│   │  │  Exports (JavaScript-callable):                                 │   │   │
+│   │  │  • JsonExtractor.new()                                          │   │   │
+│   │  │  • JsonExtractor.extract(json, paths)                          │   │   │
+│   │  │  • JsonExtractor.detect_paths(json)                            │   │   │
+│   │  └─────────────────────────────────────────────────────────────────┘   │   │
+│   │                                                                          │   │
+│   │  CHARACTERISTICS:                                                        │   │
+│   │  • Runs in browser sandbox                                               │   │
+│   │  • ⚠️ NO filesystem access (by design)                                   │   │
+│   │  • ⚠️ NO localStorage/sessionStorage (stateless design)                  │   │
+│   │  • All data in memory only                                               │   │
+│   └─────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                  │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 2.2.3 DeskTop
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           Desktop (Tauri)                                        │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
+│   LAYER 1: EXACT SAME AS WEB                                                     │
+│   ┌─────────────────────────────────────────────────────────────────────────┐   │
+│   │              Web Frontend (packages/web/dist)                           │   │
+│   │  ⚠️  THIS IS THE EXACT SAME CODE AS THE WEB VERSION!                    │   │
+│   │                                                                         │   │
+│   │  Tauri config:                                                          │   │
+│   │    build.frontendDist = "../web/dist"                                   │   │
+│   │                                                                         │   │
+│   │  • Same Next.js pages                                                 │   │
+│   │  • Same React components                                              │   │
+│   │  • Same WASM loader (lib/core.ts)                                     │   │
+│   │  • SAME shard-den-wasm.wasm file!                                     │   │
+│   └───────────────────────────────────┬───────────────────────────────────────┘   │
+│                                       │                                          │
+│   LAYER 2: Desktop Extension (Tauri adds this)                                   │
+│                                       │                                          │
+│                                       ▼                                          │
+│   ┌─────────────────────────────────────────────────────────────────────────┐   │
+│   │              Tauri Commands (Rust)                                      │   │
+│   │                                                                         │   │
+│   │  When frontend calls: invoke('save_history', {entry})                  │   │
+│   │                    │                                                    │   │
+│   │                    ▼                                                    │   │
+│   │  Rust receives: commands.rs::save_history(entry)                       │   │
+│   │                    │                                                    │   │
+│   │                    ▼                                                    │   │
+│   │  storage.rs (implements HistoryStore trait from Core)                  │   │
+│   │                    │                                                    │   │
+│   │                    ▼                                                    │   │
+│   │  ┌─────────────────────────────────────────────────────────────────┐   │   │
+│   │  │  Local Storage (JSON Files)                                      │   │   │
+│   │  │  • ~/.shard-den/config.json  (Config from Core)                  │   │   │
+│   │  │  • ~/.shard-den/history.json (HistoryEntry list)                 │   │   │
+│   │  └─────────────────────────────────────────────────────────────────┘   │   │
+│   │                                                                          │   │
+│   │  ┌─────────────────────────────────────────────────────────────────┐   │   │
+│   │  │  System Integration                                              │   │   │
+│   │  │  • Global shortcuts (e.g., Ctrl+Shift+J open JSON Extractor)    │   │   │
+│   │  │  • System tray icon                                              │   │   │
+│   │  │  • File associations (.json files → open in app)                │   │   │
+│   │  └─────────────────────────────────────────────────────────────────┘   │   │
+│   │                                                                          │   │
+│   │  CHARACTERISTICS:                                                        │   │
+│   │  • All Web features (same UI, same WASM)                                 │   │
+│   │  • PLUS: File storage via Tauri Commands                                 │   │
+│   │  • PLUS: System integration (tray, shortcuts)                            │   │
+│   └─────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                  │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+
+
+### 2.3 Critical Clarifications
+
+#### 2.3.1 Key Principles
+
+- **Web = Stateless**: Pure WASM, no backend, no storage
+- **Desktop = Full**: WASM + Storage + System integration (reuses Web frontend)
+- **CLI = Core**: Pure Rust Core for scripting/automation
+- **Shared Core**: Same Rust code compiled for all targets
+- **WASM Aggregation**: Single WASM bundle contains all tools
+
+#### 2.3.2 Key Points
+
+1. **Single Frontend**: `packages/web/` is the ONLY frontend codebase
+2. **Desktop is a Shell**: Tauri embeds `packages/web/dist/` as the UI
+3. **Same WASM**: Both Web and Desktop load the exact same `shard_den_wasm.wasm`
+4. **Desktop adds**: Storage (via Tauri Commands) + System integration (tray, shortcuts)
+5. **Web limitation**: Cannot access filesystem, cannot persist data (by design)
+
+#### 2.3.3 Desktop UI
+
+**❌ WRONG Understanding: Desktop has its own UI code**
 ```
 Desktop has its own frontend code
 Web ───────► Web Frontend
@@ -164,7 +319,7 @@ Desktop ─────► Desktop Frontend (different)
                WASM
 ```
 
-**✅ CORRECT Understanding:**
+**✅ CORRECT Understanding: Desktop EMBEDS Web UI**
 ```
 Desktop EMBEDS the Web frontend
 
@@ -179,14 +334,16 @@ Desktop ──► [EMBED: web/dist] + Tauri Commands + Storage
                             WASM Tools
 ```
 
-**Key Points:**
-1. **Single Frontend**: `packages/web/` is the ONLY frontend codebase
-2. **Desktop is a Shell**: Tauri embeds `packages/web/dist/` as the UI
-3. **Same WASM**: Both Web and Desktop load the exact same `shard_den_wasm.wasm`
-4. **Desktop adds**: Storage (via Tauri Commands) + System integration (tray, shortcuts)
-5. **Web limitation**: Cannot access filesystem, cannot persist data (by design)
+#### 2.3.4 WASM
 
-### 2.2 Dependency Matrix
+- WASM Package is a **Rust crate** that depends on Tool Libs
+- When compiled, it produces a `.wasm` file + JS bindings
+- Web **does not** have a Cargo dependency on WASM Package
+- Web **loads** the WASM file at runtime via `import()`
+
+### 2.4 Dependency
+
+### 2.4.1 Dependency Matrix
 
 | Form | = Core | + CLI Interface | + WASM | + GUI | + Storage | + System |
 |------|--------|-----------------|-------|-------|----------|----------|
@@ -195,7 +352,19 @@ Desktop ──► [EMBED: web/dist] + Tauri Commands + Storage
 | Desktop | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ (shortcuts, tray) |
 | Extension | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ (browser API) |
 
-### 2.3 Package Dependency Graph
+#### 2.4.2 Core Module Usage
+
+| Module | Used By | Purpose | Notes |
+|--------|---------|---------|-------|
+| **Config** | Desktop | Load/save user settings | Config types from Core |
+| **Error/Result** | Tool Libs + CLI + Desktop | Unified error handling | `ShardDenError`, `Result<T>` |
+| **History** | Desktop | History storage trait | Desktop implements `HistoryStore` |
+| **Logger** | CLI + Desktop | Initialize tracing | `init_logger()` function |
+| **Core Types** | Web (indirect) | Via WASM | Web loads WASM which contains Core types |
+
+**Important:** Web doesn't have a `shard-den-core` dependency in package.json. Web loads `shard-den-wasm`, which was compiled from Rust code that used Core types.
+
+#### 2.4.3 Package Dependency
 
 ```
                               Workspace: shard-den
@@ -246,7 +415,7 @@ Desktop ──► [EMBED: web/dist] + Tauri Commands + Storage
 └─────────────────────────┘
 ```
 
-#### Dependency Rules
+##### Dependency Rules
 
 **Rust Dependencies (Cargo.toml):**
 
@@ -285,31 +454,67 @@ Core ◄── Tool Lib ◄── Tool CLI
   └──────────────────────────────┘ (Desktop embeds Web + uses Core for storage)
 ```
 
-**Key insight about WASM:**
-- WASM Package is a **Rust crate** that depends on Tool Libs
-- When compiled, it produces a `.wasm` file + JS bindings
-- Web **does not** have a Cargo dependency on WASM Package
-- Web **loads** the WASM file at runtime via `import()`
+#### 2.4.4 Build Dependency
 
-#### Core Module Usage
+```
+Web Build:
+  ┌─────────────┐     ┌─────────────┐
+  │   WASM      │────►│   Web       │
+  │  (tools)    │     │   (Next.js) │
+  └─────────────┘     └──────┬──────┘
+                             │
+                             ▼
+                       ┌─────────────┐
+                       │   dist/     │
+                       │   (static)  │
+                       └──────┬──────┘
+                              │
+Desktop Build:                │
+  ┌─────────────┐             │
+  │   Tauri     │◄────────────┘
+  │   Commands  │    (embeds web/dist)
+  │   + Storage │
+  └──────┬──────┘
+         ▼
+    ┌─────────────┐
+    │   Desktop   │
+    │   App       │
+    │  (.exe/.app)│
+    └─────────────┘
+```
 
-| Module | Used By | Purpose | Notes |
-|--------|---------|---------|-------|
-| **Config** | Desktop | Load/save user settings | Config types from Core |
-| **Error/Result** | Tool Libs + CLI + Desktop | Unified error handling | `ShardDenError`, `Result<T>` |
-| **History** | Desktop | History storage trait | Desktop implements `HistoryStore` |
-| **Logger** | CLI + Desktop | Initialize tracing | `init_logger()` function |
-| **Core Types** | Web (indirect) | Via WASM | Web loads WASM which contains Core types |
+##### Build Pipeline
 
-**Important:** Web doesn't have a `shard-den-core` dependency in package.json. Web loads `shard-den-wasm`, which was compiled from Rust code that used Core types.
+**Step-by-Step Build Process**
 
-### 2.4 Architecture Principles
+```bash
+# 1. Build WASM package (includes ALL tools)
+#    This creates the WASM bundle that both Web and Desktop use
+cargo build --release -p shard-den-wasm --target wasm32-unknown-unknown
+# Output: target/wasm32-unknown-unknown/release/shard_den_wasm.wasm
 
-- **Web = Stateless**: Pure WASM, no backend, no storage
-- **Desktop = Full**: WASM + Storage + System integration (reuses Web frontend)
-- **CLI = Core**: Pure Rust Core for scripting/automation
-- **Shared Core**: Same Rust code compiled for all targets
-- **WASM Aggregation**: Single WASM bundle contains all tools
+# 2. Build CLI (native binary, no WASM)
+#    Each tool has its own CLI binary
+cargo build --release -p shard-den-json-cli
+# Output: target/release/shard-den-json.exe
+
+# 3. Build Web (Next.js static site)
+#    Creates the frontend that Desktop will embed
+cd packages/web
+npm install
+npm run build
+# Output: packages/web/dist/ (static HTML/JS/CSS)
+
+# 4. Build Desktop (Tauri app)
+#    IMPORTANT: Desktop doesn't have its own frontend!
+#    It embeds packages/web/dist/ from step 3
+cd packages/desktop
+cargo tauri build
+# Output: 
+#   - src-tauri/target/release/bundle/msi/*.msi (Windows)
+#   - src-tauri/target/release/bundle/dmg/*.dmg (macOS)
+#   - src-tauri/target/release/bundle/appimage/*.AppImage (Linux)
+```
 
 ---
 
@@ -400,7 +605,7 @@ shard-den/
 
 ---
 
-## 4. Core Module Usage
+## 4. Core Module
 
 ### 4.1 Core Consumers
 
@@ -410,10 +615,10 @@ The `shard-den-core` crate provides shared types and is used by:
 |----------|------|---------|
 | **Tools** (e.g., `json-extractor`) | `Result`, `ShardDenError` | Unified error handling across all tools |
 | **Tool CLI** | `Result`, `ShardDenError`, `Config` (future) | CLI error handling and config access |
-| **WASM** | Should use `Result`, `ShardDenError` | Error types for WASM exports (TODO: add dependency) |
+| **WASM** | Should use `Result`, `ShardDenError` | Error types for WASM exports |
 | **Desktop** | `Config`, `HistoryEntry`, `HistoryStore`, `Result`, `ShardDenError` | Config persistence, history storage, error handling |
 
-### 4.2 Core Module Diagram
+### 4.2 Module Structure
 
 ```
 shard-den-core/
@@ -428,8 +633,7 @@ shard-den-core/
 │   • HistoryEntry       │── Used by Desktop only
 │   • HistoryStore       │   (Web is stateless)
 └── logger.rs      ──────┘
-    • init_logger()      ─── Should be used by CLI + Desktop
-                           (TODO: initialize in main.rs)
+    • init_logger()      ─── Used by CLI + Desktop
 ```
 
 ### 4.3 Why Core Exists
@@ -454,11 +658,7 @@ Benefits:
 - ✅ Config can be shared between CLI and Desktop
 - ✅ History trait allows different storage backends (file, DB, etc.)
 
----
-
-## 5. Core Module Design
-
-### 4.1 Config Manager
+### 4.4 Config Manager
 
 ```rust
 // packages/core/src/config.rs
@@ -481,7 +681,7 @@ pub struct JsonExtractorConfig {
 }
 ```
 
-### 4.2 History Storage
+### 4.5 History Storage
 
 ```rust
 // packages/core/src/history.rs
@@ -506,73 +706,70 @@ pub trait HistoryStore {
 
 ---
 
-## 5. Tool: JSON Extractor
+## 5. Tools
 
-### 5.1 Tool Structure
+### 5.1 Tool Architecture
 
-Each tool has two Cargo packages:
+Each tool follows the same structure to ensure consistency across the platform:
 
 ```
-packages/tools/json-extractor/
+packages/tools/{tool-name}/
 ├── src/                    # Core library (for WASM)
 │   ├── lib.rs             # wasm_bindgen exports
-│   ├── extract.rs         # Extraction logic
-│   ├── path.rs            # JSONPath logic
-│   └── format.rs          # Output formatting
+│   ├── {tool}.rs          # Tool logic
+│   ├── error.rs           # Tool-specific errors
+│   └── ...
 │
 └── cli/                    # CLI binary
     ├── Cargo.toml
-    └── main.rs            # Uses core lib
+    └── main.rs            # CLI entry point
 ```
 
-> **Why split?** 
-> - `src/` → compiled to WASM (for Web/Desktop)
-> - `cli/` → compiled to native binary (for CLI)
+**Why split?**
+- `src/` → compiled to WASM (for Web/Desktop)
+- `cli/` → compiled to native binary (for CLI)
 
-### 5.2 Core API
+### 5.2 Tool Interface Standard
+
+All tools must implement the following interface:
 
 ```rust
-// packages/tools/json-extractor/src/extract.rs
+use wasm_bindgen::prelude::*;
 
-pub struct Extractor {
-    config: JsonExtractorConfig,
+#[wasm_bindgen]
+pub struct ToolName {
+    // Tool state
 }
 
-impl Extractor {
-    /// Extract fields from JSON using JSONPath-like syntax
-    pub fn extract(&self, json: &str, paths: &[String]) -> Result<ExtractResult>;
+#[wasm_bindgen]
+impl ToolName {
+    /// Tool unique identifier
+    pub fn name(&self) -> String;
     
-    /// Auto-detect available paths in JSON
-    pub fn detect_paths(&self, json: &str) -> Vec<JsonPath>;
+    /// Tool description
+    pub fn description(&self) -> String;
     
-    /// Format output in various formats
-    pub fn format(&self, result: &ExtractResult, format: OutputFormat) -> String;
+    /// Execute tool operation
+    pub fn execute(&self, input: &str, options: &str) -> Result<String, JsValue>;
+    
+    /// Get supported operations
+    pub fn operations(&self) -> Vec<Operation>;
 }
 ```
 
-### 5.3 Path Syntax
+### 5.3 CLI Interface Standard
 
-| Syntax | Description | Example |
-|--------|-------------|---------|
-| `key` | Get key value | `data.items[].id` |
-| `*` | Wildcard - all keys | `data.*` |
-| `[]` | Array iteration | `data.items[].name` |
-| `[0]` | Array index | `data.items[0]` |
-| `..` | Recursive descent | `..id` |
-
-### 5.4 CLI Interface
+Each tool provides a CLI subcommand:
 
 ```bash
-# Main binary: shard-den (or shard-den.exe on Windows)
+# Main binary: shard-den
+$ shard-den {tool} --help
+$ shard-den {tool} -o option < input.txt
 
-# JSON Extractor subcommand
+# Examples:
 $ shard-den json -p "data.items[].id" < input.json
-$ shard-den json -p "id,name,email" -f csv < input.json
-$ shard-den json --detect < input.json
-
-# Future tools (same pattern)
-$ shard-den csv parse --input data.csv
-$ shard-den xml convert --input data.xml
+$ shard-den csv --parse data.csv
+$ shard-den xml --convert data.xml
 ```
 
 **CLI Structure:**
@@ -580,8 +777,28 @@ $ shard-den xml convert --input data.xml
 shard-den              # Main binary
 ├── json               # JSON Extractor tool
 ├── csv                # CSV Parser tool (future)
-└── xml                # XML Converter tool (future)
+├── url                # URL Parser tool (future)
+└── ...
 ```
+
+### 5.4 Adding New Tools
+
+See Section 12 for detailed instructions on adding new tools.
+
+### 5.5 Tool-Specific Design
+
+Each tool's page needs independent design because:
+- Input/output areas differ
+- Function logic differs
+- Help content differs
+
+Design principles:
+1. Keep overall layout consistent (sidebar + theme)
+2. Main content area designed per tool specifics
+3. Help button shows tool-specific syntax/usage
+4. Desktop-only features (favorites/history) controlled via conditional rendering
+
+> **Reference**: See `docs/designs/ui/json-extractor/prototype.md` for detailed example.
 
 ---
 
@@ -738,283 +955,190 @@ clap = { version = "4", features = ["derive"] }
 
 ---
 
-## 10. WASM + Storage Architecture
+## 10. Storage Implementation (Desktop Only)
 
-### Decision: WASM for Web, Tauri for Desktop
-
-| Target | Approach | Reason |
-|--------|----------|--------|
-| **CLI** | Native Rust | Fast, scriptable |
-| **Web** | WASM | Stateless, no backend, runs in browser |
-| **Desktop** | Tauri + Local Storage | Full features + system integration |
-
-### Architecture Comparison
+### 10.1 Storage Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              CLI (Native Rust)                                   │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│   ┌─────────────────────────────────────────────────────────────────────────┐   │
-│   │                    shard-den-core (Rust Library)                        │   │
-│   │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐  │   │
-│   │  │    Config    │  │ Error Types  │  │   History    │  │   Logger   │  │   │
-│   │  └──────────────┘  └──────────────┘  └──────────────┘  └────────────┘  │   │
-│   └───────────────────────────────┬─────────────────────────────────────────┘   │
-│                                   │ USES (Error types)                           │
-│                                   ▼                                              │
-│   ┌─────────────────────────────────────────────────────────────────────────┐   │
-│   │              shard-den-json (Tool Library + CLI Binary)                 │   │
-│   │  ┌─────────────────────────────────┐   ┌─────────────────────────────┐  │   │
-│   │  │         Library (lib.rs)        │   │     CLI Binary (main.rs)    │  │   │
-│   │  │  • extract.rs                   │   │  • Parses CLI args          │  │   │
-│   │  │  • path.rs                      │──►│  • Calls Tool methods       │  │   │
-│   │  │  • format.rs                    │   │  • Prints to stdout         │  │   │
-│   │  │  • lib.rs (wasm-bindgen)        │   │  • Uses Core for errors     │  │   │
-│   │  └─────────────────────────────────┘   └─────────────────────────────┘  │   │
-│   │                                                                          │   │
-│   │  CHARACTERISTICS:                                                        │   │
-│   │  • Compiled to native binary (NO WASM)                                   │   │
-│   │  • Fastest performance (no WASM overhead)                                │   │
-│   │  • No storage (Core has types but no persistence impl)                   │   │
-│   └─────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           Web (Browser)                                          │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│   ┌─────────────────────────────────────────────────────────────────────────┐   │
-│   │                    Web Frontend (packages/web)                          │   │
-│   │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                  │   │
-│   │  │  Next.js     │  │   React      │  │  Tailwind    │                  │   │
-│   │  │  pages       │  │   components │  │  CSS         │                  │   │
-│   │  └──────────────┘  └──────────────┘  └──────────────┘                  │   │
-│   │                                                                             │   │
-│   │  ┌─────────────────────────────────────────────────────────────────┐     │   │
-│   │  │  lib/core.ts - WASM Loader                                       │     │   │
-│   │  │  • initWasm(): Loads shard_den_wasm.wasm                        │     │   │
-│   │  │  • Provides: JsonExtractor class                                │     │   │
-│   │  └─────────────────────────────────────────────────────────────────┘     │   │
-│   └───────────────────────────────────┬───────────────────────────────────────┘   │
-│                                       │ LOADS                                    │
-│                                       ▼                                          │
-│   ┌─────────────────────────────────────────────────────────────────────────┐   │
-│   │              shard-den-wasm (WASM Bundle)                               │   │
-│   │  ┌─────────────────────────────────────────────────────────────────┐   │   │
-│   │  │  Compiles: shard-den-json library → WASM                        │   │   │
-│   │  │                                                                 │   │   │
-│   │  │  Exports (JavaScript-callable):                                 │   │   │
-│   │  │  • JsonExtractor.new()                                          │   │   │
-│   │  │  • JsonExtractor.extract(json, paths)                          │   │   │
-│   │  │  • JsonExtractor.detect_paths(json)                            │   │   │
-│   │  └─────────────────────────────────────────────────────────────────┘   │   │
-│   │                                                                          │   │
-│   │  CHARACTERISTICS:                                                        │   │
-│   │  • Runs in browser sandbox                                               │   │
-│   │  • ⚠️ NO filesystem access (by design)                                   │   │
-│   │  • ⚠️ NO localStorage/sessionStorage (stateless design)                  │   │
-│   │  • All data in memory only                                               │   │
-│   └─────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           Desktop (Tauri)                                        │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                  │
-│   LAYER 1: EXACT SAME AS WEB                                                     │
-│   ┌─────────────────────────────────────────────────────────────────────────┐   │
-│   │              Web Frontend (packages/web/dist)                           │   │
-│   │  ⚠️  THIS IS THE EXACT SAME CODE AS THE WEB VERSION!                    │   │
-│   │                                                                         │   │
-│   │  Tauri config:                                                          │   │
-│   │    build.frontendDist = "../web/dist"                                   │   │
-│   │                                                                         │   │
-│   │  • Same Next.js pages                                                 │   │
-│   │  • Same React components                                              │   │
-│   │  • Same WASM loader (lib/core.ts)                                     │   │
-│   │  • SAME shard-den-wasm.wasm file!                                     │   │
-│   └───────────────────────────────────┬───────────────────────────────────────┘   │
-│                                       │                                          │
-│   LAYER 2: Desktop Extension (Tauri adds this)                                   │
-│                                       │                                          │
-│                                       ▼                                          │
-│   ┌─────────────────────────────────────────────────────────────────────────┐   │
-│   │              Tauri Commands (Rust)                                      │   │
-│   │                                                                         │   │
-│   │  When frontend calls: invoke('save_history', {entry})                  │   │
-│   │                    │                                                    │   │
-│   │                    ▼                                                    │   │
-│   │  Rust receives: commands.rs::save_history(entry)                       │   │
-│   │                    │                                                    │   │
-│   │                    ▼                                                    │   │
-│   │  storage.rs (implements HistoryStore trait from Core)                  │   │
-│   │                    │                                                    │   │
-│   │                    ▼                                                    │   │
-│   │  ┌─────────────────────────────────────────────────────────────────┐   │   │
-│   │  │  Local Storage (JSON Files)                                      │   │   │
-│   │  │  • ~/.shard-den/config.json  (Config from Core)                  │   │   │
-│   │  │  • ~/.shard-den/history.json (HistoryEntry list)                 │   │   │
-│   │  └─────────────────────────────────────────────────────────────────┘   │   │
-│   │                                                                          │   │
-│   │  ┌─────────────────────────────────────────────────────────────────┐   │   │
-│   │  │  System Integration                                              │   │   │
-│   │  │  • Global shortcuts (e.g., Ctrl+Shift+J open JSON Extractor)    │   │   │
-│   │  │  • System tray icon                                              │   │   │
-│   │  │  • File associations (.json files → open in app)                │   │   │
-│   │  └─────────────────────────────────────────────────────────────────┘   │   │
-│   │                                                                          │   │
-│   │  CHARACTERISTICS:                                                        │   │
-│   │  • All Web features (same UI, same WASM)                                 │   │
-│   │  • PLUS: File storage via Tauri Commands                                 │   │
-│   │  • PLUS: System integration (tray, shortcuts)                            │   │
-│   └─────────────────────────────────────────────────────────────────────────┘   │
-│                                                                                  │
-└─────────────────────────────────────────────────────────────────────────────────┘
+Desktop Client
+      │
+      │ invoke()
+      ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Tauri Commands (Rust)                                    │
+│  • commands.rs - IPC handlers                              │
+│  • storage.rs - File storage implementation                │
+│  • Implements HistoryStore trait from Core                 │
+└─────────────────────────────────────────────────────────────┘
+      │
+      ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Local Storage (JSON Files)                               │
+│  • ~/.shard-den/config.json   (User preferences)           │
+│  • ~/.shard-den/history.json (Tool usage history)         │
+│  • ~/.shard-den/favorites.json (Saved items)              │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Key Insight
+### 10.2 Storage Operations
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  Common Misunderstanding:                               │
-│                                                         │
-│  ❌ "Desktop has its own UI code"                       │
-│                                                         │
-│      Web ──────► Web UI                                 │
-│      Desktop ──► Desktop UI (different?)               │
-│                                                         │
-├─────────────────────────────────────────────────────────┤
-│  Correct Understanding:                                 │
-│                                                         │
-│  ✅ "Desktop EMBEDS Web UI"                             │
-│                                                         │
-│      packages/web/ ◄──── ONLY frontend codebase        │
-│           │                                             │
-│           ├──► npm run build ──► dist/                  │
-│           │                         │                   │
-│           │                         ├──► Serve as Web   │
-│           │                         │                   │
-│           │                         └──► Embed in       │
-│           │                               Desktop       │
-│           │                                             │
-│      Desktop adds: Storage + System features            │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
+| Operation | Command | Description |
+|-----------|---------|-------------|
+| Save Config | `invoke('save_config', config)` | Persist user preferences |
+| Load Config | `invoke('load_config')` | Retrieve user preferences |
+| Add History | `invoke('add_history', entry)` | Record tool usage |
+| Get History | `invoke('get_history', {tool, limit})` | Retrieve history |
+| Add Favorite | `invoke('add_favorite', item)` | Save to favorites |
+| Get Favorites | `invoke('get_favorites', tool)` | Retrieve favorites |
 
-### Build Pipeline
+### 10.3 System Integration (Desktop Only)
 
-#### Step-by-Step Build Process
-
-```bash
-# 1. Build WASM package (includes ALL tools)
-#    This creates the WASM bundle that both Web and Desktop use
-cargo build --release -p shard-den-wasm --target wasm32-unknown-unknown
-# Output: target/wasm32-unknown-unknown/release/shard_den_wasm.wasm
-
-# 2. Build CLI (native binary, no WASM)
-#    Each tool has its own CLI binary
-cargo build --release -p shard-den-json-cli
-# Output: target/release/shard-den-json.exe
-
-# 3. Build Web (Next.js static site)
-#    Creates the frontend that Desktop will embed
-cd packages/web
-npm install
-npm run build
-# Output: packages/web/dist/ (static HTML/JS/CSS)
-
-# 4. Build Desktop (Tauri app)
-#    IMPORTANT: Desktop doesn't have its own frontend!
-#    It embeds packages/web/dist/ from step 3
-cd packages/desktop
-cargo tauri build
-# Output: 
-#   - src-tauri/target/release/bundle/msi/*.msi (Windows)
-#   - src-tauri/target/release/bundle/dmg/*.dmg (macOS)
-#   - src-tauri/target/release/bundle/appimage/*.AppImage (Linux)
-```
-
-#### Build Dependencies
-
-```
-Web Build:
-  ┌─────────────┐     ┌─────────────┐
-  │   WASM      │────►│   Web       │
-  │  (tools)    │     │   (Next.js) │
-  └─────────────┘     └──────┬──────┘
-                             │
-                             ▼
-                       ┌─────────────┐
-                       │   dist/     │
-                       │   (static)  │
-                       └──────┬──────┘
-                              │
-Desktop Build:                │
-  ┌─────────────┐             │
-  │   Tauri     │◄────────────┘
-  │   Commands  │    (embeds web/dist)
-  │   + Storage │
-  └──────┬──────┘
-         ▼
-    ┌─────────────┐
-    │   Desktop   │
-    │   App       │
-    │  (.exe/.app)│
-    └─────────────┘
-```
-
-### How WASM Bundles All Tools
-
-```
-packages/wasm/src/lib.rs
-        │
-        ├── Re-exports from ALL tools
-        │
-        ├── json_extractor::extract()
-        ├── csv_parser::parse()
-        └── xml_converter::convert()
-        
-        ▼ Compile to WASM ▼
-        
-shard_den_wasm.wasm (single file with all tools)
-```
-
-### Data Flow Comparison
-
-| Capability | CLI | Web | Desktop | Notes |
-|------------|-----|-----|---------|-------|
-| **Core Tool Functions** | ✅ Native | ✅ WASM | ✅ WASM | Same code, compiled differently |
-| **JSON Extraction** | ✅ | ✅ | ✅ | All targets support |
-| **CLI Interface** | ✅ stdin/stdout | ❌ | ❌ | CLI only |
-| **GUI Interface** | ❌ | ✅ Browser | ✅ Tauri Window | Desktop embeds Web UI |
-| **History Persistence** | ❌ | ❌ (by design) | ✅ JSON file | Web is stateless |
-| **Config Persistence** | ❌ | ❌ (by design) | ✅ JSON file | Desktop only |
-| **Favorites Storage** | ❌ | ❌ | ✅ JSON file | Desktop only |
-| **Global Shortcuts** | ❌ | ❌ | ✅ OS-level | Desktop only |
-| **System Tray** | ❌ | ❌ | ✅ Native | Desktop only |
-| **File Associations** | ❌ | ❌ | ✅ OS-level | Desktop only |
-| **Offline Capability** | ✅ | ✅ | ✅ | All work offline |
-
-### Code Reuse Matrix
-
-| Code Component | CLI | Web | Desktop | Reuse Level |
-|----------------|-----|-----|---------|-------------|
-| **Core Types** (Config, Error) | ✅ | ✅ (via WASM) | ✅ | 100% |
-| **Tool Logic** (extract, path, format) | ✅ | ✅ (WASM) | ✅ (WASM) | 100% |
-| **Frontend UI** (React components) | ❌ | ✅ | ✅ (embeds Web) | 100% Web↔Desktop |
-| **WASM Module** | ❌ | ✅ | ✅ | 100% Web↔Desktop |
-| **Storage Implementation** | ❌ | ❌ | ✅ | Desktop only |
-| **CLI Binary** | ✅ | ❌ | ❌ | CLI only |
+| Feature | Implementation | Description |
+|---------|---------------|-------------|
+| **Global Shortcuts** | Tauri global shortcut API | e.g., Ctrl+Shift+J open JSON Extractor |
+| **System Tray** | Tauri tray API | Quick access menu |
+| **File Associations** | Tauri file type registration | Open .json files directly |
 
 ---
 
-## 11. Adding New Tools (Extensibility)
+## 11. UI Design
 
-### 11.1 Tool Registration Flow
+### 11.1 Design Principles
+
+- **Layout Consistency**: Web and Desktop share the same overall layout structure
+- **Progressive Enhancement**: Desktop adds features on top of Web baseline
+- **Developer-Focused**: Clean, functional UI with keyboard shortcuts
+- **Theme System**: Three themes (Light/Dark/Tech) with system-follow support
+
+### 11.2 Overall Layout
+
+Both Web and Desktop share the same layout structure:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ShardDen [工具名称] [?]              [Theme ▼] [⚙]            │
+├─────────────┬───────────────────────────────────────────────────┤
+│             │                                                   │
+│  📁 工具    │   页面内容区域                                     │
+│             │   (每个工具独立设计)                               │
+│  ├ JSON     │                                                   │
+│    提取器    │   例如: /tools/json-extractor                   │
+│             │                                                   │
+│  ├ URL      │                                                   │
+│    解析器    │                                                   │
+│             │                                                   │
+│  └ ...      │                                                   │
+│             │                                                   │
+│  ─────────  │                                                   │
+│  ⭐ 收藏    │                                                   │
+│  ─────────  │                                                   │
+│  🕐 历史    │                                                   │
+│             │                                                   │
+└─────────────┴───────────────────────────────────────────────────┘
+       ↑                         ↑
+    侧边栏                  主内容区（工具页面）
+```
+
+**Header (两端一致)**:
+- Logo + 工具名称
+- [?] 帮助按钮 (Hover 显示悬浮帮助)
+- [Theme ▼] 主题切换下拉框
+- [⚙] 设置按钮 (仅桌面端)
+
+**Sidebar (两端一致)**:
+- 工具列表
+- 收藏 (仅桌面端)
+- 历史记录 (仅桌面端)
+
+### 11.3 Web vs Desktop Differences
+
+| 功能 | Web | Desktop |
+|------|-----|---------|
+| 侧边栏 | ✅ | ✅ |
+| 工具列表 | ✅ | ✅ |
+| 收藏功能 | ❌ | ✅ (持久化) |
+| 历史记录 | ❌ | ✅ (持久化) |
+| 设置页面 | ❌ | ✅ |
+| 主题切换 | 手动三选一 | 手动 + 跟随系统 |
+| 数据持久化 | ❌ 无状态 | ✅ JSON文件存储 |
+
+### 11.4 Theme System
+
+#### 11.4.1 Three Themes
+
+| Theme | Background | Surface | Text Primary | Text Secondary | Accent |
+|-------|------------|---------|--------------|----------------|--------|
+| **Light** | `#FFFFFF` | `#F8FAFC` | `#0F172A` | `#475569` | `#22C55E` |
+| **Dark** | `#0F172A` | `#1E293B` | `#F8FAFC` | `#94A3B8` | `#22C55E` |
+| **Tech** | `#0A0A0A` | `#141414` | `#00FF00` | `#00AA00` | `#00FF00` |
+
+#### 11.4.2 Theme Behavior
+
+| Platform | Default | Options |
+|----------|---------|---------|
+| **Web** | Dark | Light / Dark / Tech (手动切换) |
+| **Desktop** | 跟随系统 | 跟随系统 / Light / Dark / Tech |
+
+#### 11.4.3 Implementation
+
+使用 CSS Variables + Tailwind CSS:
+
+```css
+/* globals.css */
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-accent: var(--accent);
+}
+
+/* Theme classes */
+.theme-light {
+  --bg: #FFFFFF;
+  --surface: #F8FAFC;
+  --text: #0F172A;
+  --text-secondary: #475569;
+  --accent: #22C55E;
+}
+
+.theme-dark {
+  --bg: #0F172A;
+  --surface: #1E293B;
+  --text: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --accent: #22C55E;
+}
+
+.theme-tech {
+  --bg: #0A0A0A;
+  --surface: #141414;
+  --text: #00FF00;
+  --text-secondary: #00AA00;
+  --accent: #00FF00;
+}
+```
+
+### 11.5 Tool-Specific Design
+
+Each tool's page needs independent design because:
+- Input/output areas differ
+- Function logic differs
+- Help content differs
+
+Design principles:
+1. Keep overall layout consistent (sidebar + theme)
+2. Main content area designed per tool specifics
+3. Help button shows tool-specific syntax/usage (hover tooltip)
+4. Desktop-only features (favorites/history) controlled via conditional rendering
+
+**Reference**: See `docs/designs/ui/json-extractor/prototype.md` for detailed example of tool-specific UI design.
+
+---
+
+## 12. Adding New Tools (Extensibility)
+
+### 12.1 Tool Registration Flow
 
 ```
 New Tool Request
@@ -1050,14 +1174,15 @@ New Tool Request
 └──────────────────┘
 ```
 
-### 11.2 Step-by-Step Guide
+### 12.2 Step-by-Step Guide
 
 #### Step 1: Design the Tool
 
-参考本文档第 5 节 JSON Extractor 的设计，回答：
+参考本文档第 5 节 Tools 的设计原则，以及 `docs/designs/ui/json-extractor/prototype.md` 作为示例：
 - 工具的核心功能是什么？
 - 需要什么配置？
 - CLI 接口如何设计？
+- UI 布局如何设计？
 
 #### Step 2: Create Module Structure
 
@@ -1152,7 +1277,7 @@ fn run_new_tool(input: String) -> Result<String, String> {
 }
 ```
 
-### 11.3 Tool Interface Standard
+### 12.3 Tool Interface Standard
 
 所有工具必须使用 `wasm-bindgen` 导出（以便在 Web/Desktop 中使用）：
 
@@ -1180,7 +1305,7 @@ impl JsonExtractor {
 }
 ```
 
-### 11.4 Build Targets
+### 12.4 Build Targets
 
 每个工具需要支持以下构建目标：
 
@@ -1192,7 +1317,7 @@ impl JsonExtractor {
 
 ---
 
-## 12. Open Questions
+## 13. Open Questions
 
 1. ✅ **Storage**: JSON files (Desktop only)
 2. ✅ **WASM vs Tauri**: WASM for Web, Tauri for Desktop (user decision)
@@ -1202,9 +1327,9 @@ impl JsonExtractor {
 
 ---
 
-## 13. Known Gaps / TODOs
+## 14. Known Gaps / TODOs
 
-### 13.1 Missing Dependencies
+### 14.1 Missing Dependencies
 
 1. **WASM should use Core**
    - Current: `packages/wasm/Cargo.toml` doesn't include `shard-den-core`
@@ -1217,7 +1342,7 @@ impl JsonExtractor {
      - `packages/desktop/src/main.rs`: `shard_den_core::init_logger()`
      - `packages/tools/json-extractor/cli/main.rs`: `shard_den_core::init_logger()`
 
-### 13.2 Design Decisions to Make
+### 14.2 Design Decisions to Make
 
 1. **Tool Registry**
    - Where should `ToolRegistry` live? Core or separate registry crate?
@@ -1231,7 +1356,7 @@ impl JsonExtractor {
    - Web: Load WASM via `initWasm()` in `core.ts`
    - Desktop: How does Tauri-embedded Web load WASM? Same mechanism?
 
-### 13.3 Testing Strategy
+### 14.3 Testing Strategy
 
 1. **Coverage requirements**: 85% for all Rust and TypeScript
 2. **CI enforcement**: GitHub Actions should block PRs with <85% coverage
@@ -1239,7 +1364,7 @@ impl JsonExtractor {
 
 ---
 
-## 14. Next Steps
+## 15. Next Steps
 
 1. ✅ Design approved → Commit this doc
 2. ✅ Initialize workspace structure

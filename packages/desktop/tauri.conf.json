@@ -6,7 +6,7 @@
     "beforeDevCommand": "cd ../web && npm run dev",
     "beforeBuildCommand": "cd ../web && npm run build",
     "devUrl": "http://localhost:3000",
-    "frontendDist": "../web/dist"
+    "frontendDist": "../web/.next/server"
   },
   "app": {
     "windows": [
@@ -28,14 +28,7 @@
           "identifier": "default",
           "windows": ["main"],
           "permissions": [
-            "path:default",
-            "event:default",
-            "window:default",
-            "app:default",
-            "image:default",
-            "resources:default",
-            "menu:default",
-            "tray:default",
+            "core:default",
             "shell:allow-open"
           ]
         }
@@ -44,12 +37,20 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["msi", "dmg", "appimage"],
-    "icon": [],
+    "targets": "all",
+    "icon": [
+      "src-tauri/icons/icon.png",
+      "src-tauri/icons/icon.ico"
+    ],
     "resources": [],
     "copyright": "Copyright (c) 2026",
     "category": "DeveloperTool",
     "shortDescription": "Developer toolkit platform",
-    "longDescription": "A modular developer toolkit platform with JSON extraction and more tools."
+    "longDescription": "A modular developer toolkit platform with JSON extraction and more tools.",
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
+    }
   }
 }

@@ -1,6 +1,7 @@
 //! JSON extraction logic
 
 use jsonpath_rust::parser::JsonPath;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use shard_den_core::Result;
 
@@ -11,7 +12,7 @@ pub struct ExtractResult {
 }
 
 /// A single extracted value
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExtractedValue {
     pub path: String,
     pub value: Value,
@@ -62,20 +63,55 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_simple_path() {
-        let json: Value = serde_json::from_str(r#"{"name": "test", "value": 123}"#).unwrap();
+    fn test_extract_array_wildcard() {
+        let json: Value =
+            serde_json::from_str(r#"{"items": [{"id": 1}, {"id": 2}, {"id": 3}]}"#).unwrap();
         let extractor = Extractor::new();
-        // JSONPath needs to start with $
-        let result = extractor.extract(&json, &["$.name".to_string()]);
-        println!("Result: {:?}", result);
+        // JSONPath array wildcard syntax: $.items[*].id
+        let result = extractor.extract(&json, &["$.items[*].id".to_string()]);
+        println!("Array wildcard result: {:?}", result);
         assert!(result.is_ok(), "Error: {:?}", result.err());
         let extract_result = result.unwrap();
         assert_eq!(extract_result.values.len(), 1);
-        // find() wraps result in array
         let extracted = &extract_result.values[0].value;
-        assert!(extracted.is_array(), "Expected array, got: {:?}", extracted);
+        // find() wraps result in array
         let arr = extracted.as_array().unwrap();
-        assert_eq!(arr.len(), 1);
-        assert_eq!(arr[0], "test");
+        // Should get [1, 2, 3]
+        assert_eq!(arr.len(), 3);
+    }
+
+    #[test]
+    fn test_extract_filter() {
+        let json: Value =
+            serde_json::from_str(r#"{"items": [{"price": 10}, {"price": 20}, {"price": 30}]}"#)
+                .unwrap();
+        let extractor = Extractor::new();
+        // JSONPath filter syntax: $.items[?(@.price > 15)]
+        let result = extractor.extract(&json, &["$.items[?(@.price > 15)]".to_string()]);
+        println!("Filter result: {:?}", result);
+        assert!(result.is_ok(), "Error: {:?}", result.err());
+        let extract_result = result.unwrap();
+        assert_eq!(extract_result.values.len(), 1);
+        let extracted = &extract_result.values[0].value;
+        let arr = extracted.as_array().unwrap();
+        // Should get items with price > 15: [{"price": 20}, {"price": 30}]
+        assert_eq!(arr.len(), 2);
+    }
+
+    #[test]
+    fn test_extract_recursive() {
+        let json: Value =
+            serde_json::from_str(r#"{"a": {"id": 1}, "b": {"c": {"id": 2}}}"#).unwrap();
+        let extractor = Extractor::new();
+        // JSONPath recursive descent: $..id
+        let result = extractor.extract(&json, &["$..id".to_string()]);
+        println!("Recursive result: {:?}", result);
+        assert!(result.is_ok(), "Error: {:?}", result.err());
+        let extract_result = result.unwrap();
+        assert_eq!(extract_result.values.len(), 1);
+        let extracted = &extract_result.values[0].value;
+        let arr = extracted.as_array().unwrap();
+        // Should find all id fields recursively: [1, 2]
+        assert_eq!(arr.len(), 2);
     }
 }

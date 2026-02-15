@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use shard_den_json::JsonExtractorCore;
+use shard_den_json::{JsonExtractorCore, OutputFormat};
 use std::io::{self, Read};
 use tracing::{info, warn};
 
@@ -20,7 +20,7 @@ struct Cli {
     #[arg(short, long, value_name = "PATHS")]
     paths: Option<String>,
 
-    /// Output format (json, csv, text)
+    /// Output format (json, csv, text, yaml)
     #[arg(short, long, value_name = "FORMAT", default_value = "json")]
     format: String,
 
@@ -39,12 +39,25 @@ enum Commands {
 
         /// Input file (stdin if not provided)
         input: Option<String>,
+
+        /// Output format (json, csv, text, yaml)
+        #[arg(short, long, default_value = "json")]
+        format: String,
     },
     /// Detect available paths in JSON
     Detect {
         /// Input file (stdin if not provided)
         input: Option<String>,
     },
+}
+
+fn parse_format(format: &str) -> OutputFormat {
+    match format.to_lowercase().as_str() {
+        "csv" => OutputFormat::Csv,
+        "text" => OutputFormat::Text,
+        "yaml" => OutputFormat::Yaml,
+        _ => OutputFormat::Json,
+    }
 }
 
 fn main() -> Result<()> {
@@ -57,9 +70,14 @@ fn main() -> Result<()> {
     info!("Starting JSON Extractor CLI");
 
     match cli.command {
-        Some(Commands::Extract { paths, input }) => {
+        Some(Commands::Extract {
+            paths,
+            input,
+            format,
+        }) => {
             let json = read_input(input.as_deref())?;
-            let result = extractor.extract(&json, &paths)?;
+            let output_format = parse_format(&format);
+            let result = extractor.extract_with_format(&json, &paths, output_format)?;
             println!("{}", result);
         }
         Some(Commands::Detect { input }) => {
@@ -75,7 +93,8 @@ fn main() -> Result<()> {
                 println!("{:?}", result);
             } else if let Some(paths) = cli.paths {
                 let json = read_input(None)?;
-                let result = extractor.extract(&json, &paths)?;
+                let output_format = parse_format(&cli.format);
+                let result = extractor.extract_with_format(&json, &paths, output_format)?;
                 println!("{}", result);
             } else {
                 warn!("No operation specified. Use --help for usage.");

@@ -74,6 +74,12 @@ mod tests {
     use serde_json::json;
 
     #[test]
+    fn test_path_parser_new() {
+        let parser = PathParser::new();
+        let _ = parser;
+    }
+
+    #[test]
     fn test_detect_paths() {
         let parser = PathParser::new();
         let value = json!({
@@ -93,6 +99,49 @@ mod tests {
     fn test_detect_paths_empty() {
         let parser = PathParser::new();
         let value = json!("simple string");
+        let paths = parser.detect_paths(&value);
+        assert!(paths.is_empty());
+    }
+
+    #[test]
+    fn test_detect_paths_array() {
+        let parser = PathParser::new();
+        let value = json!([1, 2, 3]);
+        let paths = parser.detect_paths(&value);
+        assert!(!paths.is_empty());
+        assert!(paths.contains(&"[0]".to_string()));
+    }
+
+    #[test]
+    fn test_detect_paths_nested() {
+        let parser = PathParser::new();
+        let value = json!({"a": {"b": {"c": 1}}});
+        let paths = parser.detect_paths(&value);
+        assert!(paths.contains(&"a".to_string()));
+        assert!(paths.contains(&"a.b".to_string()));
+        assert!(paths.contains(&"a.b.c".to_string()));
+    }
+
+    #[test]
+    fn test_detect_paths_number() {
+        let parser = PathParser::new();
+        let value = json!(42);
+        let paths = parser.detect_paths(&value);
+        assert!(paths.is_empty());
+    }
+
+    #[test]
+    fn test_detect_paths_bool() {
+        let parser = PathParser::new();
+        let value = json!(true);
+        let paths = parser.detect_paths(&value);
+        assert!(paths.is_empty());
+    }
+
+    #[test]
+    fn test_detect_paths_null() {
+        let parser = PathParser::new();
+        let value = json!(null);
         let paths = parser.detect_paths(&value);
         assert!(paths.is_empty());
     }
