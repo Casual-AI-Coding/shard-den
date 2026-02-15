@@ -1,0 +1,220 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # 构建 CLI 二进制文件（多平台）
+  build-cli:
+    name: Build CLI (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            suffix: ''
+            name: linux-x64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            suffix: '.exe'
+            name: windows-x64
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            suffix: ''
+            name: macos-x64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            suffix: ''
+            name: macos-arm64
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.target }}
+    
+    - name: Build CLI
+      run: cargo build --release -p shard-den-json-cli --target ${{ matrix.target }}
+    
+    - name: Package CLI
+      shell: bash
+      run: |
+        cd target/${{ matrix.target }}/release
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          7z a ../../../shard-den-json-${{ matrix.name }}.zip shard-den-json${{ matrix.suffix }}
+        else
+          tar czvf ../../../shard-den-json-${{ matrix.name }}.tar.gz shard-den-json${{ matrix.suffix }}
+        fi
+        cd ../../..
+    
+    - name: Upload CLI Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: cli-${{ matrix.name }}
+        path: |
+          shard-den-json-${{ matrix.name }}.*
+
+  # 构建 WASM 包
+  build-wasm:
+    name: Build WASM
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+    
+    - name: Install wasm-pack
+      run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+    
+    - name: Build WASM
+      run: wasm-pack build packages/wasm --target web --out-dir pkg
+    
+    - name: Package WASM
+      run: |
+        cd packages/wasm/pkg
+        tar czvf ../../../shard-den-wasm.tar.gz *
+        cd ../../..
+        zip -r shard-den-wasm.zip packages/wasm/pkg/
+    
+    - name: Upload WASM Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: wasm
+        path: |
+          shard-den-wasm.tar.gz
+          shard-den-wasm.zip
+
+  # 构建 Web 前端
+  build-web:
+    name: Build Web
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+    
+    - name: Install wasm-pack
+      run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+    
+    - name: Build WASM
+      run: wasm-pack build packages/wasm --target web --out-dir pkg
+    
+    - name: Install dependencies
+      working-directory: packages/web
+      run: npm install
+    
+    - name: Build Web
+      working-directory: packages/web
+      run: npm run build
+    
+    - name: Package Web
+      run: |
+        cd packages/web/dist
+        tar czvf ../../../shard-den-web.tar.gz *
+        cd ../../..
+        zip -r shard-den-web.zip packages/web/dist/
+    
+    - name: Upload Web Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: web
+        path: |
+          shard-den-web.tar.gz
+          shard-den-web.zip
+
+  # 创建 Release 并上传所有产物
+  release:
+    name: Create Release
+    needs: [build-cli, build-wasm, build-web]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+        merge-multiple: true
+    
+    - name: Display structure of downloaded files
+      run: ls -R artifacts
+    
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: artifacts/*
+        draft: false
+        prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+        generate_release_notes: true
+        body: |
+          ## Installation
+
+          ### CLI
+
+          **Linux:**
+          ```bash
+          tar xzf shard-den-json-linux-x64.tar.gz
+          ./shard-den-json --help
+          ```
+
+          **macOS (Intel):**
+          ```bash
+          tar xzf shard-den-json-macos-x64.tar.gz
+          ./shard-den-json --help
+          ```
+
+          **macOS (Apple Silicon):**
+          ```bash
+          tar xzf shard-den-json-macos-arm64.tar.gz
+          ./shard-den-json --help
+          ```
+
+          **Windows:**
+          ```powershell
+          Expand-Archive shard-den-json-windows-x64.zip
+          .\shard-den-json.exe --help
+          ```
+
+          ### Web
+
+          Download `shard-den-web.tar.gz` and serve the static files:
+          ```bash
+          tar xzf shard-den-web.tar.gz
+          npx serve .
+          ```
+
+          ### WASM
+
+          For custom web integration:
+          ```bash
+          tar xzf shard-den-wasm.tar.gz
+          # Import in your JS/TS project
+          ```
+
+          ## Changelog
+
+          See [CHANGELOG.md](../CHANGELOG.md) for full details.
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
