@@ -18,9 +18,7 @@ pub struct HistoryEntry {
 impl HistoryEntry {
     /// Create a new history entry
     pub fn new(
-        tool: impl Into<String>,
-        input: impl Into<String>,
-        output: impl Into<String>,
+        tool: impl Into<String>, input: impl Into<String>, output: impl Into<String>,
     ) -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),

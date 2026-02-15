@@ -74,9 +74,7 @@ impl Storage {
 
     /// List history entries
     pub fn list_history(
-        &self,
-        tool: Option<&str>,
-        limit: usize,
+        &self, tool: Option<&str>, limit: usize,
     ) -> shard_den_core::Result<Vec<HistoryEntry>> {
         let entries = self.load_history_entries()?;
 
@@ -122,22 +120,22 @@ impl Default for Storage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     // Simple temp dir for tests
     struct TempDir(PathBuf);
-    
+
     impl TempDir {
         fn new() -> std::io::Result<Self> {
             let path = std::env::temp_dir().join(format!("shard-den-test-{}", std::process::id()));
             std::fs::create_dir_all(&path)?;
             Ok(Self(path))
         }
-        
+
         fn path(&self) -> &PathBuf {
             &self.0
         }
     }
-    
+
     impl Drop for TempDir {
         fn drop(&mut self) {
             let _ = std::fs::remove_dir_all(&self.0);

@@ -43,9 +43,7 @@ pub fn save_history(entry: HistoryEntry, state: State<'_, AppState>) -> Result<(
 /// Load history entries
 #[tauri::command]
 pub fn load_history(
-    tool: Option<String>,
-    limit: usize,
-    state: State<'_, AppState>,
+    tool: Option<String>, limit: usize, state: State<'_, AppState>,
 ) -> Result<Vec<HistoryEntry>, String> {
     state
         .storage

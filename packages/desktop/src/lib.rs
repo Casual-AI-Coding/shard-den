@@ -24,7 +24,7 @@ pub fn run() {
             // Initialize storage directory
             let app_dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&app_dir)?;
-            
+
             tracing::info!("App directory: {:?}", app_dir);
             Ok(())
         })

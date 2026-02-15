@@ -12,5 +12,5 @@ pub mod history;
 pub mod logger;
 
 pub use config::Config;
-pub use error::{ShardDenError, Result};
+pub use error::{Result, ShardDenError};
 pub use history::{HistoryEntry, HistoryStore};

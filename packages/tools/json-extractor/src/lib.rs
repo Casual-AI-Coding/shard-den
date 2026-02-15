@@ -13,7 +13,7 @@ pub mod extract;
 pub mod format;
 pub mod path;
 
-pub use extract::{Extractor, ExtractResult};
+pub use extract::{ExtractResult, Extractor};
 pub use format::{Formatter, OutputFormat};
 pub use path::{JsonPath, PathParser};
 
@@ -36,29 +36,29 @@ impl JsonExtractor {
     }
 
     /// Extract fields from JSON
-    /// 
+    ///
     /// # Arguments
     /// * `json` - Input JSON string
     /// * `paths` - Comma-separated path expressions
-    /// 
+    ///
     /// # Returns
     /// Extracted values as JSON string, or error
     pub fn extract(&self, json: &str, paths: &str) -> Result<String, JsValue> {
         let paths: Vec<&str> = paths.split(',').map(|s| s.trim()).collect();
-        let result = self.extract_internal(json, &paths)
+        let result = self
+            .extract_internal(json, &paths)
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        
-        serde_json::to_string(&result)
-            .map_err(|e| JsValue::from_str(&e.to_string()))
+
+        serde_json::to_string(&result).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     /// Auto-detect available paths in JSON
     pub fn detect_paths(&self, json: &str) -> Result<String, JsValue> {
-        let paths = self.detect_paths_internal(json)
+        let paths = self
+            .detect_paths_internal(json)
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        
-        serde_json::to_string(&paths)
-            .map_err(|e| JsValue::from_str(&e.to_string()))
+
+        serde_json::to_string(&paths).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     /// Get tool name
@@ -75,7 +75,9 @@ impl JsonExtractor {
 }
 
 impl JsonExtractor {
-    fn extract_internal(&self, json: &str, paths: &[&str]) -> shard_den_core::Result<serde_json::Value> {
+    fn extract_internal(
+        &self, json: &str, paths: &[&str],
+    ) -> shard_den_core::Result<serde_json::Value> {
         // Placeholder - will be implemented
         let _ = paths;
         let value: serde_json::Value = serde_json::from_str(json)?;
