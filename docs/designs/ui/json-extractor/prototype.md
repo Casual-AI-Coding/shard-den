@@ -1,5 +1,11 @@
 # JSON Extractor - UI Prototype
 
+## 实现顺序
+
+```
+CLI (Rust) → WASM → Web UI → Desktop → Tests
+```
+
 ## 平台差异说明
 
 | 功能 | Web | Desktop |

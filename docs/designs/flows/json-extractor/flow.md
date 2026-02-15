@@ -1,5 +1,20 @@
 # JSON Extractor - 功能流程设计
 
+## 实现顺序
+
+```
+1. CLI (Rust Core)     →  2. WASM bindings    →  3. Web UI       →  4. Desktop    →  5. Tests
+   核心提取逻辑            WASM 暴露给前端       Next.js 页面       Tauri 桌面端      覆盖率85%
+```
+
+| 步骤 | 内容 | Web 支持 |
+|------|------|----------|
+| 1. CLI | JSONPath 解析、提取、格式化 | ✅ |
+| 2. WASM | wasm-bindgen 暴露给 JS | ✅ |
+| 3. Web UI | Input/Output/帮助面板 | ✅ |
+| 4. Desktop | 嵌入 Web UI + 本地存储 | - |
+| 5. Tests | Rust + Vitest | ✅ |
+
 ## 平台差异
 
 ### Web 端（无状态）
