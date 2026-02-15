@@ -1,5 +1,24 @@
 # JSON Extractor - 状态机说明
 
+## 平台差异
+
+### Web 端状态
+```
+AppState (Web) =
+  - wasmReady: boolean
+  - theme: 'light' | 'dark' | 'system'
+```
+
+### Desktop 端状态
+```
+AppState (Desktop) =
+  - wasmReady: boolean
+  - theme: 'light' | 'dark' | 'system'
+  - history: HistoryEntry[]      // 从本地存储加载
+  - favorites: string[]          // 收藏的路径
+  - config: UserConfig           // 用户配置
+```
+
 ## 核心状态
 
 ### 应用级别状态
