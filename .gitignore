@@ -8,9 +8,16 @@ dist/
 build/
 target/
 *.exe
+*.dylib
 *.dll
 *.so
-*.dylib
+
+# WASM
+pkg/
+
+# Desktop (Tauri)
+packages/desktop/gen/
+packages/desktop/src-tauri/target/
 
 # WASM
 pkg/

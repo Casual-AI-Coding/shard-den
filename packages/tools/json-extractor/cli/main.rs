@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use shard_den_json::JsonExtractor;
+use shard_den_json::JsonExtractorCore;
 use std::io::{self, Read};
 use tracing::{info, warn};
 
@@ -52,7 +52,7 @@ fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     let cli = Cli::parse();
-    let extractor = JsonExtractor::new();
+    let extractor = JsonExtractorCore::new();
 
     info!("Starting JSON Extractor CLI");
 
@@ -65,14 +65,14 @@ fn main() -> Result<()> {
         Some(Commands::Detect { input }) => {
             let json = read_input(input.as_deref())?;
             let result = extractor.detect_paths(&json)?;
-            println!("{}", result);
+            println!("{:?}", result);
         }
         None => {
             // Handle args directly
             if cli.detect {
                 let json = read_input(None)?;
                 let result = extractor.detect_paths(&json)?;
-                println!("{}", result);
+                println!("{:?}", result);
             } else if let Some(paths) = cli.paths {
                 let json = read_input(None)?;
                 let result = extractor.extract(&json, &paths)?;

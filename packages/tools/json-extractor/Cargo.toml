@@ -7,14 +7,19 @@ license.workspace = true
 repository.workspace = true
 description = "JSON Extractor tool for ShardDen"
 
+[features]
+default = []
+wasm = ["wasm-bindgen", "serde-wasm-bindgen"]
+
 [dependencies]
-wasm-bindgen.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-serde-wasm-bindgen = "0.6"
 shard-den-core = { workspace = true }
 thiserror.workspace = true
 tracing.workspace = true
+
+wasm-bindgen = { workspace = true, optional = true }
+serde-wasm-bindgen = { version = "0.6", optional = true }
 
 [dev-dependencies]
 wasm-bindgen-test.workspace = true

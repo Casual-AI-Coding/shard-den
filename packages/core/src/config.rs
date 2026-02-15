@@ -1,4 +1,5 @@
 //! Configuration management for ShardDen
+#![allow(clippy::derivable_impls)]
 
 use serde::{Deserialize, Serialize};
 
@@ -20,17 +21,9 @@ impl Default for Config {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ToolConfig {
     pub json_extractor: JsonExtractorConfig,
-}
-
-impl Default for ToolConfig {
-    fn default() -> Self {
-        Self {
-            json_extractor: JsonExtractorConfig::default(),
-        }
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -50,9 +43,10 @@ impl Default for JsonExtractorConfig {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum OutputFormat {
+    #[default]
     Json,
     Csv,
     Text,
@@ -73,11 +67,12 @@ impl Default for UiConfig {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum Theme {
     Light,
     Dark,
+    #[default]
     System,
 }
 

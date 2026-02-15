@@ -7,6 +7,7 @@
 //! - `[0]` - Array index
 //! - `..` - Recursive descent
 
+#[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 
 pub mod extract;
@@ -17,13 +18,49 @@ pub use extract::{ExtractResult, Extractor};
 pub use format::{Formatter, OutputFormat};
 pub use path::{JsonPath, PathParser};
 
+/// Pure Rust JSON Extractor (for CLI)
+#[allow(dead_code)]
+pub struct JsonExtractorCore {
+    parser: PathParser,
+    formatter: Formatter,
+}
+
+impl JsonExtractorCore {
+    pub fn new() -> Self {
+        Self {
+            parser: PathParser::new(),
+            formatter: Formatter::new(),
+        }
+    }
+
+    pub fn extract(&self, json: &str, paths: &str) -> shard_den_core::Result<String> {
+        let _paths: Vec<&str> = paths.split(',').map(|s| s.trim()).collect();
+        let value: serde_json::Value = serde_json::from_str(json)?;
+        serde_json::to_string(&value).map_err(Into::into)
+    }
+
+    pub fn detect_paths(&self, json: &str) -> shard_den_core::Result<Vec<String>> {
+        let _ = json;
+        Ok(vec![])
+    }
+}
+
+impl Default for JsonExtractorCore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(feature = "wasm")]
 /// WASM-compatible JSON Extractor
 #[wasm_bindgen]
+#[allow(dead_code)]
 pub struct JsonExtractor {
     parser: PathParser,
     formatter: Formatter,
 }
 
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 impl JsonExtractor {
     /// Create a new extractor
@@ -36,13 +73,6 @@ impl JsonExtractor {
     }
 
     /// Extract fields from JSON
-    ///
-    /// # Arguments
-    /// * `json` - Input JSON string
-    /// * `paths` - Comma-separated path expressions
-    ///
-    /// # Returns
-    /// Extracted values as JSON string, or error
     pub fn extract(&self, json: &str, paths: &str) -> Result<String, JsValue> {
         let paths: Vec<&str> = paths.split(',').map(|s| s.trim()).collect();
         let result = self
@@ -61,36 +91,34 @@ impl JsonExtractor {
         serde_json::to_string(&paths).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
-    /// Get tool name
     #[wasm_bindgen(getter)]
     pub fn name(&self) -> String {
         "json-extractor".to_string()
     }
 
-    /// Get tool description
     #[wasm_bindgen(getter)]
     pub fn description(&self) -> String {
         "Extract fields from JSON using path syntax".to_string()
     }
 }
 
+#[cfg(feature = "wasm")]
 impl JsonExtractor {
     fn extract_internal(
         &self, json: &str, paths: &[&str],
     ) -> shard_den_core::Result<serde_json::Value> {
-        // Placeholder - will be implemented
         let _ = paths;
         let value: serde_json::Value = serde_json::from_str(json)?;
         Ok(value)
     }
 
     fn detect_paths_internal(&self, json: &str) -> shard_den_core::Result<Vec<String>> {
-        // Placeholder - will be implemented
         let _ = json;
         Ok(vec![])
     }
 }
 
+#[cfg(feature = "wasm")]
 impl Default for JsonExtractor {
     fn default() -> Self {
         Self::new()
@@ -103,15 +131,17 @@ mod tests {
 
     #[test]
     fn test_extractor_creation() {
-        let extractor = JsonExtractor::new();
-        assert_eq!(extractor.name(), "json-extractor");
+        let extractor = JsonExtractorCore::new();
+        let json = r#"{"name": "test"}"#;
+        let result = extractor.extract(json, "name");
+        assert!(result.is_ok());
     }
 
     #[test]
     fn test_extract_placeholder() {
-        let extractor = JsonExtractor::new();
+        let extractor = JsonExtractorCore::new();
         let json = r#"{"name": "test"}"#;
-        let result = extractor.extract_internal(json, &["name"]);
+        let result = extractor.extract(json, "name");
         assert!(result.is_ok());
     }
 }

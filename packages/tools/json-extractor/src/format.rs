@@ -26,8 +26,9 @@ impl Formatter {
     /// Format a JSON value to the specified output format
     pub fn format(&self, value: &Value, format: OutputFormat) -> Result<String> {
         match format {
-            OutputFormat::Json => serde_json::to_string_pretty(value)
-                .map_err(|e| shard_den_core::ShardDenError::Json(e)),
+            OutputFormat::Json => {
+                serde_json::to_string_pretty(value).map_err(shard_den_core::ShardDenError::Json)
+            }
             OutputFormat::Csv => self.format_csv(value),
             OutputFormat::Text => self.format_text(value),
             OutputFormat::Yaml => self.format_yaml(value),
