@@ -141,10 +141,93 @@ jobs:
           shard-den-web.tar.gz
           shard-den-web.zip
 
+  # 构建桌面应用（Tauri）
+  build-desktop:
+    name: Build Desktop (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            platform: windows
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            platform: macos-intel
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            platform: macos-arm
+            target: aarch64-apple-darwin
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.target }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install system dependencies (Ubuntu)
+      if: matrix.platform == 'linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+    - name: Install dependencies
+      working-directory: packages/web
+      run: npm install
+
+    - name: Build Web
+      working-directory: packages/web
+      run: npm run build
+
+    - name: Install Tauri CLI
+      run: cargo install tauri-cli --version "^2.0"
+
+    - name: Build Desktop App
+      working-directory: packages/desktop
+      run: cargo tauri build --target ${{ matrix.target }}
+
+    - name: Upload Desktop Artifact (Linux)
+      if: matrix.platform == 'linux'
+      uses: actions/upload-artifact@v4
+      with:
+        name: desktop-linux
+        path: packages/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage
+
+    - name: Upload Desktop Artifact (Windows)
+      if: matrix.platform == 'windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: desktop-windows
+        path: packages/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/msi/*.msi
+
+    - name: Upload Desktop Artifact (macOS Intel)
+      if: matrix.platform == 'macos-intel'
+      uses: actions/upload-artifact@v4
+      with:
+        name: desktop-macos-intel
+        path: packages/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+
+    - name: Upload Desktop Artifact (macOS ARM)
+      if: matrix.platform == 'macos-arm'
+      uses: actions/upload-artifact@v4
+      with:
+        name: desktop-macos-arm
+        path: packages/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+
   # 创建 Release 并上传所有产物
   release:
     name: Create Release
-    needs: [build-cli, build-wasm, build-web]
+    needs: [build-cli, build-wasm, build-web, build-desktop]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -212,6 +295,21 @@ jobs:
           tar xzf shard-den-wasm.tar.gz
           # Import in your JS/TS project
           ```
+
+          ### Desktop
+
+          **Linux:**
+          Download the `.AppImage` file, make it executable, and run:
+          ```bash
+          chmod +x ShardDen_*.AppImage
+          ./ShardDen_*.AppImage
+          ```
+
+          **macOS:**
+          Download the `.dmg` file, open it, and drag ShardDen to Applications.
+
+          **Windows:**
+          Download the `.msi` installer and run it.
 
           ## Changelog
 

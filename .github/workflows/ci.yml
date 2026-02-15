@@ -40,7 +40,7 @@ jobs:
       run: cargo install cargo-tarpaulin
       
     - name: Coverage
-      run: cargo tarpaulin --packages shard-den-core --packages shard-den-json --fail-under 85 || true
+      run: cargo tarpaulin --packages shard-den-core --packages shard-den-json --fail-under 85
 
   web-check:
     name: Web Checks
@@ -60,16 +60,16 @@ jobs:
       run: npm install
     
     - name: Type check
-      run: npm run typecheck || true
+      run: npm run typecheck
     
     - name: Lint
-      run: npm run lint || true
+      run: npm run lint
     
     - name: Test
-      run: npm run test || true
+      run: npm run test
     
     - name: Coverage
-      run: npm run test:coverage || true
+      run: npm run test:coverage
 
   build:
     name: Build
