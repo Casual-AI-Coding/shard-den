@@ -236,7 +236,7 @@ packages/tools/json-extractor/
 > - `src/` → compiled to WASM (for Web/Desktop)
 > - `cli/` → compiled to native binary (for CLI)
 
-### 5.1 Core API
+### 5.2 Core API
 
 ```rust
 // packages/tools/json-extractor/src/extract.rs
@@ -257,7 +257,7 @@ impl Extractor {
 }
 ```
 
-### 5.2 Path Syntax
+### 5.3 Path Syntax
 
 | Syntax | Description | Example |
 |--------|-------------|---------|
@@ -267,7 +267,7 @@ impl Extractor {
 | `[0]` | Array index | `data.items[0]` |
 | `..` | Recursive descent | `..id` |
 
-### 5.3 CLI Interface
+### 5.4 CLI Interface
 
 ```bash
 # Main binary: shard-den (or shard-den.exe on Windows)
@@ -294,7 +294,7 @@ shard-den              # Main binary
 
 ## 6. Phase Implementation Plan
 
-### Phase 1: Core + JSON Extractor CLI + WASM (Week 1)
+### 6.1 Phase 1: Core + JSON Extractor CLI + WASM (Week 1)
 
 | Task | Description | Deliverable |
 |------|-------------|-------------|
@@ -309,7 +309,7 @@ shard-den              # Main binary
 > - `src/` - Core logic with `#[wasm_bindgen]` exports (for WASM)
 > - `cli/` - CLI binary that uses the core logic
 
-### Phase 2: Web UI (Week 2)
+### 6.2 Phase 2: Web UI (Week 2)
 
 | Task | Description | Deliverable |
 |------|-------------|-------------|
@@ -319,7 +319,7 @@ shard-den              # Main binary
 | Styling | Tailwind + custom theme | Polished UI |
 | ⚠️ **Note** | **Web is STATELESS** - no history, no storage | |
 
-### Phase 3: Tauri Desktop (Week 3)
+### 6.3 Phase 3: Tauri Desktop (Week 3)
 
 | Task | Description | Deliverable |
 |------|-------------|-------------|
@@ -328,7 +328,7 @@ shard-den              # Main binary
 | Add Storage | Implement config/history/favorites storage | Data persists |
 | System integration | Shortcuts, tray, window management | Native feel |
 
-### Phase 4: Extensibility (Week 4+)
+### 6.4 Phase 4: Extensibility (Week 4+)
 
 | Task | Description | Deliverable |
 |------|-------------|-------------|
@@ -416,7 +416,7 @@ clap = { version = "4", features = ["derive"] }
 
 **Note: Storage is only for Desktop. Web is stateless.**
 
-### 8.1 What to Store
+### 9.1 What to Store
 
 | Data | Description | Example |
 |------|-------------|---------|
@@ -425,7 +425,7 @@ clap = { version = "4", features = ["derive"] }
 | **User Config** | 主题、默认格式、语言 | `{"theme": "dark", "defaultFormat": "csv"}` |
 | **Tool Config** | 每个工具的特定设置 | JSON Extractor 的配置 |
 
-### 8.2 Storage Format
+### 9.2 Storage Format
 
 **Format: JSON Files**
 
@@ -554,7 +554,7 @@ shard_den_wasm.wasm (single file with all tools)
 
 ## 11. Adding New Tools (Extensibility)
 
-### 10.1 Tool Registration Flow
+### 11.1 Tool Registration Flow
 
 ```
 New Tool Request
@@ -590,7 +590,7 @@ New Tool Request
 └──────────────────┘
 ```
 
-### 10.2 Step-by-Step Guide
+### 11.2 Step-by-Step Guide
 
 #### Step 1: Design the Tool
 
@@ -692,7 +692,7 @@ fn run_new_tool(input: String) -> Result<String, String> {
 }
 ```
 
-### 10.3 Tool Interface Standard
+### 11.3 Tool Interface Standard
 
 所有工具必须使用 `wasm-bindgen` 导出（以便在 Web/Desktop 中使用）：
 
@@ -720,7 +720,7 @@ impl JsonExtractor {
 }
 ```
 
-### 10.4 Build Targets
+### 11.4 Build Targets
 
 每个工具需要支持以下构建目标：
 
