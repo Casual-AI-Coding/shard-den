@@ -1,63 +1,47 @@
 # JSON Extractor - 功能流程设计
 
-## 实现阶段功能清单
-
-### 阶段 1: CLI (Rust Core)
-
-| 功能 | 说明 |
-|------|------|
-| JSON 解析 | 解析输入的 JSON 字符串 |
-| JSONPath 解析 | 解析 JSONPath 表达式 |
-| 单值提取 | `data.name` |
-| 列表提取 | `data.items[*].id` |
-| 过滤支持 | `data.items[?(@.price > 100)]` |
-| 递归查找 | `..id` |
-| 格式转换 | JSON / CSV / Text 输出 |
-| CLI 参数 | `--input`, `--path`, `--output`, `--format` |
-
-### 阶段 2: WASM Bindings
-
-| 功能 | 说明 |
-|------|------|
-| WASM 入口 | `initWasm()` 初始化 |
-| 提取方法 | `extract(json, paths)` |
-| 路径检测 | `detectPaths(json)` |
-| 错误处理 | JsValue 错误转换 |
-
-### 阶段 3: Web UI
-
-| 功能 | 说明 |
-|------|------|
-| Input 输入区 | JSON 输入 + 验证 |
-| 粘贴支持 | Ctrl+V 粘贴 |
-| 文件导入 | 拖拽 / 选择 .json |
-| URL 导入 | 输入 URL 获取 JSON |
-| Path 输入 | JSONPath 表达式输入 |
-| Extract 按钮 | 执行提取 |
-| Clear 按钮 | 清空输入 |
-| Output 显示区 | 结果展示 |
-| 格式选择 | JSON / CSV / Text 下拉 |
-| Copy 按钮 | 复制到剪贴板 |
-| Download 按钮 | 下载文件 |
-| 右键菜单 | 选中字段 → Copy JSONPath |
-| 悬浮帮助按钮 | ❓ 弹出语法帮助 |
-
-### 阶段 4: Desktop
-
-| 功能 | 说明 |
-|------|------|
-| 本地存储 | 历史记录保存 |
-| 收藏路径 | 常用路径收藏 |
-| 配置持久化 | 用户设置保存 |
-
-### 阶段 5: Tests
-
-| 类型 | 覆盖率 |
-|------|--------|
-| Rust Unit Tests | ≥85% |
-| Web Vitest | ≥85% |
-
 ## 实现顺序
+
+```
+CLI (Rust) → WASM → Web UI → Desktop → Tests
+```
+
+## 功能清单
+
+| 阶段 | 功能 | 说明 |
+|------|------|------|
+| **CLI** | JSON 解析 | 解析输入的 JSON 字符串 |
+| **CLI** | JSONPath 解析 | 解析 JSONPath 表达式 |
+| **CLI** | 单值提取 | `data.name` |
+| **CLI** | 列表提取 | `data.items[*].id` |
+| **CLI** | 过滤支持 | `data.items[?(@.price > 100)]` |
+| **CLI** | 递归查找 | `..id` |
+| **CLI** | 格式转换 | JSON / CSV / Text 输出 |
+| **CLI** | CLI 参数 | `--input`, `--path`, `--output`, `--format` |
+| **WASM** | WASM 入口 | `initWasm()` 初始化 |
+| **WASM** | 提取方法 | `extract(json, paths)` |
+| **WASM** | 路径检测 | `detectPaths(json)` |
+| **WASM** | 错误处理 | JsValue 错误转换 |
+| **Web** | Input 输入区 | JSON 输入 + 验证 |
+| **Web** | 粘贴支持 | Ctrl+V 粘贴 |
+| **Web** | 文件导入 | 拖拽 / 选择 .json |
+| **Web** | URL 导入 | 输入 URL 获取 JSON |
+| **Web** | Path 输入 | JSONPath 表达式输入 |
+| **Web** | Extract 按钮 | 执行提取 |
+| **Web** | Clear 按钮 | 清空输入 |
+| **Web** | Output 显示区 | 结果展示 |
+| **Web** | 格式选择 | JSON / CSV / Text 下拉 |
+| **Web** | Copy 按钮 | 复制到剪贴板 |
+| **Web** | Download 按钮 | 下载文件 |
+| **Web** | 右键菜单 | 选中字段 → Copy JSONPath |
+| **Web** | 悬浮帮助按钮 | ❓ 弹出语法帮助 |
+| **Desktop** | 本地存储 | 历史记录保存 |
+| **Desktop** | 收藏路径 | 常用路径收藏 |
+| **Desktop** | 配置持久化 | 用户设置保存 |
+| **Tests** | Rust Unit Tests | ≥85% 覆盖率 |
+| **Tests** | Web Vitest | ≥85% 覆盖率 |
+
+## 平台差异
 
 ```
 1. CLI (Rust Core)     →  2. WASM bindings    →  3. Web UI       →  4. Desktop    →  5. Tests
