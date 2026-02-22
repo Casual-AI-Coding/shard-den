@@ -3372,7 +3372,7 @@ dependencies = [
 
 [[package]]
 name = "shard-den"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -3386,7 +3386,7 @@ dependencies = [
 
 [[package]]
 name = "shard-den-core"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "chrono",
  "insta",
@@ -3401,7 +3401,7 @@ dependencies = [
 
 [[package]]
 name = "shard-den-desktop"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "directories",
@@ -3419,7 +3419,7 @@ dependencies = [
 
 [[package]]
 name = "shard-den-json-extractor"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "insta",
  "jsonpath-rust",
@@ -3437,7 +3437,7 @@ dependencies = [
 
 [[package]]
 name = "shard-den-wasm"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "console_error_panic_hook",
  "serde",
