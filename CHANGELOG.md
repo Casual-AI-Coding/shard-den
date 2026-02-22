@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-02-22
+
+### Added
+- Unified CLI binary (`shard-den`) replacing `shard-den-json`
+  - `shard-den extract --paths PATH [--format FORMAT] [input]`
+  - `shard-den detect [input]`
+  - `shard-den tools`
+- crates.io publishing in release workflow
+- `CARGO_REGISTRY_TOKEN` support for publishing to crates.io
+
+### Changed
+- CLI binary renamed from `shard-den-json` to `shard-den`
+- Release artifacts renamed accordingly
+
 ## [0.2.0] - 2026-02-22
 
 ### Added
@@ -107,7 +121,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CLI = Core**: Native Rust, no WASM overhead
 - **Shared Core**: Same Rust code compiled for all targets
 
-[Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.1
 [0.2.0]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.0
 [0.1.2]: https://github.com/oGsLP/shard-den/releases/tag/v0.1.2
 [0.1.1]: https://github.com/oGsLP/shard-den/releases/tag/v0.1.1
