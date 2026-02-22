@@ -1,5 +1,3 @@
-/* @ts-self-types="./shard_den_wasm.d.ts" */
-
 //#region exports
 
 /**

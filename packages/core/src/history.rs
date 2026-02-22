@@ -4,6 +4,17 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// Generate a simple unique ID without uuid crate
+fn generate_id() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    // Use a simple hash-based approach for uniqueness
+    format!("{:x}-{:x}", timestamp, std::process::id())
+}
+
 /// A single history entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HistoryEntry {
@@ -21,7 +32,7 @@ impl HistoryEntry {
         tool: impl Into<String>, input: impl Into<String>, output: impl Into<String>,
     ) -> Self {
         Self {
-            id: uuid::Uuid::new_v4().to_string(),
+            id: generate_id(),
             tool: tool.into(),
             input: input.into(),
             output: output.into(),

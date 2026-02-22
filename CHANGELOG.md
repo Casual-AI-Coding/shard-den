@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-22
+
+### Added
+- JSON Extractor Web UI with full functionality
+  - JSON input with validation (debounced 500ms)
+  - JSONPath expression input with syntax help
+  - Extract button with WASM backend integration
+  - Output display with format selection (JSON/CSV/Text/YAML)
+  - Copy and Download buttons
+  - File upload support
+  - URL import support
+  - Clipboard paste support
+  - Right-click context menu for copying
+  - Detected paths popup for auto-complete
+  - Session storage persistence
+- WASM panic fix (create fresh instance per operation)
+- UUID dependency removed (replaced with simple ID generator)
+- Path detection with `$.` prefix and `[*]` wildcard for arrays
+
+### Fixed
+- Popup positioning with scroll offset and auto-flip
+- getBoundingClientRect null error after async operation
+
 ## [0.1.2] - 2026-02-15
 
 ### Added
@@ -84,5 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CLI = Core**: Native Rust, no WASM overhead
 - **Shared Core**: Same Rust code compiled for all targets
 
-[Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.0
+[0.1.2]: https://github.com/oGsLP/shard-den/releases/tag/v0.1.2
 [0.1.1]: https://github.com/oGsLP/shard-den/releases/tag/v0.1.1

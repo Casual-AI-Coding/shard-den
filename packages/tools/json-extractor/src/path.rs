@@ -48,7 +48,7 @@ impl PathParser {
             Value::Object(map) => {
                 for (key, val) in map {
                     let path = if prefix.is_empty() {
-                        key.clone()
+                        format!("$.{}", key)
                     } else {
                         format!("{}.{}", prefix, key)
                     };
@@ -57,10 +57,16 @@ impl PathParser {
                 }
             }
             Value::Array(arr) => {
-                for (i, val) in arr.iter().enumerate() {
-                    let path = format!("{}[{}]", prefix, i);
-                    paths.push(path.clone());
-                    self.detect_paths_recursive(val, &path, paths);
+                if arr.is_empty() {
+                    return;
+                }
+                // For arrays, show only [*] wildcard instead of indices
+                let path = format!("{}[*]", prefix);
+                paths.push(path);
+                
+                // Only recurse into the first element to avoid duplicates
+                if let Some(first) = arr.first() {
+                    self.detect_paths_recursive(first, &format!("{}[*]", prefix), paths);
                 }
             }
             _ => {}

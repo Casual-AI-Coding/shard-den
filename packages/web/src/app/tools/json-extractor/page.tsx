@@ -32,7 +32,6 @@ export default function JsonExtractorPage() {
   const [error, setError] = useState('');
   const [format, setFormat] = useState('json');
   const [isLoading, setIsLoading] = useState(true);
-  const [extractor, setExtractor] = useState<any>(null);
   const [urlInput, setUrlInput] = useState('');
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
@@ -47,9 +46,7 @@ export default function JsonExtractorPage() {
 
   useEffect(() => {
     initWasm()
-      .then(() => JsonExtractor.create())
-      .then((ex) => {
-        setExtractor(ex);
+      .then(() => {
         setIsLoading(false);
       })
       .catch((e) => {
@@ -112,12 +109,12 @@ export default function JsonExtractorPage() {
     }
 
     try {
-      const result = extractor.extract_with_format(input, paths, format);
+      const result = await JsonExtractor.extract(input, paths, format);
       setOutput(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : '未知错误');
     }
-  }, [input, paths, format, extractor]);
+  }, [input, paths, format]);
 
   const handleDetect = useCallback(async (e: React.MouseEvent<HTMLButtonElement>) => {
     setError('');
@@ -128,13 +125,12 @@ export default function JsonExtractorPage() {
       return;
     }
 
+    // Capture position BEFORE async call - event target becomes null after await
+    const rect = e.currentTarget.getBoundingClientRect();
+    
     try {
-      const detectedPaths = extractor.detect_paths(input);
-      const paths = JSON.parse(detectedPaths);
-      setDetectedPaths(paths);
-      
-      // Position popup near the button - use fixed positioning with viewport coords
-      const rect = e.currentTarget.getBoundingClientRect();
+      const detected = await JsonExtractor.detect(input);
+      setDetectedPaths(detected);
       
       // Add scroll offset to get document-relative position
       const scrollX = window.scrollX;
@@ -152,7 +148,7 @@ export default function JsonExtractorPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : '未知错误');
     }
-  }, [input, extractor]);
+  }, [input]);
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -376,7 +372,7 @@ export default function JsonExtractorPage() {
               <div className="flex flex-wrap gap-3">
                 <button
                   onClick={handleExtract}
-                  disabled={!extractor}
+                  disabled={isLoading}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--accent)] hover:opacity-90 text-[var(--bg)] font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Wand2 className="w-4 h-4" />
@@ -385,7 +381,7 @@ export default function JsonExtractorPage() {
 
                 <button
                   onClick={handleDetect}
-                  disabled={!extractor}
+                  disabled={isLoading}
                   className="px-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] hover:bg-[var(--hover)] text-[var(--text)] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="检测可用路径"
                 >
