@@ -42,16 +42,16 @@ jobs:
         targets: ${{ matrix.target }}
     
     - name: Build CLI
-      run: cargo build --release -p shard-den-json-cli --target ${{ matrix.target }}
+      run: cargo build --release -p shard-den --target ${{ matrix.target }}
     
     - name: Package CLI
       shell: bash
       run: |
         cd target/${{ matrix.target }}/release
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          7z a ../../../shard-den-json-${{ matrix.name }}.zip shard-den-json${{ matrix.suffix }}
+          7z a ../../../shard-den-${{ matrix.name }}.zip shard-den${{ matrix.suffix }}
         else
-          tar czvf ../../../shard-den-json-${{ matrix.name }}.tar.gz shard-den-json${{ matrix.suffix }}
+          tar czvf ../../../shard-den-${{ matrix.name }}.tar.gz shard-den${{ matrix.suffix }}
         fi
         cd ../../..
     
@@ -60,7 +60,7 @@ jobs:
       with:
         name: cli-${{ matrix.name }}
         path: |
-          shard-den-json-${{ matrix.name }}.*
+          shard-den-${{ matrix.name }}.*
 
   # 构建 WASM 包
   build-wasm:
@@ -224,10 +224,29 @@ jobs:
         name: desktop-macos-arm
         path: packages/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
 
+  # 发布到 crates.io
+  publish-crates:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Publish crates
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          # Publish in dependency order
+          cargo publish -p shard-den-core
+          cargo publish -p shard-den-json
+          cargo publish -p shard-den
+
   # 创建 Release 并上传所有产物
   release:
     name: Create Release
-    needs: [build-cli, build-wasm, build-web, build-desktop]
+    needs: [build-cli, build-wasm, build-web, build-desktop, publish-crates]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -258,26 +277,26 @@ jobs:
 
           **Linux:**
           ```bash
-          tar xzf shard-den-json-linux-x64.tar.gz
-          ./shard-den-json --help
+          tar xzf shard-den-linux-x64.tar.gz
+          ./shard-den --help
           ```
 
           **macOS (Intel):**
           ```bash
-          tar xzf shard-den-json-macos-x64.tar.gz
-          ./shard-den-json --help
+          tar xzf shard-den-macos-x64.tar.gz
+          ./shard-den --help
           ```
 
           **macOS (Apple Silicon):**
           ```bash
-          tar xzf shard-den-json-macos-arm64.tar.gz
-          ./shard-den-json --help
+          tar xzf shard-den-macos-arm64.tar.gz
+          ./shard-den --help
           ```
 
           **Windows:**
           ```powershell
-          Expand-Archive shard-den-json-windows-x64.zip
-          .\shard-den-json.exe --help
+          Expand-Archive shard-den-windows-x64.zip
+          .\shard-den.exe --help
           ```
 
           ### Web

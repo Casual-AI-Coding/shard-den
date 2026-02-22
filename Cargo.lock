@@ -3371,8 +3371,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "shard-den"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "serde",
+ "serde_json",
+ "shard-den-core",
+ "shard-den-json",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "shard-den-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "insta",
@@ -3387,7 +3401,7 @@ dependencies = [
 
 [[package]]
 name = "shard-den-desktop"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "directories",
@@ -3405,7 +3419,7 @@ dependencies = [
 
 [[package]]
 name = "shard-den-json"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "insta",
  "jsonpath-rust",
@@ -3422,22 +3436,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "shard-den-json-cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "serde",
- "serde_json",
- "shard-den-core",
- "shard-den-json",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "shard-den-wasm"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "console_error_panic_hook",
  "serde",

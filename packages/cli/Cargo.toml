@@ -1,22 +1,29 @@
 [package]
-name = "shard-den-json-cli"
+name = "shard-den"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "CLI for JSON Extractor tool"
+description = "Modular developer toolkit platform"
 
 [[bin]]
-name = "shard-den-json"
-path = "main.rs"
+name = "shard-den"
+path = "src/main.rs"
 
 [dependencies]
-shard-den-json = { path = ".." }
-shard-den-core = { workspace = true }
+# Workspace dependencies
+shard-den-core.workspace = true
 clap.workspace = true
 anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+
+# Tools
+shard-den-json = { path = "../tools/json-extractor", optional = true }
+
+[features]
+default = ["json"]
+json = ["dep:shard-den-json"]
