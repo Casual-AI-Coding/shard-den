@@ -18,7 +18,7 @@ repository = "https://github.com/yourusername/shard-den"
 [workspace.dependencies]
 # Internal crates
 shard-den-core = { path = "packages/core" }
-shard-den-json = { path = "packages/tools/json-extractor" }
+shard-den-json-extractor = { path = "packages/tools/json-extractor" }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

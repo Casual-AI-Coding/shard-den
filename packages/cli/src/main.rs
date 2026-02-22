@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use shard_den_json::{JsonExtractorCore, OutputFormat};
+use shard_den_json_extractor::{JsonExtractorCore, OutputFormat};
 use std::io::{self, Read};
 use tracing::info;
 

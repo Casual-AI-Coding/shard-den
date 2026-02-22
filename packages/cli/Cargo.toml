@@ -22,8 +22,8 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 
 # Tools
-shard-den-json = { path = "../tools/json-extractor", optional = true }
+shard-den-json-extractor = { path = "../tools/json-extractor", optional = true }
 
 [features]
 default = ["json"]
-json = ["dep:shard-den-json"]
+json = ["dep:shard-den-json-extractor"]

@@ -240,7 +240,7 @@ jobs:
         run: |
           # Publish in dependency order
           cargo publish -p shard-den-core
-          cargo publish -p shard-den-json
+          cargo publish -p shard-den-json-extractor
           cargo publish -p shard-den
 
   # 创建 Release 并上传所有产物

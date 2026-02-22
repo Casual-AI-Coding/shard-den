@@ -3372,21 +3372,21 @@ dependencies = [
 
 [[package]]
 name = "shard-den"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "clap",
  "serde",
  "serde_json",
  "shard-den-core",
- "shard-den-json",
+ "shard-den-json-extractor",
  "tracing",
  "tracing-subscriber",
 ]
 
 [[package]]
 name = "shard-den-core"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "chrono",
  "insta",
@@ -3401,14 +3401,14 @@ dependencies = [
 
 [[package]]
 name = "shard-den-desktop"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "directories",
  "serde",
  "serde_json",
  "shard-den-core",
- "shard-den-json",
+ "shard-den-json-extractor",
  "tauri",
  "tauri-build",
  "tauri-plugin-shell",
@@ -3418,8 +3418,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "shard-den-json"
-version = "0.2.0"
+name = "shard-den-json-extractor"
+version = "0.2.1"
 dependencies = [
  "insta",
  "jsonpath-rust",
@@ -3437,14 +3437,14 @@ dependencies = [
 
 [[package]]
 name = "shard-den-wasm"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "console_error_panic_hook",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
  "serde_yaml",
- "shard-den-json",
+ "shard-den-json-extractor",
  "wasm-bindgen",
  "wasm-bindgen-test",
  "web-sys",

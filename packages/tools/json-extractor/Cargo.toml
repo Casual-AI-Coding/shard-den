@@ -1,5 +1,5 @@
 [package]
-name = "shard-den-json"
+name = "shard-den-json-extractor"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -30,4 +30,4 @@ insta.workspace = true
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-name = "shard_den_json"
+name = "shard_den_json_extractor"
