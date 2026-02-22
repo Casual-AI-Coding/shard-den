@@ -427,31 +427,338 @@ fn load_history() -> Result<Vec<HistoryEntry>, String> {
 
 ---
 
-## 阶段 5: Tests
+## 阶段 5: UI Redesign (Web + Desktop)
 
-### Task 5.1: 达到覆盖率 85%
+> **参考文档:**
+> - 主设计: `docs/plans/2026-02-15-shard-den-architecture-design.md` (Section 11: UI Design)
+> - JSON Extractor: `docs/designs/ui/json-extractor/prototype.md`
+
+### Task 5.1: 设置主题系统 (CSS Variables + ThemeProvider)
+
+**Goal:** 实现三主题支持 (Light/Dark/Tech) + 系统跟随 (仅 Desktop)
 
 **Files:**
-- 现有测试文件
+- Modify: `packages/web/src/styles/globals.css`
+- Create: `packages/web/src/components/ThemeProvider.tsx`
+- Create: `packages/web/src/hooks/useTheme.ts`
+- Create: `packages/web/src/components/ui/ThemeToggle.tsx`
 
-**Step 1: 运行覆盖率**
+**Step 1: 添加 CSS 变量**
 
-Run: `cargo tarpaulin --packages shard-den-core --packages shard-den-json --fail-under 85`
+```css
+/* globals.css */
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-accent: var(--accent);
+}
 
-**Step 2: 补充缺失测试**
+/* Light Theme */
+.theme-light {
+  --bg: #FFFFFF;
+  --surface: #F8FAFC;
+  --text: #0F172A;
+  --text-secondary: #475569;
+  --accent: #22C55E;
+}
 
-**Step 3: 验证**
+/* Dark Theme */
+.theme-dark {
+  --bg: #0F172A;
+  --surface: #1E293B;
+  --text: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --accent: #22C55E;
+}
 
-**Step 4: Commit**
+/* Tech Theme */
+.theme-tech {
+  --bg: #0A0A0A;
+  --surface: #141414;
+  --text: #00FF00;
+  --text-secondary: #00AA00;
+  --accent: #00FF00;
+}
+```
+
+**Step 2: 创建 ThemeProvider**
+
+```typescript
+// components/ThemeProvider.tsx
+'use client';
+import { createContext, useContext, useState, useEffect } from 'react';
+
+type Theme = 'light' | 'dark' | 'tech';
+
+interface ThemeContextType {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+}
+
+const ThemeContext = createContext<ThemeContextType | null>(null);
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<Theme>('dark');
+  
+  useEffect(() => {
+    document.documentElement.className = `theme-${theme}`;
+  }, [theme]);
+  
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) throw new Error('useTheme must be used within ThemeProvider');
+  return context;
+};
+```
+
+**Step 3: 更新 layout.tsx 包裹 ThemeProvider**
+
+**Step 4: 创建 ThemeToggle 组件**
+
+**Step 5: Commit**
+
+```bash
+git add packages/web/src/styles/globals.css packages/web/src/components/ThemeProvider.tsx
+git commit -m "feat: add theme system with CSS variables"
+```
 
 ---
 
-## 执行选项
+### Task 5.2: 创建布局组件 (Sidebar + Header)
 
-**Plan complete and saved to `docs/plans/2026-02-15-json-extractor-implementation.md`. Two execution options:**
+**Goal:** 实现整体布局：侧边栏 + 主内容区，支持 Web/Desktop 差异
 
-1. **Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
+**Files:**
+- Create: `packages/web/src/components/Sidebar.tsx`
+- Create: `packages/web/src/components/Header.tsx`
+- Modify: `packages/web/src/app/layout.tsx`
 
-2. **Parallel Session (separate)** - Open new session with executing-plans, batch execution with checkpoints
+**Step 1: 创建 Sidebar 组件**
 
-**Which approach?**
+```typescript
+// components/Sidebar.tsx
+'use client';
+import Link from 'next/link';
+
+const tools = [
+  { name: 'JSON 提取器', path: '/tools/json-extractor', icon: '...' },
+  // Future tools...
+];
+
+export function Sidebar({ isDesktop = false }: { isDesktop?: boolean }) {
+  return (
+    <aside className="w-64 bg-[var(--surface)] border-r border-slate-800">
+      {/* Tool List */}
+      <nav className="p-4">
+        <h3 className="text-xs font-semibold text-slate-500 uppercase mb-2">工具</h3>
+        <ul className="space-y-1">
+          {tools.map(tool => (
+            <li key={tool.path}>
+              <Link href={tool.path} className="...">{tool.name}</Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      
+      {/* Desktop Only: Favorites & History */}
+      {isDesktop && (
+        <>
+          <div className="border-t border-slate-800 p-4">
+            <h3 className="text-xs font-semibold text-slate-500 uppercase mb-2">收藏</h3>
+          </div>
+          <div className="border-t border-slate-800 p-4">
+            <h3 className="text-xs font-semibold text-slate-500 uppercase mb-2">历史</h3>
+          </div>
+        </>
+      )}
+    </aside>
+  );
+}
+```
+
+**Step 2: 创建 Header 组件**
+
+```typescript
+// components/Header.tsx
+'use client';
+import { ThemeToggle } from './ui/ThemeToggle';
+
+export function Header({ title, showSettings = false }: { title: string; showSettings?: boolean }) {
+  return (
+    <header className="h-14 bg-[var(--surface)] border-b border-slate-800 flex items-center justify-between px-4">
+      <div className="flex items-center gap-2">
+        <h1 className="text-lg font-semibold text-[var(--text)]">{title}</h1>
+        {/* Help Button - to be added in Task 6.3 */}
+      </div>
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
+        {showSettings && <button>⚙️</button>}
+      </div>
+    </header>
+  );
+}
+```
+
+**Step 3: 更新 layout.tsx**
+
+**Step 4: Commit**
+
+```bash
+git add packages/web/src/components/Sidebar.tsx packages/web/src/components/Header.tsx
+git commit -m "feat: add layout components (Sidebar, Header)"
+```
+
+---
+
+### Task 5.3: 重构 JSON Extractor 页面
+
+**Goal:** 按照设计文档实现新布局：左右两块 + 帮助按钮
+
+**Files:**
+- Modify: `packages/web/src/app/tools/json-extractor/page.tsx`
+
+**Step 1: 更新页面布局**
+
+```typescript
+// 新的布局结构
+export default function JsonExtractorPage() {
+  return (
+    <div className="flex h-full">
+      <Sidebar /> {/* 工具列表 */}
+      <div className="flex-1 flex flex-col">
+        <Header title="JSON 提取器" showSettings={isDesktop} />
+        <main className="flex-1 p-6">
+          {/* 左右两块布局 */}
+          <div className="grid grid-cols-2 gap-6 h-full">
+            {/* 左侧：输入 */}
+            <div className="space-y-4">
+              {/* JSON 输入区 */}
+              {/* JSONPath 输入框 */}
+              {/* 提取/清空按钮 */}
+            </div>
+            {/* 右侧：输出 */}
+            <div className="space-y-4">
+              {/* 输出区域 */}
+              {/* 格式选择器 */}
+              {/* 复制/下载按钮 */}
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+```
+
+**Step 2: 添加帮助按钮 (Hover Tooltip)**
+
+```typescript
+// 在 Header 标题旁边
+<Header title="JSON 提取器">
+  <HelpButton content={[
+    { code: 'key', desc: '获取对象属性' },
+    { code: '*', desc: '通配符' },
+    { code: '[0]', desc: '数组索引' },
+    { code: '..', desc: '递归下降' },
+  ]} />
+</Header>
+```
+
+**Step 3: Commit**
+
+```bash
+git commit -m "refactor: redesign JSON extractor page with new layout"
+```
+
+---
+
+### Task 5.4: 处理 Web/Desktop 差异
+
+**Goal:** 根据环境显示/隐藏特定功能
+
+**Files:**
+- Modify: `packages/web/src/app/layout.tsx`
+- Create: `packages/web/src/lib/platform.ts`
+
+**Step 1: 检测平台**
+
+```typescript
+// lib/platform.ts
+export function isDesktop(): boolean {
+  return typeof window !== 'undefined' && '__TAURI__' in window;
+}
+```
+
+**Step 2: 条件渲染**
+
+```typescript
+// layout.tsx
+const isDesktop = typeof window !== 'undefined' && '__TAURI__' in window;
+
+return (
+  <div className="flex h-screen">
+    <Sidebar isDesktop={isDesktop} />
+    {children}
+  </div>
+);
+```
+
+**Step 3: Commit**
+
+```bash
+git commit -m "feat: handle Web/Desktop platform differences"
+```
+
+---
+
+### Task 5.5: 验证和测试
+
+**Step 1: 运行开发服务器**
+
+```bash
+cd packages/web
+npm run dev
+```
+
+**Step 2: 验证布局**
+
+- [ ] Sidebar 显示工具列表
+- [ ] 主题切换正常工作 (Light/Dark/Tech)
+- [ ] JSON Extractor 页面左右布局正确
+- [ ] 帮助按钮 Hover 显示语法提示
+- [ ] Web 端隐藏收藏/历史/设置
+
+**Step 3: 运行测试**
+
+```bash
+npm run test
+npm run test:coverage
+```
+
+**Step 4: Commit**
+
+```bash
+git commit -m "test: add UI tests and verify coverage"
+```
+
+---
+
+## 实现完成检查清单
+
+- [ ] ThemeProvider + CSS 变量主题系统
+- [ ] Sidebar 组件 (工具列表)
+- [ ] Header 组件 (标题 + 帮助按钮 + 主题切换)
+- [ ] JSON Extractor 页面左右两块布局
+- [ ] 帮助按钮 Hover 显示语法提示
+- [ ] 平台检测 (Web vs Desktop)
+- [ ] Web 端隐藏收藏/历史/设置
+- [ ] 测试覆盖率 ≥ 85%

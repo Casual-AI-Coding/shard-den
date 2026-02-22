@@ -1,0 +1,24 @@
+{
+  "name": "shard-den-wasm",
+  "type": "module",
+  "collaborators": [
+    "Your Name <your.email@example.com>"
+  ],
+  "description": "WASM bindings for ShardDen - bundles all tools",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/shard-den"
+  },
+  "files": [
+    "shard_den_wasm_bg.wasm",
+    "shard_den_wasm.js",
+    "shard_den_wasm.d.ts"
+  ],
+  "main": "shard_den_wasm.js",
+  "types": "shard_den_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

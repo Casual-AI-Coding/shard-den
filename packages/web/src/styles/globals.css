@@ -1,3 +1,60 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* CSS Custom Properties for Theme System */
+:root {
+  /* Default: Dark theme */
+  --bg: #0F172A;
+  --surface: #1E293B;
+  --text: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --accent: #22C55E;
+  --border: #334155;
+  --hover: #334155;
+}
+
+/* Light Theme */
+.theme-light {
+  --bg: #FFFFFF;
+  --surface: #F8FAFC;
+  --text: #0F172A;
+  --text-secondary: #475569;
+  --accent: #22C55E;
+  --border: #E2E8F0;
+  --hover: #F1F5F9;
+}
+
+/* Dark Theme */
+.theme-dark {
+  --bg: #0F172A;
+  --surface: #1E293B;
+  --text: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --accent: #22C55E;
+  --border: #334155;
+  --hover: #334155;
+}
+
+/* Tech Theme */
+.theme-tech {
+  --bg: #0A0A0A;
+  --surface: #141414;
+  --text: #00FF00;
+  --text-secondary: #00AA00;
+  --accent: #00FF00;
+  --border: #1A1A1A;
+  --hover: #1F1F1F;
+}
+
+/* Base styles */
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Tech theme specific overrides */
+.theme-tech body {
+  font-family: 'JetBrains Mono', monospace;
+}
