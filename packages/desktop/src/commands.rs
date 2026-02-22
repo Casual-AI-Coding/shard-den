@@ -2,9 +2,8 @@
 //!
 //! These commands are exposed to the frontend via IPC.
 
-use serde::{Deserialize, Serialize};
 use shard_den_core::{Config, HistoryEntry};
-use shard_den_json::JsonExtractorCore;
+use shard_den_json_extractor::JsonExtractorCore;
 use tauri::State;
 
 use crate::storage::Storage;
@@ -77,7 +76,7 @@ pub fn extract_json(json: String, paths: String) -> Result<String, String> {
 pub fn extract_json_with_format(
     json: String, paths: String, format: String,
 ) -> Result<String, String> {
-    use shard_den_json::OutputFormat;
+    use shard_den_json_extractor::OutputFormat;
 
     let output_format = match format.to_lowercase().as_str() {
         "csv" => OutputFormat::Csv,

@@ -254,4 +254,42 @@ mod tests {
         let result = formatter.format(&value, OutputFormat::Yaml).unwrap();
         assert!(result.contains("- 1"));
     }
+
+    #[test]
+    fn test_format_csv_with_null() {
+        let formatter = Formatter::new();
+        // Array with null values
+        let value = json!([{"name": null}, {"name": "test"}]);
+        let result = formatter.format(&value, OutputFormat::Csv);
+        // Should handle null gracefully
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_format_csv_empty_array() {
+        let formatter = Formatter::new();
+        // Empty array
+        let value = json!([]);
+        let result = formatter.format(&value, OutputFormat::Csv);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_value_to_text_string() {
+        let formatter = Formatter::new();
+        // Direct string value
+        let value = json!("hello");
+        let result = formatter.format(&value, OutputFormat::Text);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), "hello");
+    }
+
+    #[test]
+    fn test_value_to_text_nested_array() {
+        let formatter = Formatter::new();
+        // Nested array in text format
+        let value = json!([[1, 2], [3, 4]]);
+        let result = formatter.format(&value, OutputFormat::Text);
+        assert!(result.is_ok());
+    }
 }

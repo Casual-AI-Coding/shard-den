@@ -104,12 +104,11 @@ import * as ShardDen from 'shard-den-wasm';
 
 ```
 docs/designs/
-├── ui/
-│   ├── json-extractor/
-│   │   ├── prototype.md      # 原型图描述（文字+ASCII/截图）
-│   │   ├── wireframe.png     # 线框图
-│   │   └── interactions.md   # 交互说明
-│   └── [new-tool]/
+
+├── json-extractor/
+│   │   ├── ui/
+│   │   │   ├── prototype.md      # 原型图描述（文字+ASCII/截图）
+└── [new-tool]/
 │       └── ...
 ```
 
@@ -127,13 +126,13 @@ docs/designs/
 
 ```
 docs/designs/
-├── flows/
-│   ├── json-extractor/
-│   │   ├── flow.md           # 功能流程说明
-│   │   ├── sequence.mmd      # 时序图 (Mermaid)
-│   │   └── state.md          # 状态机说明
-│   └── [new-tool]/
-│       └── ...
+├── json-extractor/
+│   │   ├── flows/
+│   │   │   ├── flow.md           # 功能流程说明
+│   │   │   ├── sequence.mmd      # 时序图 (Mermaid)
+│   │   │   ├── state.md          # 状态机说明
+│   [new-tool]/
+│   └── ...
 ```
 
 **流程图必须包含:**
@@ -169,7 +168,7 @@ sequenceDiagram
 
 ```bash
 # Rust 覆盖率检查
-cargo tarpaulin --packages shard-den-core --packages shard-den-json --fail-under 85
+cargo tarpaulin --packages shard-den-core --packages shard-den-json-extractor --fail-under 85
 
 # Web 覆盖率检查
 cd packages/web
@@ -219,7 +218,7 @@ npm run test:coverage -- --threshold=85
 
 ```bash
 # Rust
-cargo build --release -p shard-den-json     # Build CLI
+cargo build --release -p shard-den           # Build CLI
 cargo build --release -p shard-den-wasm     # Build WASM
 
 # Web

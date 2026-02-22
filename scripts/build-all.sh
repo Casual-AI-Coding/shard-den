@@ -37,8 +37,8 @@ cargo build --release -p shard-den-core
 
 # Build JSON Extractor
 echo "  → Building json-extractor..."
-cargo build --release -p shard-den-json
-cargo build --release -p shard-den-json-cli
+cargo build --release -p shard-den-json-extractor
+cargo build --release -p shard-den
 
 # Build WASM
 echo "  → Building WASM..."
@@ -64,7 +64,7 @@ echo ""
 echo -e "${GREEN}✅ Build complete!${NC}"
 echo ""
 echo "📦 Artifacts:"
-echo "  CLI: target/release/shard-den-json.exe"
+echo "  CLI: target/release/shard-den.exe"
 echo "  WASM: packages/wasm/target/wasm32-unknown-unknown/release/"
 echo "  Web: packages/web/dist/"
 echo ""

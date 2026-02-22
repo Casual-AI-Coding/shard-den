@@ -114,4 +114,22 @@ mod tests {
         // Should find all id fields recursively: [1, 2]
         assert_eq!(arr.len(), 2);
     }
+
+    #[test]
+    fn test_extract_invalid_path() {
+        let json: Value = serde_json::from_str(r#"{"name": "test"}"#).unwrap();
+        let extractor = Extractor::new();
+        // Invalid JSONPath syntax - should return error
+        let result = extractor.extract(&json, &["[[[".to_string()]);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_extract_empty_path() {
+        let json: Value = serde_json::from_str(r#"{"name": "test"}"#).unwrap();
+        let extractor = Extractor::new();
+        // Empty path - should return error
+        let result = extractor.extract(&json, &["".to_string()]);
+        assert!(result.is_err());
+    }
 }

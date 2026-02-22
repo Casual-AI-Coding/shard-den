@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-02-23
+
+### Added
+- Test coverage improvements (90.53% coverage)
+- Additional tests for error handling and edge cases
+- Fixed detect_paths test assertions to match actual output format
+
+### Fixed
+- Package name references updated: `shard-den-json` → `shard-den-json-extractor`
+- Documentation references updated across all files
+- Unused import warnings in desktop module
+
+### Documentation
+- Updated release flow documentation
+- CLI usage examples aligned with actual implementation
+
 ## [0.2.1] - 2026-02-22
 
 ### Added

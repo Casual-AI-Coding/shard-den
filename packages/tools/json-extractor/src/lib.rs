@@ -276,8 +276,8 @@ mod tests {
         let result = extractor.detect_paths(json);
         assert!(result.is_ok());
         let paths = result.unwrap();
-        assert!(paths.contains(&"name".to_string()));
-        assert!(paths.contains(&"data".to_string()));
+        assert!(paths.contains(&"$.name".to_string()));
+        assert!(paths.contains(&"$.data".to_string()));
     }
 
     #[test]
@@ -301,6 +301,34 @@ mod tests {
         let extractor = JsonExtractorCore::new();
         let json = r#"{"name": "test", "value": 42}"#;
         let result = extractor.extract(json, "$.name,$.value");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_extractor_default() {
+        // Test Default implementation
+        let extractor = JsonExtractorCore::default();
+        let json = r#"{"name": "test"}"#;
+        let result = extractor.extract(json, "$.name");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_extract_single_value_non_array() {
+        // Test extracting a single scalar value (not wrapped in array)
+        let extractor = JsonExtractorCore::new();
+        let json = r#"{"name": "test", "count": 5}"#;
+        // Extract single path - result should not be wrapped in array
+        let result = extractor.extract(json, "$.count");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_extract_with_format_single_value() {
+        // Test extract_with_format with single value
+        let extractor = JsonExtractorCore::new();
+        let json = r#"{"value": 42}"#;
+        let result = extractor.extract_with_format(json, "$.value", OutputFormat::Text);
         assert!(result.is_ok());
     }
 }

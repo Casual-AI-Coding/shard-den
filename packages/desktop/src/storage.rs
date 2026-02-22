@@ -6,8 +6,7 @@
 //! - Linux: ~/.local/share/com.shardden.app/
 
 use directories::ProjectDirs;
-use serde::{Deserialize, Serialize};
-use shard_den_core::{Config, HistoryEntry, HistoryStore};
+use shard_den_core::{Config, HistoryEntry};
 use std::path::PathBuf;
 
 /// File-based storage for desktop

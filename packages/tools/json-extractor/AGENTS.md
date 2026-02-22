@@ -48,11 +48,13 @@ let paths = extractor.detect_paths(json)?;
 
 ```bash
 # Extract fields
-shard-den json -p "data.items[].id" < input.json
-shard-den json -p "id,name,email" -f csv < input.json
+shard-den extract -p "$.items[*].id" -f csv < input.json
 
 # Detect paths
-shard-den json --detect < input.json
+shard-den detect < input.json
+
+# List available tools
+shard-den tools
 ```
 
 ---
@@ -73,10 +75,10 @@ cd packages/tools/json-extractor
 cargo test
 
 # CLI tests
-cargo test -p shard-den-json-cli
+cargo test -p shard-den
 
 # Coverage
-cargo tarpaulin -p shard-den-json --fail-under 85
+cargo tarpaulin -p shard-den-json-extractor --fail-under 85
 ```
 
 ---
@@ -84,5 +86,5 @@ cargo tarpaulin -p shard-den-json --fail-under 85
 ## DESIGN DOCS
 
 Required before implementation:
-- `docs/designs/ui/json-extractor/` - UI原型图
-- `docs/designs/flows/json-extractor/` - 功能流程图
+- `docs/designs/json-extractor/ui/` - UI原型图
+- `docs/designs/json-extractor/flows/` - 功能流程图
