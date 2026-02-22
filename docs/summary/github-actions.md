@@ -99,7 +99,7 @@
 
 #### 3. Build (多平台)
 - **平台**: ubuntu-latest, windows-latest, macos-latest
-- **构建 CLI**: `cargo build --release -p shard-den-json-cli`
+- **构建 CLI**: `cargo build --release -p shard-den`
 - **构建 WASM**: `cargo build --release -p shard-den-wasm --target wasm32-unknown-unknown`
 
 ### 用途
@@ -223,29 +223,66 @@
 ### 触发条件
 - `push` 符合 `v*` 模式的标签 (如 `v0.1.0`, `v1.2.3`)
 
-### 任务
+### 任务执行顺序
 
-#### 1. Build CLI (多平台矩阵)
-| 平台 | 目标架构 | 产物 |
-|------|---------|------|
-| ubuntu-latest | x86_64-unknown-linux-gnu | shard-den-json-linux-x64.tar.gz |
-| windows-latest | x86_64-pc-windows-msvc | shard-den-json-windows-x64.zip |
-| macos-latest | x86_64-apple-darwin | shard-den-json-macos-x64.tar.gz |
-| macos-latest | aarch64-apple-darwin | shard-den-json-macos-arm64.tar.gz |
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         并行执行 (5 个 job)                          │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐             │
+│  │  build-cli   │  │  build-wasm  │  │  build-web   │             │
+│  │  (4 平台)   │  │  (WASM)      │  │  (Next.js)  │             │
+│  └──────────────┘  └──────────────┘  └──────────────┘             │
+│                                                                     │
+│  ┌──────────────┐  ┌──────────────────┐                           │
+│  │build-desktop │  │publish-crates    │                           │
+│  │ (4 平台)    │  │ (crates.io)      │                           │
+│  └──────────────┘  └──────────────────┘                           │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+                    所有 job 完成后触发
+                              ↓
+              ┌───────────────────────────────┐
+              │          release               │
+              │    (创建 GitHub Release)      │
+              └───────────────────────────────┘
+```
 
-#### 2. Build WASM (ubuntu-latest)
-- 使用 `wasm-pack` 构建
-- 产物: `shard-den-wasm.tar.gz`, `shard-den-wasm.zip`
+#### 各 Job 详情
 
-#### 3. Build Web (ubuntu-latest)
-- 构建 Next.js 静态站点
-- 产物: `shard-den-web.tar.gz`, `shard-den-web.zip`
+| Job | 平台/产物 | 命令 | 产物文件 |
+|-----|----------|------|----------|
+| **build-cli** | Linux x64 | `cargo build -p shard-den` | `shard-den-linux-x64.tar.gz` |
+| | Windows x64 | | `shard-den-windows-x64.zip` |
+| | macOS x64 | | `shard-den-macos-x64.tar.gz` |
+| | macOS ARM | | `shard-den-macos-arm64.tar.gz` |
+| **build-wasm** | Linux | `wasm-pack build` | `shard-den-wasm.tar.gz/.zip` |
+| **build-web** | Linux | `npm run build` | `shard-den-web.tar.gz/.zip` |
+| **build-desktop** | Linux | `cargo tauri build` | `ShardDen_*.AppImage` |
+| | Windows | | `ShardDen_*.msi` |
+| | macOS Intel | | `ShardDen_*.dmg` |
+| | macOS ARM | | `ShardDen_*.dmg` |
+| **publish-crates** | - | `cargo publish` | → crates.io |
 
-#### 4. Create Release (ubuntu-latest)
-- 下载所有构建产物
-- 创建/更新 GitHub Release
-- 上传所有产物文件
-- 生成安装说明
+#### crates.io 发布顺序
+
+```bash
+cargo publish -p shard-den-core   # 1. 核心库 (无依赖)
+cargo publish -p shard-den-json-extractor   # 2. JSON 工具 (依赖 core)
+cargo publish -p shard-den        # 3. CLI (依赖 json + core)
+```
+
+#### 发布位置
+
+| 产物 | 位置 |
+|------|------|
+| **CLI** | GitHub Release (4个平台压缩包) |
+| **WASM** | GitHub Release + crates.io |
+| **Web** | GitHub Release (静态文件) |
+| **Desktop** | GitHub Release (安装包) |
+| **crates** | crates.io (shard-den-core, shard-den-json-extractor, shard-den) |
 
 ### Release 工作流程图
 
@@ -297,10 +334,10 @@
 │  │  │       │                                                  │    │    │
 │  │  │       ▼                                                  │    │    │
 │  │  │  artifacts/                                              │    │    │
-│  │  │  ├── shard-den-json-linux-x64.tar.gz                     │    │    │
-│  │  │  ├── shard-den-json-windows-x64.zip                      │    │    │
-│  │  │  ├── shard-den-json-macos-x64.tar.gz                     │    │    │
-│  │  │  ├── shard-den-json-macos-arm64.tar.gz                   │    │    │
+│  │  │  ├── shard-den-linux-x64.tar.gz                     │    │    │
+│  │  │  ├── shard-den-windows-x64.zip                      │    │    │
+│  │  │  ├── shard-den-macos-x64.tar.gz                     │    │    │
+│  │  │  ├── shard-den-macos-arm64.tar.gz                   │    │    │
 │  │  │  ├── shard-den-wasm.tar.gz                              │    │    │
 │  │  │  ├── shard-den-wasm.zip                                 │    │    │
 │  │  │  ├── shard-den-web.tar.gz                              │    │    │
@@ -324,10 +361,10 @@
 │  │  https://github.com/.../releases/tag/v0.1.2 ◄───────────────────┘    │
 │  │       ┌─────────────────────────────────────────┐                  │    │
 │  │       │  📦 Attached Assets                      │                  │    │
-│  │       │  • shard-den-json-linux-x64.tar.gz       │                  │    │
-│  │       │  • shard-den-json-windows-x64.zip        │                  │    │
-│  │       │  • shard-den-json-macos-x64.tar.gz       │                  │    │
-│  │       │  • shard-den-json-macos-arm64.tar.gz     │                  │    │
+│  │       │  • shard-den-linux-x64.tar.gz       │                  │    │
+│  │       │  • shard-den-windows-x64.zip        │                  │    │
+│  │       │  • shard-den-macos-x64.tar.gz       │                  │    │
+│  │       │  • shard-den-macos-arm64.tar.gz     │                  │    │
 │  │       │  • shard-den-wasm.tar.gz                 │                  │    │
 │  │       │  • shard-den-web.tar.gz                  │                  │    │
 │  │       └─────────────────────────────────────────┘                  │    │
@@ -340,10 +377,10 @@
 发布时会自动生成以下文件：
 
 ```
-shard-den-json-linux-x64.tar.gz      # Linux CLI
-shard-den-json-windows-x64.zip       # Windows CLI
-shard-den-json-macos-x64.tar.gz      # macOS Intel CLI
-shard-den-json-macos-arm64.tar.gz    # macOS Apple Silicon CLI
+shard-den-linux-x64.tar.gz      # Linux CLI
+shard-den-windows-x64.zip       # Windows CLI
+shard-den-macos-x64.tar.gz      # macOS Intel CLI
+shard-den-macos-arm64.tar.gz    # macOS Apple Silicon CLI
 shard-den-wasm.tar.gz                # WASM 包 (.tar.gz)
 shard-den-wasm.zip                   # WASM 包 (.zip)
 shard-den-web.tar.gz                 # Web 前端 (.tar.gz)
