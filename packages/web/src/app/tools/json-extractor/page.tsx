@@ -132,9 +132,22 @@ export default function JsonExtractorPage() {
       const detectedPaths = extractor.detect_paths(input);
       const paths = JSON.parse(detectedPaths);
       setDetectedPaths(paths);
-      // Position popup near the button
+      
+      // Position popup near the button - use fixed positioning with viewport coords
       const rect = e.currentTarget.getBoundingClientRect();
-      setPopupPosition({ x: rect.left, y: rect.bottom + 8 });
+      
+      // Add scroll offset to get document-relative position
+      const scrollX = window.scrollX;
+      const scrollY = window.scrollY;
+      
+      // Check if popup would go below viewport, show above instead
+      const popupHeight = 300; // estimated max height
+      const showAbove = rect.bottom + popupHeight > window.innerHeight;
+      
+      setPopupPosition({ 
+        x: rect.left + scrollX, 
+        y: showAbove ? rect.top + scrollY - popupHeight : rect.bottom + scrollY + 8 
+      });
       setShowPathsPopup(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : '未知错误');
