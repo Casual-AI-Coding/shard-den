@@ -134,8 +134,12 @@ impl JsonExtractor {
             }
         }
 
-        let json_value =
-            serde_json::to_value(&all_values).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        // If single path with single value, return unwrapped
+        let json_value = if paths_vec.len() == 1 && all_values.len() == 1 {
+            all_values.into_iter().next().unwrap()
+        } else {
+            serde_json::to_value(&all_values).map_err(|e| JsValue::from_str(&e.to_string()))?
+        };
 
         serde_json::to_string(&json_value).map_err(|e| JsValue::from_str(&e.to_string()))
     }
@@ -164,8 +168,12 @@ impl JsonExtractor {
             }
         }
 
-        let json_value: serde_json::Value =
-            serde_json::to_value(&all_values).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        // If single path with single value, return unwrapped
+        let json_value: serde_json::Value = if paths_vec.len() == 1 && all_values.len() == 1 {
+            all_values.into_iter().next().unwrap()
+        } else {
+            serde_json::to_value(&all_values).map_err(|e| JsValue::from_str(&e.to_string()))?
+        };
 
         let output_format = match format.to_lowercase().as_str() {
             "csv" => OutputFormat::Csv,

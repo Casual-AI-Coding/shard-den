@@ -37,6 +37,9 @@ export default function JsonExtractorPage() {
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [contextMenu, setContextMenu] = useState<{x: number; y: number; text: string} | null>(null);
+  const [detectedPaths, setDetectedPaths] = useState<string[]>([]);
+  const [showPathsPopup, setShowPathsPopup] = useState(false);
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [isValidJson, setIsValidJson] = useState<boolean | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
@@ -116,7 +119,7 @@ export default function JsonExtractorPage() {
     }
   }, [input, paths, format, extractor]);
 
-  const handleDetect = useCallback(async () => {
+  const handleDetect = useCallback(async (e: React.MouseEvent<HTMLButtonElement>) => {
     setError('');
     setOutput('');
 
@@ -127,7 +130,12 @@ export default function JsonExtractorPage() {
 
     try {
       const detectedPaths = extractor.detect_paths(input);
-      setOutput('可用路径:\n' + JSON.stringify(JSON.parse(detectedPaths), null, 2));
+      const paths = JSON.parse(detectedPaths);
+      setDetectedPaths(paths);
+      // Position popup near the button
+      const rect = e.currentTarget.getBoundingClientRect();
+      setPopupPosition({ x: rect.left, y: rect.bottom + 8 });
+      setShowPathsPopup(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : '未知错误');
     }
@@ -451,6 +459,38 @@ export default function JsonExtractorPage() {
             <Copy className="w-4 h-4" />
             复制
           </button>
+        </div>
+      )}
+
+      {/* Detected Paths Popup */}
+      {showPathsPopup && (
+        <div
+          className="fixed z-50 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg max-w-md max-h-96 overflow-auto"
+          style={{ left: popupPosition.x, top: popupPosition.y }}
+        >
+          <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--border)]">
+            <span className="font-medium text-sm text-[var(--text)]">可用路径</span>
+            <button
+              onClick={() => setShowPathsPopup(false)}
+              className="text-[var(--text-secondary)] hover:text-[var(--text)] text-lg leading-none"
+            >
+              ×
+            </button>
+          </div>
+          <div className="p-2">
+            {detectedPaths.map((path, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  setPaths(path);
+                  setShowPathsPopup(false);
+                }}
+                className="w-full px-3 py-1.5 text-left text-sm font-mono text-[var(--text)] hover:bg-[var(--hover)] rounded transition-colors"
+              >
+                {path}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </>
