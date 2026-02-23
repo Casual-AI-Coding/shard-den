@@ -81,8 +81,10 @@ jobs:
 
     - name: Install binaryen
       run: |
-        sudo apt-get update
-        sudo apt-get install -y binaryen
+        wget -q https://github.com/WebAssembly/binaryen/releases/download/version_116/binaryen-version_116-x86_64-linux.tar.gz -O /tmp/binaryen.tar.gz
+        tar -xzf /tmp/binaryen.tar.gz -C /tmp
+        sudo cp /tmp/binaryen-version_116/bin/wasm-opt /usr/bin/
+        sudo chmod +x /usr/bin/wasm-opt
 
     - name: Build WASM
       run: wasm-pack build packages/wasm --target web --out-dir pkg
@@ -126,8 +128,10 @@ jobs:
 
     - name: Install binaryen
       run: |
-        sudo apt-get update
-        sudo apt-get install -y binaryen
+        wget -q https://github.com/WebAssembly/binaryen/releases/download/version_116/binaryen-version_116-x86_64-linux.tar.gz -O /tmp/binaryen.tar.gz
+        tar -xzf /tmp/binaryen.tar.gz -C /tmp
+        sudo cp /tmp/binaryen-version_116/bin/wasm-opt /usr/bin/
+        sudo chmod +x /usr/bin/wasm-opt
     
     - name: Build WASM
       run: wasm-pack build packages/wasm --target web --out-dir pkg
