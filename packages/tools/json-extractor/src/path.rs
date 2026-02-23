@@ -63,7 +63,7 @@ impl PathParser {
                 // For arrays, show only [*] wildcard instead of indices
                 let path = format!("{}[*]", prefix);
                 paths.push(path);
-                
+
                 // Only recurse into the first element to avoid duplicates
                 if let Some(first) = arr.first() {
                     self.detect_paths_recursive(first, &format!("{}[*]", prefix), paths);
@@ -120,7 +120,11 @@ mod tests {
         // But when recursing into first element, it becomes "$[*]" - wait no
         // Let's check actual output
         let has_array_path = paths.iter().any(|p| p.contains("[*]"));
-        assert!(has_array_path, "Expected path containing [*], got: {:?}", paths);
+        assert!(
+            has_array_path,
+            "Expected path containing [*], got: {:?}",
+            paths
+        );
     }
 
     #[test]

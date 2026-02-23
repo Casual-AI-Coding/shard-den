@@ -17,7 +17,6 @@ pub fn init_logger_with_filter(filter: &str) {
     fmt().with_env_filter(EnvFilter::new(filter)).init();
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
