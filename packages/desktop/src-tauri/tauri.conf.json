@@ -4,7 +4,6 @@
   "identifier": "com.shardden.app",
   "build": {
     "beforeDevCommand": "cd ../web && npm run dev",
-    "beforeBuildCommand": "cd ../web && npm run build",
     "devUrl": "http://localhost:3010",
     "frontendDist": "../web/.next"
   },
