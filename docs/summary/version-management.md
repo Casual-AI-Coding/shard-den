@@ -98,7 +98,126 @@ CI 从 Git tag (`v*`) 提取版本。
 
 ---
 
-## 版本同步策略
+## 发布版本时需要修改的文件
+
+发布新版本时，需要同时修改以下 6 个位置：
+
+### 1. Cargo.toml (workspace)
+
+**文件**: `Cargo.toml`
+
+```toml
+[workspace.package]
+version = "0.2.3"
+```
+
+**说明**: 唯一真实源，必须首先修改。
+
+---
+
+### 2. CHANGELOG.md
+
+**文件**: `CHANGELOG.md`
+
+```markdown
+## [Unreleased]
+
+## [0.2.3] - 2026-02-23
+
+### Added
+- 新功能描述
+
+### Fixed
+- 修复内容
+
+---
+
+[Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.3
+[0.2.2]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.2
+```
+
+**说明**: 添加新版本章节，更新底部链接。
+
+---
+
+### 3. packages/web/package.json
+
+**文件**: `packages/web/package.json`
+
+```json
+{
+  "name": "shard-den-web",
+  "version": "0.2.3",
+  ...
+}
+```
+
+**说明**: Next.js Web 包的版本。
+
+---
+
+### 4. README.md (可选)
+
+**文件**: `README.md`
+
+```markdown
+![Version](https://img.shields.io/badge/version-0.2.3-blue)
+```
+
+**说明**: 版本徽章，保持与最新版本一致。
+
+---
+
+### 5. packages/tools/json-extractor/Cargo.toml
+
+**文件**: `packages/tools/json-extractor/Cargo.toml`
+
+```toml
+# 必须使用显式版本（不能使用 workspace = true）
+shard-den-core = { version = "0.2.3", path = "../../core" }
+```
+
+**说明**: 发布到 crates.io 时，依赖必须显式指定版本。
+
+---
+
+### 6. packages/cli/Cargo.toml
+
+**文件**: `packages/cli/Cargo.toml`
+
+```toml
+# 必须使用显式版本（不能使用 workspace = true）
+shard-den-json-extractor = { version = "0.2.3", path = "../tools/json-extractor", optional = true }
+```
+
+**说明**: 发布到 crates.io 时，依赖必须显式指定版本。
+
+---
+
+## 修改顺序
+
+建议按以下顺序修改：
+
+1. `Cargo.toml` (workspace) ← 首先修改
+2. `CHANGELOG.md`
+3. `packages/web/package.json`
+4. `README.md`
+5. `packages/tools/json-extractor/Cargo.toml`
+6. `packages/cli/Cargo.toml` ← 最后修改
+
+## 快速命令
+
+```bash
+# 1. 修改版本号 (Cargo.toml)
+sed -i 's/version = ".*"/version = "0.2.3"/' Cargo.toml
+
+# 2. 修改 json-extractor 依赖版本
+sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "0.2.3"/' packages/tools/json-extractor/Cargo.toml
+
+# 3. 修改 CLI 依赖版本
+sed -i 's/shard-den-json-extractor = { version = ".*"/shard-den-json-extractor = { version = "0.2.3"/' packages/cli/Cargo.toml
+```
 
 ### 策略 1: 手动同步 (当前方式)
 
