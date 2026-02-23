@@ -7,6 +7,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  VERSION: ${{ github.ref_name }}
 
 jobs:
   # 构建 CLI 二进制文件（多平台）
@@ -47,11 +48,12 @@ jobs:
     - name: Package CLI
       shell: bash
       run: |
+        VERSION="${{ env.VERSION }}"
         cd target/${{ matrix.target }}/release
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          7z a ../../../shard-den-${{ matrix.name }}.zip shard-den${{ matrix.suffix }}
+          7z a ../../../shard-den-$VERSION-${{ matrix.name }}.zip shard-den${{ matrix.suffix }}
         else
-          tar czvf ../../../shard-den-${{ matrix.name }}.tar.gz shard-den${{ matrix.suffix }}
+          tar czvf ../../../shard-den-$VERSION-${{ matrix.name }}.tar.gz shard-den${{ matrix.suffix }}
         fi
         cd ../../..
     
@@ -93,10 +95,11 @@ jobs:
     
     - name: Package WASM
       run: |
+        VERSION="${{ env.VERSION }}"
         cd packages/wasm/pkg
-        tar czvf ../../../shard-den-wasm.tar.gz *
+        tar czvf ../../../shard-den-$VERSION-wasm.tar.gz *
         cd ../../..
-        zip -r shard-den-wasm.zip packages/wasm/pkg/
+        zip -r shard-den-$VERSION-wasm.zip packages/wasm/pkg/
     
     - name: Upload WASM Artifact
       uses: actions/upload-artifact@v4
