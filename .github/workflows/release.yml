@@ -243,49 +243,49 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: desktop-linux-appimage
-        path: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage
+        path: target/${{ matrix.target }}/release/bundle/appimage/*.AppImage
 
     - name: Upload Desktop Artifact (Linux deb)
       if: matrix.platform == 'linux'
       uses: actions/upload-artifact@v4
       with:
         name: desktop-linux-deb
-        path: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+        path: target/${{ matrix.target }}/release/bundle/deb/*.deb
 
     - name: Upload Desktop Artifact (Linux rpm)
       if: matrix.platform == 'linux'
       uses: actions/upload-artifact@v4
       with:
         name: desktop-linux-rpm
-        path: src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
+        path: target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
     - name: Upload Desktop Artifact (Windows MSI)
       if: matrix.platform == 'windows'
       uses: actions/upload-artifact@v4
       with:
         name: desktop-windows-msi
-        path: src-tauri/target/${{ matrix.target }}/release/bundle/msi/*.msi
+        path: target/${{ matrix.target }}/release/bundle/msi/*.msi
 
     - name: Upload Desktop Artifact (Windows NSIS)
       if: matrix.platform == 'windows'
       uses: actions/upload-artifact@v4
       with:
         name: desktop-windows-nsis
-        path: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*.exe
+        path: target/${{ matrix.target }}/release/bundle/nsis/*.exe
 
     - name: Upload Desktop Artifact (macOS Intel)
       if: matrix.platform == 'macos-intel'
       uses: actions/upload-artifact@v4
       with:
         name: desktop-macos-intel
-        path: src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+        path: target/${{ matrix.target }}/release/bundle/dmg/*.dmg
 
     - name: Upload Desktop Artifact (macOS ARM)
       if: matrix.platform == 'macos-arm'
       uses: actions/upload-artifact@v4
       with:
         name: desktop-macos-arm
-        path: src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+        path: target/${{ matrix.target }}/release/bundle/dmg/*.dmg
 
   # 发布到 crates.io
   publish-crates:
