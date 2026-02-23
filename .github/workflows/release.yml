@@ -62,7 +62,7 @@ jobs:
       with:
         name: cli-${{ matrix.name }}
         path: |
-          shard-den-${{ matrix.name }}.*
+          shard-den-${{ env.VERSION }}-${{ matrix.name }}.*
 
   # 构建 WASM 包
   build-wasm:
@@ -106,8 +106,8 @@ jobs:
       with:
         name: wasm
         path: |
-          shard-den-wasm.tar.gz
-          shard-den-wasm.zip
+          shard-den-${{ env.VERSION }}-wasm.tar.gz
+          shard-den-${{ env.VERSION }}-wasm.zip
 
   # 构建 Web 前端
   build-web:
@@ -153,18 +153,19 @@ jobs:
     
     - name: Package Web
       run: |
+        VERSION="${{ env.VERSION }}"
         cd packages/web/.next
-        tar czvf ../../../shard-den-web.tar.gz *
+        tar czvf ../../../shard-den-$VERSION-web.tar.gz *
         cd ../../..
-        zip -r shard-den-web.zip packages/web/.next/
+        zip -r shard-den-$VERSION-web.zip packages/web/.next/
     
     - name: Upload Web Artifact
       uses: actions/upload-artifact@v4
       with:
         name: web
         path: |
-          shard-den-web.tar.gz
-          shard-den-web.zip
+          shard-den-${{ env.VERSION }}-web.tar.gz
+          shard-den-${{ env.VERSION }}-web.zip
 
   # 部署到 Vercel
   deploy-vercel:
@@ -307,37 +308,46 @@ jobs:
         body: |
           ## Installation
 
+          ### crates.io
+
+          Install via cargo:
+          ```bash
+          cargo install shard-den
+          cargo install shard-den-core
+          cargo install shard-den-json-extractor
+          ```
+
           ### CLI
 
           **Linux:**
           ```bash
-          tar xzf shard-den-linux-x64.tar.gz
+          tar xzf shard-den-${{ env.VERSION }}-linux-x64.tar.gz
           ./shard-den --help
           ```
 
           **macOS (Intel):**
           ```bash
-          tar xzf shard-den-macos-x64.tar.gz
+          tar xzf shard-den-${{ env.VERSION }}-macos-x64.tar.gz
           ./shard-den --help
           ```
 
           **macOS (Apple Silicon):**
           ```bash
-          tar xzf shard-den-macos-arm64.tar.gz
+          tar xzf shard-den-${{ env.VERSION }}-macos-arm64.tar.gz
           ./shard-den --help
           ```
 
           **Windows:**
           ```powershell
-          Expand-Archive shard-den-windows-x64.zip
+          Expand-Archive shard-den-${{ env.VERSION }}-windows-x64.zip
           .\shard-den.exe --help
           ```
 
           ### Web
 
-          Download `shard-den-web.tar.gz` and serve the static files:
+          Download `shard-den-${{ env.VERSION }}-web.tar.gz` and serve the static files:
           ```bash
-          tar xzf shard-den-web.tar.gz
+          tar xzf shard-den-${{ env.VERSION }}-web.tar.gz
           npx serve .
           ```
 
@@ -345,7 +355,7 @@ jobs:
 
           For custom web integration:
           ```bash
-          tar xzf shard-den-wasm.tar.gz
+          tar xzf shard-den-${{ env.VERSION }}-wasm.tar.gz
           # Import in your JS/TS project
           ```
 
