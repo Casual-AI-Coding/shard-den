@@ -262,31 +262,58 @@ cargo tauri build                           # Build app
 
 ### Release Checklist (发布检查清单)
 
-#### 发布前 (手动)
+#### 发布前 (手动) - 必须更新以下所有文件
 
-1. **更新版本号**:
-   - 修改 `Cargo.toml` 中的 `version` (如: `0.2.3`)
+1. **更新 Cargo.toml (workspace 版本源)**:
+   - 修改 `Cargo.toml` 中的 `version` (如: `0.2.4`)
 
-2. **更新 CHANGELOG.md**:
+2. **更新 crates.io 依赖显式版本**:
+   - `packages/tools/json-extractor/Cargo.toml` - `shard-den-core` 版本
+   - `packages/cli/Cargo.toml` - `shard-den-core` 和 `shard-den-json-extractor` 版本
+
+3. **更新 npm 包版本**:
+   - `packages/web/package.json` - Web 包版本
+   - `packages/wasm/pkg/package.json` - WASM 包版本
+
+4. **更新 CHANGELOG.md**:
    - 在 `[Unreleased]` 下添加新版本章节
    - 包含: Added, Fixed, Changed, Performance 等
    - 添加版本链接
 
-3. **更新其他版本文件** (如需要):
-   - `packages/web/package.json`
+5. **更新其他版本文件**:
    - `README.md` 版本徽章
 
-4. **提交更改**:
+6. **提交更改**:
    ```bash
    git add -A
-   git commit -m "release: bump version to v0.2.3"
+   git commit -m "release: bump version to v0.2.4"
    ```
 
-5. **创建并推送 tag**:
+7. **创建并推送 tag**:
    ```bash
-   git tag -a v0.2.3 -m "Release v0.2.3"
-   git push origin v0.2.3
+   git tag -a v0.2.4 -m "Release v0.2.4"
+   git push origin v0.2.4
    ```
+
+#### 快速命令 (一键更新所有版本)
+```bash
+VERSION="0.2.4"
+
+# 1. Cargo.toml (workspace)
+sed -i 's/version = ".*"/version = "$VERSION"/' Cargo.toml
+
+# 2. crates.io 显式版本
+sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "$VERSION"/' packages/tools/json-extractor/Cargo.toml
+sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "$VERSION"/' packages/cli/Cargo.toml
+sed -i 's/shard-den-json-extractor = { version = ".*"/shard-den-json-extractor = { version = "$VERSION"/' packages/cli/Cargo.toml
+
+# 3. npm 包版本
+sed -i 's/"version": ".*"/"version": "$VERSION"/' packages/web/package.json
+sed -i 's/"version": ".*"/"version": "$VERSION"/' packages/wasm/pkg/package.json
+
+# 4. README 版本徽章
+sed -i 's/version-[0-9.]*/version-$VERSION/' README.md
+```
 
 #### 发布后 (CI 自动)
 
