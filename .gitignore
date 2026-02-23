@@ -22,7 +22,6 @@ wasm/pkg/
 # Desktop (Tauri)
 packages/desktop/gen/
 packages/desktop/src-tauri/target/
-packages/desktop/src-tauri/icons/icon.ico
 
 # IDE
 .vscode/
