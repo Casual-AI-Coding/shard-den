@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-02-23
+
+### Added
+- CLI artifact naming with version suffix
+- Desktop bundle formats: AppImage, deb, rpm, MSI, NSIS (exe), DMG
+- crates.io links in release description
+- WASM optimization configuration (bulk-memory, nontrapping-float-to-int, sign-ext)
+
+### Fixed
+- Desktop artifact paths in CI workflow
+- tauri-cli installation using taiki-e/install-action
+- Artifact naming consistency (added `-cli-` suffix)
+- Release workflow path configurations
+
+### Performance
+- Added Swatinem rust-cache for faster builds
+- Web artifact reuse between build-web and build-desktop jobs
+- cargo-binstall for fast tauri-cli installation
+
 ## [0.2.2] - 2026-02-23
 
 ### Added
@@ -142,7 +161,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CLI = Core**: Native Rust, no WASM overhead
 - **Shared Core**: Same Rust code compiled for all targets
 
-[Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.3
 [0.2.2]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.2
 [0.2.2-1]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.2-1
 [0.2.1]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.1
