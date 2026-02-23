@@ -51,9 +51,9 @@ jobs:
         VERSION="${{ env.VERSION }}"
         cd target/${{ matrix.target }}/release
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          7z a ../../../shard-den-$VERSION-${{ matrix.name }}.zip shard-den${{ matrix.suffix }}
+          7z a ../../../shard-den-$VERSION-cli-${{ matrix.name }}.zip shard-den${{ matrix.suffix }}
         else
-          tar czvf ../../../shard-den-$VERSION-${{ matrix.name }}.tar.gz shard-den${{ matrix.suffix }}
+          tar czvf ../../../shard-den-$VERSION-cli-${{ matrix.name }}.tar.gz shard-den${{ matrix.suffix }}
         fi
         cd ../../..
     
@@ -62,7 +62,7 @@ jobs:
       with:
         name: cli-${{ matrix.name }}
         path: |
-          shard-den-${{ env.VERSION }}-${{ matrix.name }}.*
+          shard-den-${{ env.VERSION }}-cli-${{ matrix.name }}.*
 
   # 构建 WASM 包
   build-wasm:
@@ -238,33 +238,54 @@ jobs:
       working-directory: packages/desktop
       run: cargo tauri build --target ${{ matrix.target }}
 
-    - name: Upload Desktop Artifact (Linux)
+    - name: Upload Desktop Artifact (Linux AppImage)
       if: matrix.platform == 'linux'
       uses: actions/upload-artifact@v4
       with:
-        name: desktop-linux
-        path: packages/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage
+        name: desktop-linux-appimage
+        path: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage
 
-    - name: Upload Desktop Artifact (Windows)
+    - name: Upload Desktop Artifact (Linux deb)
+      if: matrix.platform == 'linux'
+      uses: actions/upload-artifact@v4
+      with:
+        name: desktop-linux-deb
+        path: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+
+    - name: Upload Desktop Artifact (Linux rpm)
+      if: matrix.platform == 'linux'
+      uses: actions/upload-artifact@v4
+      with:
+        name: desktop-linux-rpm
+        path: src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
+
+    - name: Upload Desktop Artifact (Windows MSI)
       if: matrix.platform == 'windows'
       uses: actions/upload-artifact@v4
       with:
-        name: desktop-windows
-        path: packages/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/msi/*.msi
+        name: desktop-windows-msi
+        path: src-tauri/target/${{ matrix.target }}/release/bundle/msi/*.msi
+
+    - name: Upload Desktop Artifact (Windows NSIS)
+      if: matrix.platform == 'windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: desktop-windows-nsis
+        path: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*.exe
 
     - name: Upload Desktop Artifact (macOS Intel)
       if: matrix.platform == 'macos-intel'
       uses: actions/upload-artifact@v4
       with:
         name: desktop-macos-intel
-        path: packages/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+        path: src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
 
     - name: Upload Desktop Artifact (macOS ARM)
       if: matrix.platform == 'macos-arm'
       uses: actions/upload-artifact@v4
       with:
         name: desktop-macos-arm
-        path: packages/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+        path: src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
 
   # 发布到 crates.io
   publish-crates:
@@ -340,25 +361,25 @@ jobs:
 
           **Linux:**
           ```bash
-          tar xzf shard-den-${{ env.VERSION }}-linux-x64.tar.gz
+          tar xzf shard-den-${{ env.VERSION }}-cli-linux-x64.tar.gz
           ./shard-den --help
           ```
 
           **macOS (Intel):**
           ```bash
-          tar xzf shard-den-${{ env.VERSION }}-macos-x64.tar.gz
+          tar xzf shard-den-${{ env.VERSION }}-cli-macos-x64.tar.gz
           ./shard-den --help
           ```
 
           **macOS (Apple Silicon):**
           ```bash
-          tar xzf shard-den-${{ env.VERSION }}-macos-arm64.tar.gz
+          tar xzf shard-den-${{ env.VERSION }}-cli-macos-arm64.tar.gz
           ./shard-den --help
           ```
 
           **Windows:**
           ```powershell
-          Expand-Archive shard-den-${{ env.VERSION }}-windows-x64.zip
+          Expand-Archive shard-den-${{ env.VERSION }}-cli-windows-x64.zip
           .\shard-den.exe --help
           ```
 
