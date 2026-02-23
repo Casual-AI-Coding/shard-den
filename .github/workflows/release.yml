@@ -232,7 +232,6 @@ jobs:
   publish-crates:
     name: Publish to crates.io
     runs-on: ubuntu-latest
-    if: secrets.CARGO_REGISTRY_TOKEN != ''
     steps:
       - uses: actions/checkout@v4
       
