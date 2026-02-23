@@ -304,15 +304,18 @@ CI 自动执行以下步骤:
 
 #### crates.io 发布注意事项
 
-发布到 crates.io 时，依赖需要**显式指定版本**:
+发布到 crates.io 时，**所有内部依赖都必须显式指定版本**（无论版本是否一致）：
 
 ```toml
 # packages/tools/json-extractor/Cargo.toml
 shard-den-core = { version = "0.2.3", path = "../../core" }
 
 # packages/cli/Cargo.toml  
+shard-den-core = { version = "0.2.3", path = "../core" }
 shard-den-json-extractor = { version = "0.2.3", path = "../tools/json-extractor", optional = true }
 ```
+
+**原因**: workspace 引用只在本地有效，发布到 crates.io 时必须显式版本才能被正确解析。
 
 ### Artifacts (产物清单)
 

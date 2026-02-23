@@ -178,7 +178,7 @@ version = "0.2.3"
 shard-den-core = { version = "0.2.3", path = "../../core" }
 ```
 
-**说明**: 发布到 crates.io 时，依赖必须显式指定版本。
+**说明**: 发布到 crates.io 时，依赖必须显式指定版本（无论版本是否一致）。
 
 ---
 
@@ -188,10 +188,11 @@ shard-den-core = { version = "0.2.3", path = "../../core" }
 
 ```toml
 # 必须使用显式版本（不能使用 workspace = true）
+shard-den-core = { version = "0.2.3", path = "../core" }
 shard-den-json-extractor = { version = "0.2.3", path = "../tools/json-extractor", optional = true }
 ```
 
-**说明**: 发布到 crates.io 时，依赖必须显式指定版本。
+**说明**: 发布到 crates.io 时，依赖必须显式指定版本（无论版本是否一致）。
 
 ---
 
