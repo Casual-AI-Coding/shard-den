@@ -38,8 +38,8 @@
     "active": true,
     "targets": "all",
     "icon": [
-      "icons/icon.png",
-      "icons/icon.ico"
+      "src-tauri/icons/icon.png",
+      "src-tauri/icons/icon.ico"
     ],
     "resources": [],
     "copyright": "Copyright (c) 2026",
