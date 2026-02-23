@@ -22,7 +22,7 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 
 # Tools
-shard-den-json-extractor = { path = "../tools/json-extractor", optional = true }
+shard-den-json-extractor = { version = "0.2.3", path = "../tools/json-extractor", optional = true }
 
 [features]
 default = ["json"]
