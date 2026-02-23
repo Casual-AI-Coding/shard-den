@@ -13,7 +13,7 @@ path = "src/main.rs"
 
 [dependencies]
 # Workspace dependencies
-shard-den-core.workspace = true
+shard-den-core = { version = "0.2.3", path = "../core" }
 clap.workspace = true
 anyhow.workspace = true
 serde.workspace = true
