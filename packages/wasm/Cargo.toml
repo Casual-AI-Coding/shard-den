@@ -39,3 +39,9 @@ wasm-bindgen-test.workspace = true
 default = ["console_error_panic_hook"]
 
 
+
+# WASM optimization configuration
+# https://docs.rs/wasm-pack/latest/wasm_pack/wasm_opt/index.html
+# Note: Rust 1.87+ requires additional flags for new features
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-O3", "--enable-bulk-memory", "--enable-nontrapping-float-to-int", "--enable-sign-ext"]
