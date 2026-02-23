@@ -75,7 +75,7 @@ jobs:
         targets: wasm32-unknown-unknown
     
     - name: Install wasm-pack
-      uses: rustwasm/wasm-pack-action@v7
+      uses: rust-wasm-pack-action@v1
       with:
         version: latest
     
@@ -115,7 +115,7 @@ jobs:
         targets: wasm32-unknown-unknown
     
     - name: Install wasm-pack
-      uses: rustwasm/wasm-pack-action@v7
+      uses: rust-wasm-pack-action@v1
       with:
         version: latest
     
