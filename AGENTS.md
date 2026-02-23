@@ -252,8 +252,86 @@ cargo tauri build                           # Build app
 
 ---
 
+## RELEASE PROCESS (发布流程)
+
+### Version Management (版本管理)
+
+**版本真实源**: `Cargo.toml` (workspace)
+
+详细版本管理规范见 [版本管理规范](./docs/summary/version-management.md)
+
+### Release Checklist (发布检查清单)
+
+#### 发布前 (手动)
+
+1. **更新版本号**:
+   - 修改 `Cargo.toml` 中的 `version` (如: `0.2.3`)
+
+2. **更新 CHANGELOG.md**:
+   - 在 `[Unreleased]` 下添加新版本章节
+   - 包含: Added, Fixed, Changed, Performance 等
+   - 添加版本链接
+
+3. **更新其他版本文件** (如需要):
+   - `packages/web/package.json`
+   - `README.md` 版本徽章
+
+4. **提交更改**:
+   ```bash
+   git add -A
+   git commit -m "release: bump version to v0.2.3"
+   ```
+
+5. **创建并推送 tag**:
+   ```bash
+   git tag -a v0.2.3 -m "Release v0.2.3"
+   git push origin v0.2.3
+   ```
+
+#### 发布后 (CI 自动)
+
+CI 自动执行以下步骤:
+
+| Step | Job | 说明 |
+|------|-----|------|
+| 1 | build-cli | 构建 CLI (4平台) |
+| 2 | build-wasm | 构建 WASM 包 |
+| 3 | build-web | 构建 Web 前端 |
+| 4 | deploy-vercel | 部署到 Vercel |
+| 5 | build-desktop | 构建 Desktop (7平台) |
+| 6 | publish-crates | 发布到 crates.io |
+| 7 | release | 创建 GitHub Release |
+
+#### crates.io 发布注意事项
+
+发布到 crates.io 时，依赖需要**显式指定版本**:
+
+```toml
+# packages/tools/json-extractor/Cargo.toml
+shard-den-core = { version = "0.2.3", path = "../../core" }
+
+# packages/cli/Cargo.toml  
+shard-den-json-extractor = { version = "0.2.3", path = "../tools/json-extractor", optional = true }
+```
+
+### Artifacts (产物清单)
+
+| 类型 | 平台 | 格式 |
+|------|------|------|
+| CLI | Linux | `.tar.gz` |
+| CLI | macOS | `.tar.gz` |
+| CLI | Windows | `.zip` |
+| Web | All | `.tar.gz`, `.zip` |
+| WASM | All | `.tar.gz`, `.zip` |
+| Desktop | Linux | `.AppImage`, `.deb`, `.rpm` |
+| Desktop | Windows | `.msi`, `.exe` |
+| Desktop | macOS | `.dmg` |
+
+---
+
 ## REFERENCE
 
+- [Version Management](./docs/summary/version-management.md) - 版本管理规范
 - [Architecture Design](./docs/plans/2026-02-15-shard-den-architecture-design.md)
 - [Tauri Docs](https://tauri.app/)
 - [wasm-bindgen Guide](https://rustwasm.github.io/wasm-bindgen/)
