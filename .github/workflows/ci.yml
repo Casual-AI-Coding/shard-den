@@ -35,13 +35,13 @@ jobs:
         cargo clippy --workspace --exclude shard-den-desktop -- -D warnings
     
     - name: Test
-      run: cargo test -p shard-den-core -p shard-den-json
+      run: cargo test -p shard-den-core -p shard-den-json-extractor
     
     - name: Install tarpaulin
       run: cargo install cargo-tarpaulin
       
     - name: Coverage
-      run: cargo tarpaulin --packages shard-den-core --packages shard-den-json --fail-under 50
+      run: cargo tarpaulin --packages shard-den-core --packages shard-den-json-extractor --fail-under 50
 
   web-check:
     name: Web Checks
@@ -92,7 +92,7 @@ jobs:
         node-version: '20'
     
     - name: Build CLI
-      run: cargo build --release -p shard-den-json-cli
+      run: cargo build --release -p shard-den
     
     - name: Build WASM
       run: cargo build --release -p shard-den-wasm --target wasm32-unknown-unknown
@@ -102,5 +102,5 @@ jobs:
       with:
         name: cli-${{ matrix.os }}
         path: |
-          target/release/shard-den-json.exe
-          target/release/shard-den-json
+          target/release/shard-den.exe
+          target/release/shard-den
