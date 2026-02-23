@@ -310,12 +310,24 @@ jobs:
 
           ### crates.io
 
-          Install via cargo:
+          Install from [crates.io](https://crates.io):
           ```bash
           cargo install shard-den
           cargo install shard-den-core
           cargo install shard-den-json-extractor
           ```
+
+          Or add to your `Cargo.toml`:
+          ```toml
+          [dependencies]
+          shard-den = "0.2"
+          shard-den-core = "0.2"
+          shard-den-json-extractor = "0.2"
+          ```
+
+          - [shard-den](https://crates.io/crates/shard-den)
+          - [shard-den-core](https://crates.io/crates/shard-den-core)
+          - [shard-den-json-extractor](https://crates.io/crates/shard-den-json-extractor)
 
           ### CLI
 
