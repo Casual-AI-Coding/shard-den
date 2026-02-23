@@ -87,6 +87,8 @@ jobs:
         sudo chmod +x /usr/bin/wasm-opt
 
     - name: Build WASM
+      env:
+        WASM_OPT_FLAGS: --enable-bulk-memory
       run: wasm-pack build packages/wasm --target web --out-dir pkg
     
     - name: Package WASM
@@ -134,6 +136,8 @@ jobs:
         sudo chmod +x /usr/bin/wasm-opt
     
     - name: Build WASM
+      env:
+        WASM_OPT_FLAGS: --enable-bulk-memory
       run: wasm-pack build packages/wasm --target web --out-dir pkg
     
     - name: Install dependencies
