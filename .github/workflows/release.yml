@@ -229,10 +229,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-    # 3. Install Tauri CLI via cargo-binstall (fast!)
-    - uses: taiki-e/install-action@latest
-      with:
-        tauri-cli: ^2.0
+    # 3. Install Tauri CLI via taiki-e/install-action (fast!)
+    - uses: taiki-e/install-action@tauri-cli
 
     - name: Build Desktop App
       working-directory: packages/desktop
