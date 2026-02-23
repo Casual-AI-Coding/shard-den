@@ -2,7 +2,7 @@
 
 > A modular developer toolkit platform
 
-![Version](https://img.shields.io/badge/version-0.0.1-blue)
+![Version](https://img.shields.io/badge/version-0.2.4-blue)
 ![Status](https://img.shields.io/badge/status-planning-yellow)
 
 ## Project Name

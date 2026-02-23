@@ -13,7 +13,7 @@ path = "src/main.rs"
 
 [dependencies]
 # Workspace dependencies
-shard-den-core = { version = "0.2.3", path = "../core" }
+shard-den-core = { version = "0.2.4", path = "../core" }
 clap.workspace = true
 anyhow.workspace = true
 serde.workspace = true
@@ -22,7 +22,7 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 
 # Tools
-shard-den-json-extractor = { version = "0.2.3", path = "../tools/json-extractor", optional = true }
+shard-den-json-extractor = { version = "0.2.4", path = "../tools/json-extractor", optional = true }
 
 [features]
 default = ["json"]

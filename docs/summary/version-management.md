@@ -49,6 +49,7 @@ shard-den-json-extractor = { version = "0.2.3", path = "../tools/json-extractor"
 |------|---------|---------|------|
 | `package.json` (root) | 独立 | 手动 | 根目录，未实际使用 |
 | `packages/web/package.json` | 独立 | 手动 | Next.js Web 版本 |
+| `packages/wasm/pkg/package.json` | 独立 | 手动 | WASM 包 | |
 
 ---
 
@@ -263,7 +264,8 @@ sed -i 's/shard-den-json-extractor = { version = ".*"/shard-den-json-extractor =
 
 - [ ] `Cargo.toml` workspace 版本已更新
 - [ ] `CHANGELOG.md` 已添加新版本条目
-- [ ] `packages/web/package.json` 版本已同步 (如需)
+- [ ] `packages/web/package.json` 版本已同步
+- [ ] `packages/wasm/pkg/package.json` 版本已同步 (如需)
 - [ ] `README.md` 版本徽章已更新 (如需)
 
 ### 发布后检查 (CI 自动处理)
