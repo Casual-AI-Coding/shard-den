@@ -37,10 +37,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": [
-      "src-tauri/icons/icon.png",
-      "src-tauri/icons/icon.ico"
-    ],
+    "icon": [],
     "resources": [],
     "copyright": "Copyright (c) 2026",
     "category": "DeveloperTool",
