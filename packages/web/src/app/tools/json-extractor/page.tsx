@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Header } from '@/components/Header';
 import { HelpButton } from '@/components/ui/HelpButton';
 import { initWasm, JsonExtractor } from '@/lib/core';
+import { saveExtractionHistory, isTauri } from '@/lib/tauri';
 import { Copy } from 'lucide-react';
 import {
   InputPanel,
@@ -90,6 +91,11 @@ export default function JsonExtractorPage() {
       const result = await JsonExtractor.extract(input, paths, format);
       setOutput(result);
       success('提取成功！');
+      
+      // Save to history in Desktop mode
+      if (isTauri()) {
+        saveExtractionHistory(input, paths, result, format).catch(console.error);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : '未知错误';
       setError(msg);

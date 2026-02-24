@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import JsonExtractorPage from './page';
 
 // Mock components
@@ -36,6 +36,11 @@ vi.mock('@/components/Header', () => ({
 
 vi.mock('@/components/ui/HelpButton', () => ({
   HelpButton: () => <button data-testid="help-btn">?</button>,
+}));
+
+vi.mock('@/lib/tauri', () => ({
+  isTauri: vi.fn().mockReturnValue(false),
+  saveExtractionHistory: vi.fn().mockResolvedValue(undefined),
 }));
 
 describe('JsonExtractorPage', () => {
