@@ -4,6 +4,8 @@
 
 ![Version](https://img.shields.io/badge/version-0.2.4-blue)
 ![Status](https://img.shields.io/badge/status-planning-yellow)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/9e325baa-7ad1-4348-98ad-af595ba9585c/deploy-status)](https://app.netlify.com/sites/shard-den-web/deploys)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white)
 
 ## Project Name
 

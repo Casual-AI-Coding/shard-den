@@ -190,7 +190,7 @@ jobs:
     needs: build-web
     steps:
       - name: Trigger Netlify Deploy
-        run: curl -X POST "https://api.netlify.com/build_hooks/699dbdbe22a8f5968c520b6b"
+        run: curl -X POST "${{ secrets.NETLIFY_DEPLOY_HOOK }}"
 
   # 构建桌面应用（Tauri）
   build-desktop:
