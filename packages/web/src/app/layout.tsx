@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ['latin'] });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'ShardDen (砾穴) - Developer Toolkit',
+  title: `ShardDen (砾穴) - Developer Toolkit v${process.env.NEXT_PUBLIC_APP_VERSION}`,
   description: 'A modular developer toolkit platform',
 };
 

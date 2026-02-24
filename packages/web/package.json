@@ -5,7 +5,7 @@
   "description": "Web frontend for ShardDen",
   "scripts": {
     "dev": "next dev -p 3010",
-    "build": "next build",
+    "build": "NEXT_PUBLIC_APP_VERSION=$(node -p 'require(\"../../package.json\").version') next build"
     "start": "next start",
     "lint": "next lint",
     "fmt": "prettier --write .",
