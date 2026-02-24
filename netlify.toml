@@ -1,0 +1,15 @@
+[build]
+  command = "npm run build"
+  publish = "out"
+  directory = "packages/web"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[redirects]]
+  from = "/wasm/*"
+  to = "/wasm/:splat"
+  status = 200
+
+[context.production.environment]
+  NEXT_TELEMETRY_DISABLED = "1"
