@@ -272,7 +272,6 @@ cargo tauri build                           # Build app
    - `packages/cli/Cargo.toml` - `shard-den-core` 和 `shard-den-json-extractor` 版本
 
 3. **更新 npm 包版本**:
-   - `packages/web/package.json` - Web 包版本
    - `package.json` - 根目录版本 (供 Web 标题使用)
    - `packages/web/package.json` - Web 包版本
    - `packages/wasm/pkg/package.json` - WASM 包版本
