@@ -5,13 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FileJson, Star, History, Settings, X } from 'lucide-react';
 import packageJson from '../../package.json';
-import { isDesktop } from '@/lib/platform';
 import { loadHistory, type HistoryEntry } from '@/lib/tauri';
-
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { FileJson, Star, History, Settings, X } from 'lucide-react';
-import packageJson from '../../package.json';
 
 const tools = [
   {
@@ -38,7 +32,6 @@ export function Sidebar({ isDesktop = false, onClose }: SidebarProps) {
         .catch(console.error);
     }
   }, [isDesktop]);
-  const pathname = usePathname();
 
   return (
     <aside className="w-64 h-screen bg-[var(--surface)] border-r border-[var(--border)] flex flex-col relative">
@@ -116,14 +109,6 @@ export function Sidebar({ isDesktop = false, onClose }: SidebarProps) {
                 暂无历史
               </p>
             )}
-          </div>
-            <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase mb-3 tracking-wider flex items-center gap-2">
-              <History className="w-3 h-3" />
-              历史
-            </h3>
-            <p className="text-sm text-[var(--text-secondary)] opacity-50">
-              暂无历史
-            </p>
           </div>
         </>
       )}

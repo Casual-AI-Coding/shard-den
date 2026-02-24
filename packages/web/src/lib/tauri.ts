@@ -3,7 +3,6 @@
  * These functions only work in Tauri (Desktop) environment
  */
 
-import { invoke } from '@tauri-apps/api/core';
 import { isDesktop } from './platform';
 
 export interface HistoryEntry {
@@ -25,6 +24,21 @@ export interface Config {
 }
 
 /**
+ * Dynamically import Tauri invoke to avoid build errors in web mode
+ */
+async function getInvoke() {
+  if (!isDesktop()) {
+    return null;
+  }
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    return invoke;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Check if running in Tauri environment
  */
 export function isTauri(): boolean {
@@ -35,7 +49,8 @@ export function isTauri(): boolean {
  * Get app version from Tauri
  */
 export async function getVersion(): Promise<string> {
-  if (!isTauri()) {
+  const invoke = await getInvoke();
+  if (!invoke) {
     throw new Error('Not running in Tauri environment');
   }
   return invoke<string>('get_version');
@@ -45,7 +60,8 @@ export async function getVersion(): Promise<string> {
  * Save configuration (Desktop only)
  */
 export async function saveConfig(config: Config): Promise<void> {
-  if (!isTauri()) {
+  const invoke = await getInvoke();
+  if (!invoke) {
     console.warn('saveConfig: Not in Tauri environment, skipping');
     return;
   }
@@ -56,7 +72,8 @@ export async function saveConfig(config: Config): Promise<void> {
  * Load configuration (Desktop only)
  */
 export async function loadConfig(): Promise<Config> {
-  if (!isTauri()) {
+  const invoke = await getInvoke();
+  if (!invoke) {
     console.warn('loadConfig: Not in Tauri environment, skipping');
     return getDefaultConfig();
   }
@@ -67,7 +84,8 @@ export async function loadConfig(): Promise<Config> {
  * Save history entry (Desktop only)
  */
 export async function saveHistory(entry: Omit<HistoryEntry, 'id' | 'timestamp'>): Promise<void> {
-  if (!isTauri()) {
+  const invoke = await getInvoke();
+  if (!invoke) {
     console.warn('saveHistory: Not in Tauri environment, skipping');
     return;
   }
@@ -85,7 +103,8 @@ export async function saveHistory(entry: Omit<HistoryEntry, 'id' | 'timestamp'>)
  * Load history entries (Desktop only)
  */
 export async function loadHistory(tool?: string, limit: number = 100): Promise<HistoryEntry[]> {
-  if (!isTauri()) {
+  const invoke = await getInvoke();
+  if (!invoke) {
     console.warn('loadHistory: Not in Tauri environment, skipping');
     return [];
   }
@@ -97,7 +116,8 @@ export async function loadHistory(tool?: string, limit: number = 100): Promise<H
  * Clear all history (Desktop only)
  */
 export async function clearHistory(): Promise<void> {
-  if (!isTauri()) {
+  const invoke = await getInvoke();
+  if (!invoke) {
     console.warn('clearHistory: Not in Tauri environment, skipping');
     return;
   }

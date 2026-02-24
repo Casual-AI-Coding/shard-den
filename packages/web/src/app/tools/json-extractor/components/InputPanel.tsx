@@ -37,20 +37,6 @@ export function InputPanel({
   isValidJson,
   isLoading,
 }: InputPanelProps) {
-  input,
-  onInputChange,
-  paths,
-  onPathsChange,
-  onExtract,
-  onClear,
-  onFormat,
-  onPaste,
-  onFileUpload,
-  onUrlImport,
-  onShowToast,
-  isValidJson,
-  isLoading,
-}: InputPanelProps) {
   const detectButtonRef = useRef<HTMLButtonElement>(null);
   const [detectedPaths, setDetectedPaths] = useState<string[]>([]);
   const [showPathsPopup, setShowPathsPopup] = useState(false);

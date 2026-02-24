@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ['@tauri-apps/api'],
   async rewrites() {
     return [
       {
