@@ -1,10 +1,16 @@
 [build]
-  command = "npm run build"
-  publish = "out"
-  directory = "packages/web"
+  publish = "packages/web/out"
+  directory = "."
 
 [build.environment]
   NODE_VERSION = "20"
+  RUST_TOOLCHAIN = "stable"
+
+[build.command]
+  npm install -g wasm-pack &&
+  cargo build --release -p shard-den-wasm --target wasm32-unknown-unknown &&
+  wasm-pack build packages/wasm --target web --out-dir pkg &&
+  cd packages/web && npm install && npm run build
 
 [[redirects]]
   from = "/wasm/*"
