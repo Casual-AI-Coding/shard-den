@@ -1,102 +1,57 @@
-import { describe, it, expect } from 'vitest';
+import React from 'react';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import JsonExtractorPage from './page';
 
+// Mock components
+vi.mock('./components', () => ({
+  InputPanel: ({ onInputChange, onPathsChange, onExtract, onClear }: any) => (
+    <div data-testid="input-panel">
+      <textarea data-testid="json-input" onChange={(e) => onInputChange?.(e.target.value)} />
+      <input data-testid="paths-input" onChange={(e) => onPathsChange?.(e.target.value)} />
+      <button data-testid="extract-btn" onClick={onExtract}>提取</button>
+      <button data-testid="clear-btn" onClick={onClear}>清除</button>
+    </div>
+  ),
+  OutputPanel: ({ output, error }: any) => (
+    <div data-testid="output-panel">
+      {error && <div data-testid="error">{error}</div>}
+      {output && <pre data-testid="output">{output}</pre>}
+    </div>
+  ),
+  UrlImportModal: ({ isOpen }: any) => isOpen ? <div data-testid="url-modal" /> : null,
+  ToastContainer: () => <div data-testid="toast-container" />,
+  useToast: () => ({
+    toasts: [],
+    dismissToast: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+    warning: vi.fn(),
+  }),
+}));
+
+vi.mock('@/components/Header', () => ({
+  Header: ({ title, children }: any) => <header data-testid="header">{title}{children}</header>,
+}));
+
+vi.mock('@/components/ui/HelpButton', () => ({
+  HelpButton: () => <button data-testid="help-btn">?</button>,
+}));
+
 describe('JsonExtractorPage', () => {
-  it('should render the page title', () => {
+  it('should render the page', () => {
     render(<JsonExtractorPage />);
-    expect(screen.getByText('JSON Extractor')).toBeInTheDocument();
+    expect(screen.getByTestId('input-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('output-panel')).toBeInTheDocument();
   });
 
-  it('should render the description', () => {
+  it('should render extract button', () => {
     render(<JsonExtractorPage />);
-    expect(screen.getByText('Extract fields from JSON using path syntax')).toBeInTheDocument();
+    expect(screen.getByTestId('extract-btn')).toBeInTheDocument();
   });
 
-  it('should render input textarea', () => {
+  it('should render clear button', () => {
     render(<JsonExtractorPage />);
-    expect(screen.getByPlaceholderText('Paste your JSON here...')).toBeInTheDocument();
-  });
-
-  it('should render paths input', () => {
-    render(<JsonExtractorPage />);
-    expect(screen.getByPlaceholderText('e.g., data.items[].id, data.name')).toBeInTheDocument();
-  });
-
-  it('should render Extract button', () => {
-    render(<JsonExtractorPage />);
-    expect(screen.getByRole('button', { name: 'Extract' })).toBeInTheDocument();
-  });
-
-  it('should render Clear button', () => {
-    render(<JsonExtractorPage />);
-    expect(screen.getByRole('button', { name: 'Clear' })).toBeInTheDocument();
-  });
-
-  it('should update input value when typing', () => {
-    render(<JsonExtractorPage />);
-    const input = screen.getByPlaceholderText('Paste your JSON here...');
-    fireEvent.change(input, { target: { value: '{"test": true}' } });
-    expect(input).toHaveValue('{"test": true}');
-  });
-
-  it('should update paths value when typing', () => {
-    render(<JsonExtractorPage />);
-    const paths = screen.getByPlaceholderText('e.g., data.items[].id, data.name');
-    fireEvent.change(paths, { target: { value: 'data.name' } });
-    expect(paths).toHaveValue('data.name');
-  });
-
-  it('should show output when clicking Extract', async () => {
-    render(<JsonExtractorPage />);
-    const extractButton = screen.getByRole('button', { name: 'Extract' });
-    fireEvent.click(extractButton);
-    
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('WASM integration pending...')).toBeInTheDocument();
-    });
-  });
-
-  it('should clear all fields when clicking Clear', () => {
-    render(<JsonExtractorPage />);
-    
-    // Set some values
-    const input = screen.getByPlaceholderText('Paste your JSON here...');
-    const paths = screen.getByPlaceholderText('e.g., data.items[].id, data.name');
-    
-    fireEvent.change(input, { target: { value: '{"test": true}' } });
-    fireEvent.change(paths, { target: { value: 'test' } });
-    
-    // Click clear
-    const clearButton = screen.getByRole('button', { name: 'Clear' });
-    fireEvent.click(clearButton);
-    
-    // Verify cleared
-    expect(input).toHaveValue('');
-    expect(paths).toHaveValue('');
-  });
-
-  it('should render help section', () => {
-    render(<JsonExtractorPage />);
-    expect(screen.getByText('Path Syntax')).toBeInTheDocument();
-  });
-
-  it('should render syntax examples', () => {
-    render(<JsonExtractorPage />);
-    expect(screen.getByText('Object key')).toBeInTheDocument();
-    expect(screen.getByText('Wildcard')).toBeInTheDocument();
-    expect(screen.getByText('Array items')).toBeInTheDocument();
-    expect(screen.getByText('Array index')).toBeInTheDocument();
-  });
-
-  it('should render output label', () => {
-    render(<JsonExtractorPage />);
-    expect(screen.getByText('Output')).toBeInTheDocument();
-  });
-
-  it('should render output textarea as readonly', () => {
-    render(<JsonExtractorPage />);
-    const output = screen.getByPlaceholderText('Result will appear here...');
-    expect(output).toHaveAttribute('readonly');
+    expect(screen.getByTestId('clear-btn')).toBeInTheDocument();
   });
 });

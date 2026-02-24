@@ -1,5 +1,13 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { FileJson, Star, History, Settings, X } from 'lucide-react';
+import packageJson from '../../package.json';
+import { isDesktop } from '@/lib/platform';
+import { loadHistory, type HistoryEntry } from '@/lib/tauri';
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FileJson, Star, History, Settings, X } from 'lucide-react';
@@ -20,6 +28,16 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isDesktop = false, onClose }: SidebarProps) {
+  const pathname = usePathname();
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+
+  useEffect(() => {
+    if (isDesktop) {
+      loadHistory('json-extractor', 5)
+        .then(setHistory)
+        .catch(console.error);
+    }
+  }, [isDesktop]);
   const pathname = usePathname();
 
   return (
@@ -81,6 +99,24 @@ export function Sidebar({ isDesktop = false, onClose }: SidebarProps) {
             </p>
           </div>
           <div className="border-t border-[var(--border)] p-4">
+            <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase mb-3 tracking-wider flex items-center gap-2">
+              <History className="w-3 h-3" />
+              历史
+            </h3>
+            {history.length > 0 ? (
+              <ul className="space-y-2">
+                {history.slice(0, 5).map((entry) => (
+                  <li key={entry.id} className="text-xs text-[var(--text-secondary)] truncate">
+                    {entry.input.slice(0, 30)}{entry.input.length > 30 ? '...' : ''}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-[var(--text-secondary)] opacity-50">
+                暂无历史
+              </p>
+            )}
+          </div>
             <h3 className="text-xs font-semibold text-[var(--text-secondary)] uppercase mb-3 tracking-wider flex items-center gap-2">
               <History className="w-3 h-3" />
               历史

@@ -16,11 +16,27 @@ interface InputPanelProps {
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onUrlImport: () => void;
   onShowToast?: (type: 'success' | 'error' | 'info' | 'warning', message: string) => void;
+  onContextMenu?: (e: React.MouseEvent, text: string) => void;
   isValidJson: boolean | null;
   isLoading: boolean;
 }
 
 export function InputPanel({
+  input,
+  onInputChange,
+  paths,
+  onPathsChange,
+  onExtract,
+  onClear,
+  onFormat,
+  onPaste,
+  onFileUpload,
+  onUrlImport,
+  onShowToast,
+  onContextMenu,
+  isValidJson,
+  isLoading,
+}: InputPanelProps) {
   input,
   onInputChange,
   paths,
@@ -123,7 +139,7 @@ export function InputPanel({
       </div>
 
       <div className="bg-[var(--surface)] border-x border-[var(--border)] flex-1 min-h-0">
-        <textarea value={input} onChange={(e) => onInputChange(e.target.value)} placeholder='{"items": [{"id": 1, "name": "test"}]}' className="w-full h-full min-h-[200px] p-4 bg-transparent font-mono text-sm text-[var(--text)] placeholder-[var(--text-secondary)] focus:outline-none resize-none" spellCheck={false} />
+        <textarea value={input} onChange={(e) => onInputChange(e.target.value)} placeholder='{"items": [{"id": 1, "name": "test"}]}' className="w-full h-full min-h-[200px] p-4 bg-transparent font-mono text-sm text-[var(--text)] placeholder-[var(--text-secondary)] focus:outline-none resize-none" spellCheck={false} onContextMenu={(e) => { e.preventDefault(); onContextMenu?.(e, input); }} />
       </div>
 
       <div className="h-px bg-[var(--border)]" />
