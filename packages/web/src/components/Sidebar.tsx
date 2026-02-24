@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FileJson, Star, History, Settings, X } from 'lucide-react';
+import packageJson from '../../package.json';
 
 const tools = [
-  { 
-    name: 'JSON 提取器', 
-    path: '/tools/json-extractor', 
+  {
+    name: 'JSON 提取器',
+    path: '/tools/json-extractor',
     icon: FileJson,
     description: '使用 JSONPath 提取字段'
   },
@@ -27,6 +28,8 @@ export function Sidebar({ isDesktop = false, onClose }: SidebarProps) {
       <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
         <h1 className="text-xl font-bold text-[var(--text)]">
           砾穴 <span className="text-[var(--accent)]">ShardDen</span>
+          <span className="text-sm text-[var(--text-secondary)]"> v</span>
+          <span className="text-xs text-[var(--accent)]">{packageJson.version}</span>
         </h1>
         {onClose && (
           <button
@@ -51,11 +54,10 @@ export function Sidebar({ isDesktop = false, onClose }: SidebarProps) {
               <li key={tool.path}>
                 <Link
                   href={tool.path}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                    isActive
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive
                       ? 'bg-[var(--accent)] text-[var(--bg)]'
                       : 'text-[var(--text-secondary)] hover:bg-[var(--hover)] hover:text-[var(--text)]'
-                  }`}
+                    }`}
                 >
                   <Icon className="w-4 h-4" />
                   <span className="text-sm font-medium">{tool.name}</span>
