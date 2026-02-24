@@ -6,9 +6,9 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useLayout } from '@/lib/layout-context';
 
 const tools = [
-  { 
-    name: 'JSON 提取器', 
-    path: '/tools/json-extractor', 
+  {
+    name: 'JSON 提取器',
+    path: '/tools/json-extractor',
     title: 'JSON Extractor',
     description: '使用 JSONPath 从 JSON 中提取字段',
     icon: FileJson,
