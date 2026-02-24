@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-02-25
+
+### Added
+- Version displayed in page title (via webpack DefinePlugin)
+
+### Fixed
+- Version reading from package.json (simplified approach)
+
 ## [0.2.5] - 2026-02-25
 
 ### Added
@@ -189,6 +197,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Shared Core**: Same Rust code compiled for all targets
 
 [Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.2.6...HEAD
+[0.2.6]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.6
 [0.2.5]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.5
 [0.2.4]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.4
 [0.2.3]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.3
