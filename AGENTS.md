@@ -273,6 +273,8 @@ cargo tauri build                           # Build app
 
 3. **更新 npm 包版本**:
    - `packages/web/package.json` - Web 包版本
+   - `package.json` - 根目录版本 (供 Web 标题使用)
+   - `packages/web/package.json` - Web 包版本
    - `packages/wasm/pkg/package.json` - WASM 包版本
 
 4. **更新 CHANGELOG.md**:
@@ -308,6 +310,7 @@ sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "$VERSI
 sed -i 's/shard-den-json-extractor = { version = ".*"/shard-den-json-extractor = { version = "$VERSION"/' packages/cli/Cargo.toml
 
 # 3. npm 包版本
+sed -i 's/"version": ".*"/"version": "$VERSION"/' package.json
 sed -i 's/"version": ".*"/"version": "$VERSION"/' packages/web/package.json
 sed -i 's/"version": ".*"/"version": "$VERSION"/' packages/wasm/pkg/package.json
 
