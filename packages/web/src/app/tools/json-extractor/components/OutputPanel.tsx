@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { Copy, Download } from 'lucide-react';
 
 interface OutputPanelProps {

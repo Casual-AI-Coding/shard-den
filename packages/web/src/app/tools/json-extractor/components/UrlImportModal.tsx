@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';

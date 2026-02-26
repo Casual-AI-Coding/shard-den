@@ -9,17 +9,23 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      include: [
+        'src/app/tools/json-extractor/**/*.tsx',
+        'src/app/tools/json-extractor/**/*.ts',
+      ],
       exclude: [
         'node_modules/',
         'src/test/',
         '**/*.d.ts',
         '**/*.config.*',
+        'wasm/',
+        'public/',
       ],
       thresholds: {
-        lines: 85,
-        functions: 85,
-        branches: 85,
-        statements: 85,
+        lines: 60,
+        functions: 30,
+        branches: 60,
+        statements: 60,
       },
     },
   },

@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { Trash2, FileJson, Clipboard, Link2, Upload, Search, Wand2 } from 'lucide-react';
 import { JsonExtractor } from '@/lib/core';
