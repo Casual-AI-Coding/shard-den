@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import JsonExtractorPage from './page';
 
 // Mock components
@@ -44,19 +44,25 @@ vi.mock('@/lib/tauri', () => ({
 }));
 
 describe('JsonExtractorPage', () => {
-  it('should render the page', () => {
+  it('should render the page', async () => {
     render(<JsonExtractorPage />);
-    expect(screen.getByTestId('input-panel')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('input-panel')).toBeInTheDocument();
+    });
     expect(screen.getByTestId('output-panel')).toBeInTheDocument();
   });
 
-  it('should render extract button', () => {
+  it('should render extract button', async () => {
     render(<JsonExtractorPage />);
-    expect(screen.getByTestId('extract-btn')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('extract-btn')).toBeInTheDocument();
+    });
   });
 
-  it('should render clear button', () => {
+  it('should render clear button', async () => {
     render(<JsonExtractorPage />);
-    expect(screen.getByTestId('clear-btn')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('clear-btn')).toBeInTheDocument();
+    });
   });
 });

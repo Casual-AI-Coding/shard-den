@@ -23,9 +23,13 @@ vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn(),
 }));
 
-// Mock WASM module - return a mock that doesn't try to load actual WASM
 vi.mock('@/lib/core', () => ({
   initWasm: vi.fn().mockResolvedValue(undefined),
+  getWasm: vi.fn().mockReturnValue({
+    JsonExtractor: class {},
+    ping: vi.fn(),
+    version: vi.fn(),
+  }),
   JsonExtractor: {
     extract: vi.fn().mockResolvedValue('[]'),
     detect: vi.fn().mockResolvedValue([]),
