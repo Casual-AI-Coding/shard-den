@@ -202,6 +202,68 @@ describe('UrlImportModal', () => {
     fireEvent.click(closeButton);
     expect(onClose).toHaveBeenCalled();
   });
+
+  it('should show error when URL is empty on submit', async () => {
+    render(<UrlImportModal isOpen={true} onClose={vi.fn()} onImport={vi.fn()} />);
+    const submitButton = screen.getByText('确认导入');
+    fireEvent.click(submitButton);
+    expect(screen.getByText('请输入 URL')).toBeInTheDocument();
+  });
+
+  it('should call onImport with valid JSON from URL', async () => {
+    const onImport = vi.fn();
+    // Mock fetch to return valid JSON directly
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve('{"test": "data"}'),
+    }) as any;
+    
+    render(<UrlImportModal isOpen={true} onClose={vi.fn()} onImport={onImport} />);
+    
+    const input = screen.getByPlaceholderText(/https:\/\/example/);
+    fireEvent.change(input, { target: { value: 'https://example.com/data.json' } });
+    
+    const submitButton = screen.getByText('确认导入');
+    fireEvent.click(submitButton);
+    
+    await waitFor(() => {
+      expect(onImport).toHaveBeenCalledWith('{"test": "data"}');
+    }, { timeout: 3000 });
+  });
+
+  it('should show loading state during import', async () => {
+    // Mock fetch to delay response
+    global.fetch = vi.fn().mockImplementation(() => new Promise(() => {})) as any;
+    
+    render(<UrlImportModal isOpen={true} onClose={vi.fn()} onImport={vi.fn()} />);
+    
+    const input = screen.getByPlaceholderText(/https:\/\/example/);
+    fireEvent.change(input, { target: { value: 'https://example.com/data.json' } });
+    
+    const submitButton = screen.getByText('确认导入');
+    fireEvent.click(submitButton);
+    
+    expect(screen.getByText('导入中...')).toBeInTheDocument();
+  });
+
+  it('should show error for invalid JSON response', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      text: () => Promise.resolve('not valid json'),
+    }) as any;
+    
+    render(<UrlImportModal isOpen={true} onClose={vi.fn()} onImport={vi.fn()} />);
+    
+    const input = screen.getByPlaceholderText(/https:\/\/example/);
+    fireEvent.change(input, { target: { value: 'https://example.com/data.json' } });
+    
+    const submitButton = screen.getByText('确认导入');
+    fireEvent.click(submitButton);
+    
+    await waitFor(() => {
+      expect(screen.getByText(/导入失败/)).toBeInTheDocument();
+    }, { timeout: 3000 });
+  });
 });
 
 describe('ToastContainer', () => {
