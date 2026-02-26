@@ -25,7 +25,7 @@ const JSONPATH_HELP = [
 ];
 
 // Find JSONPath for selected text in JSON
-const findJsonPath = (json: string, sel: string): string | null => {
+export const findJsonPath = (json: string, sel: string): string | null => {
   try {
     const o = JSON.parse(json);
     const t = sel.trim();
@@ -66,7 +66,7 @@ const findJsonPath = (json: string, sel: string): string | null => {
 }
 
 // 根据位置精确查找 JSONPath
-const findJsonPathByPosition = (json: string, pos: number): string | null => {
+export const findJsonPathByPosition = (json: string, pos: number): string | null => {
   try {
     // 验证 JSON 格式
     JSON.parse(json);
