@@ -16,7 +16,7 @@ interface InputPanelProps {
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onUrlImport: () => void;
   onShowToast?: (type: 'success' | 'error' | 'info' | 'warning', message: string) => void;
-  onContextMenu?: (e: React.MouseEvent, text: string) => void;
+  onContextMenu?: (e: React.MouseEvent, text: string, selectionStart: number, selectionEnd: number) => void;
   isValidJson: boolean | null;
   isLoading: boolean;
 }
@@ -37,6 +37,7 @@ export function InputPanel({
   isValidJson,
   isLoading,
 }: InputPanelProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const detectButtonRef = useRef<HTMLButtonElement>(null);
   const [detectedPaths, setDetectedPaths] = useState<string[]>([]);
   const [showPathsPopup, setShowPathsPopup] = useState(false);
@@ -125,7 +126,15 @@ export function InputPanel({
       </div>
 
       <div className="bg-[var(--surface)] border-x border-[var(--border)] flex-1 min-h-0">
-        <textarea value={input} onChange={(e) => onInputChange(e.target.value)} placeholder='{"items": [{"id": 1, "name": "test"}]}' className="w-full h-full min-h-[200px] p-4 bg-transparent font-mono text-sm text-[var(--text)] placeholder-[var(--text-secondary)] focus:outline-none resize-none" spellCheck={false} onContextMenu={(e) => { e.preventDefault(); onContextMenu?.(e, input); }} />
+        <textarea ref={textareaRef} value={input} onChange={(e) => onInputChange(e.target.value)} placeholder='{"items": [{"id": 1, "name": "test"}]}' className="w-full h-full min-h-[200px] p-4 bg-transparent font-mono text-sm text-[var(--text)] placeholder-[var(--text-secondary)] focus:outline-none resize-none" spellCheck={false} 
+          onContextMenu={(e) => { 
+            e.preventDefault(); 
+            const selection = window.getSelection()?.toString() || '';
+            const textarea = textareaRef.current;
+            const start = textarea?.selectionStart || 0;
+            const end = textarea?.selectionEnd || 0;
+            onContextMenu?.(e, selection, start, end); 
+          }} />
       </div>
 
       <div className="h-px bg-[var(--border)]" />
@@ -144,7 +153,7 @@ export function InputPanel({
       </div>
 
       {showPathsPopup && detectedPaths.length > 0 && (
-        <div className="fixed z-50 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg min-w-[280px]" style={{ left: popupPosition.x, top: popupPosition.y }} onClick={(e) => e.stopPropagation()}>
+        <div className="fixed z-50 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg w-auto max-w-[350px]" style={{ left: popupPosition.x, top: popupPosition.y }} onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--border)]">
             <span className="font-medium text-sm text-[var(--text)]">可用路径 ({detectedPaths.length})</span>
             <button onClick={() => setShowPathsPopup(false)} className="text-[var(--text-secondary)] text-lg">×</button>

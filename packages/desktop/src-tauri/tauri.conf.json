@@ -5,7 +5,7 @@
   "build": {
     "beforeDevCommand": "cd ../web && npm run dev",
     "devUrl": "http://localhost:3010",
-    "frontendDist": "../web/.next"
+    "frontendDist": "../web/out"
   },
   "app": {
     "windows": [

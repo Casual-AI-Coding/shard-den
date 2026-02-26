@@ -154,10 +154,10 @@ jobs:
     - name: Package Web
       run: |
         VERSION="${{ env.VERSION }}"
-        cd packages/web/.next
+        cd packages/web/out
         tar czvf ../../../shard-den-$VERSION-web.tar.gz *
         cd ../../..
-        zip -r shard-den-$VERSION-web.zip packages/web/.next/
+        zip -r shard-den-$VERSION-web.zip packages/web/out/
     
     - name: Upload Web Artifact
       uses: actions/upload-artifact@v4
@@ -215,7 +215,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: web
-        path: packages/web/.next
+        path: packages/web/out
 
     # 2. Use Rust cache
     - uses: Swatinem/rust-cache@v2
@@ -282,6 +282,13 @@ jobs:
         name: desktop-windows-nsis
         path: target/${{ matrix.target }}/release/bundle/nsis/*.exe
 
+    - name: Upload Desktop Artifact (Windows Portable EXE)
+      if: matrix.platform == 'windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: desktop-windows-portable
+        path: target/${{ matrix.target }}/release/ShardDen.exe
+
     - name: Upload Desktop Artifact (macOS Intel)
       if: matrix.platform == 'macos-intel'
       uses: actions/upload-artifact@v4
@@ -302,10 +309,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+       
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      
+       
       - name: Publish crates
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
@@ -422,6 +429,7 @@ jobs:
 
           **Windows:**
           Download the `.msi` installer and run it.
+          Or download the portable `.exe` - no installation required!
 
           ## Changelog
 

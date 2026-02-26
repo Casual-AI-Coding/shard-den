@@ -11,6 +11,9 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: `ShardDen (砾穴) - Developer Toolkit`,
   description: 'A modular developer toolkit platform',
+  icons: [
+    { url: '/ShardDen Logo.png', sizes: 'any', type: 'image/png' },
+  ],
 };
 
 export default function RootLayout({

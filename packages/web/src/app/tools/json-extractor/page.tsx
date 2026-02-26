@@ -1,5 +1,6 @@
 'use client';
 
+import { JsonCursorPath } from 'json-cursor-path';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Header } from '@/components/Header';
 import { HelpButton } from '@/components/ui/HelpButton';
@@ -22,6 +23,68 @@ const JSONPATH_HELP = [
   { code: '[?(@.x)]', desc: '过滤表达式' },
 ];
 
+// Find JSONPath for selected text in JSON
+const findJsonPath = (json: string, sel: string): string | null => {
+  try {
+    const o = JSON.parse(json);
+    const t = sel.trim();
+    if (!t) return null;
+    
+    const fn = (x: any, p: string): string | null => {
+      if (x === null || x === undefined) return null;
+      
+      // Check if current value matches
+      const xStr = typeof x === 'string' ? x : JSON.stringify(x);
+      const tStr = t;
+      
+      if (xStr === tStr || x === tStr || String(x) === tStr.replace(/^"|"$/g, '')) {
+        return p || '$';
+      }
+      
+      if (Array.isArray(x)) {
+        for (let i = 0; i < x.length; i++) {
+          const newPath = p ? `${p}[${i}]` : `$[${i}]`;
+          const r = fn(x[i], newPath);
+          if (r) return r;
+        }
+      } else if (typeof x === 'object') {
+        for (const k of Object.keys(x)) {
+          const newPath = p ? `${p}.${k}` : `$.${k}`;
+          // Check if key matches (for selecting key names)
+          if (k === t || k === t.replace(/^"|"$/g, '')) return newPath;
+          
+          const r = fn(x[k], newPath);
+          if (r) return r;
+        }
+      }
+      return null;
+    };
+    
+    return fn(o, '');
+  } catch { return null; }
+}
+
+// 根据位置精确查找 JSONPath
+const findJsonPathByPosition = (json: string, pos: number): string | null => {
+  try {
+    // 验证 JSON 格式
+    JSON.parse(json);
+  } catch {
+    return null;
+  }
+  
+  if (pos <= 0 || pos > json.length) return null;
+  
+  try {
+    const cursorPath = new JsonCursorPath(json);
+    const path = cursorPath.get(pos);
+    return path || null;
+  } catch {
+    return null;
+  }
+}
+
+
 export default function JsonExtractorPage() {
   const [input, setInput] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -40,7 +103,7 @@ export default function JsonExtractorPage() {
   const [format, setFormat] = useState('json');
   const [isLoading, setIsLoading] = useState(true);
   const [showUrlModal, setShowUrlModal] = useState(false);
-  const [contextMenu, setContextMenu] = useState<{x: number; y: number; text: string} | null>(null);
+  const [contextMenu, setContextMenu] = useState<{x: number; y: number; text: string; cursorPos: number} | null>(null);
   const [isValidJson, setIsValidJson] = useState<boolean | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -169,10 +232,53 @@ export default function JsonExtractorPage() {
     } catch { showError('无效的 JSON，无法格式化'); }
   }, [input, success, showError]);
 
-  const handleCopySelected = useCallback(() => {
-    if (contextMenu?.text) { navigator.clipboard.writeText(contextMenu.text); success('已复制！'); }
+  const handleContextMenu = useCallback((e: React.MouseEvent, text: string, selectionStart: number, selectionEnd: number) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, text, cursorPos: selectionStart });
+  }, []);
+
+  const handleCopyRaw = useCallback(() => {
+    if (contextMenu?.text) {
+      navigator.clipboard.writeText(contextMenu.text);
+      success('已复制: ' + contextMenu.text);
+    } else {
+      success('请先选中内容');
+    }
     setContextMenu(null);
   }, [contextMenu, success]);
+
+  const handleCopyJsonPath = useCallback(() => {
+    if (!input) {
+      success('请先输入 JSON');
+      setContextMenu(null);
+      return;
+    }
+    
+    // 优先：根据位置精确查找
+    if (contextMenu?.cursorPos !== undefined) {
+      const jpByPos = findJsonPathByPosition(input, contextMenu.cursorPos);
+      if (jpByPos) {
+        navigator.clipboard.writeText(jpByPos);
+        success('已复制: ' + jpByPos);
+        setContextMenu(null);
+        return;
+      }
+    }
+    
+    // 后备：根据文本匹配
+    if (contextMenu?.text) {
+      const jp = findJsonPath(input, contextMenu.text);
+      if (jp) {
+        navigator.clipboard.writeText(jp);
+        success('已复制: ' + jp);
+      } else {
+        success('未找到对应的 JSONPath');
+              }
+    } else {
+      success('请先选中内容');
+      }
+    setContextMenu(null);
+  }, [contextMenu, input, success]);
 
   useEffect(() => {
     const handleClick = () => setContextMenu(null);
@@ -200,7 +306,7 @@ export default function JsonExtractorPage() {
               <InputPanel input={input} onInputChange={setInput} paths={paths} onPathsChange={setPaths}
                 onExtract={handleExtract} onClear={handleClear} onFormat={handleFormatJson}
                 onPaste={handlePaste} onFileUpload={handleFileUpload} onUrlImport={() => setShowUrlModal(true)}
-                onShowToast={handleShowToast} isValidJson={isValidJson} isLoading={isLoading} />
+                onShowToast={handleShowToast} onContextMenu={handleContextMenu} isValidJson={isValidJson} isLoading={isLoading} />
             </div>
             <div className="h-full min-h-[500px]">
               <OutputPanel output={output} error={error} format={format} onFormatChange={setFormat}
@@ -213,8 +319,11 @@ export default function JsonExtractorPage() {
       {contextMenu && (
         <div className="fixed z-50 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg py-1 min-w-[150px]"
           style={{ left: contextMenu.x, top: contextMenu.y }} onClick={(e) => e.stopPropagation()}>
-          <button onClick={handleCopySelected} className="w-full px-4 py-2 text-left text-sm text-[var(--text)] hover:bg-[var(--hover)] flex items-center gap-2">
+          <button onClick={handleCopyRaw} className="w-full px-4 py-2 text-left text-sm text-[var(--text)] hover:bg-[var(--hover)] flex items-center gap-2">
             <Copy className="w-4 h-4" />复制
+          </button>
+          <button onClick={handleCopyJsonPath} className="w-full px-4 py-2 text-left text-sm text-[var(--text)] hover:bg-[var(--hover)] flex items-center gap-2">
+            <Copy className="w-4 h-4" />复制JSONPath
           </button>
         </div>
       )}
