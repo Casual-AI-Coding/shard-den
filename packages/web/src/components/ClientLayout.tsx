@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
-import { isDesktop } from '@/lib/platform';
 import { useLayout } from '@/lib/layout-context';
 
 interface ClientLayoutProps {
@@ -12,22 +11,12 @@ interface ClientLayoutProps {
 
 export function ClientLayout({ children }: ClientLayoutProps) {
   const { isMobileMenuOpen, setIsMobileMenuOpen, isDesktop: desktop } = useLayout();
-  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname, setIsMobileMenuOpen]);
-
-  // Prevent hydration mismatch
-  if (!mounted) {
-    return <>{children}</>;
-  }
 
   return (
     <div className="flex h-screen">
