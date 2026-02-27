@@ -274,12 +274,6 @@ export default function JsonExtractorPage() {
         success('已复制: ' + jp);
       } else {
         success('未找到对应的 JSONPath');
-      }
-    } else {
-      success('请先选中内容');
-    }
-    setContextMenu(null);
-        success('未找到对应的 JSONPath');
               }
     } else {
       success('请先选中内容');
@@ -308,9 +302,7 @@ export default function JsonExtractorPage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 xl:gap-6 h-full">
-            <div className="h-full min-h-[400px] xl:min-h-[500px]">
-              <InputPanel
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
             <div className="h-full min-h-[500px]">
               <InputPanel input={input} onInputChange={setInput} paths={paths} onPathsChange={setPaths}
                 onExtract={handleExtract} onClear={handleClear} onFormat={handleFormatJson}
