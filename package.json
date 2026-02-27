@@ -12,10 +12,10 @@
     "build": "npm run build:wasm && npm run build:web",
     "build:wasm": "cargo build --release -p shard-den-wasm && wasm-pack build packages/wasm --target web --out-dir pkg",
     "build:web": "cd packages/web && npm run build",
-    "build:desktop": "cd packages/desktop && cargo tauri build",
+    "build:desktop": "cd packages/desktop && tauri build",
     "dev": "npm run dev:web",
     "dev:web": "cd packages/web && npm run dev",
-    "dev:desktop": "cd packages/desktop && cargo tauri dev",
+    "dev:desktop": "cd packages/desktop && tauri dev",
     "test": "npm run test:rust && npm run test:web",
     "test:rust": "cargo test --workspace",
     "test:web": "cd packages/web && npm test",
@@ -29,6 +29,7 @@
     "clean": "cargo clean && rm -rf packages/web/.next packages/web/node_modules packages/wasm/pkg"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2",
     "@types/node": "^20.11.0",
     "png-to-ico": "^3.0.1",
     "sharp": "^0.34.5",

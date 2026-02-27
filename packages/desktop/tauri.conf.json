@@ -3,7 +3,7 @@
   "productName": "ShardDen",
   "identifier": "com.shardden.app",
   "build": {
-    "beforeDevCommand": "cd ../web && npm run dev",
+    "beforeDevCommand": "npm run dev:web",
     "devUrl": "http://localhost:3010",
     "frontendDist": "../web/.next"
   },

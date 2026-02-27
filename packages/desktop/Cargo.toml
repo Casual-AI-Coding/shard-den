@@ -13,33 +13,20 @@ name = "shard_den_desktop"
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [[bin]]
-name = "shard-den-desktop"
+name = "shard_den_desktop_bin"
 path = "src/main.rs"
 
 [dependencies]
-# Tauri
 tauri = { version = "2.0", features = [] }
 tauri-plugin-shell = "2.0"
-
-# Serialization
 serde.workspace = true
 serde_json.workspace = true
-
-# Core
 shard-den-core = { workspace = true }
 shard-den-json-extractor = { workspace = true }
-
-# Async
 tokio.workspace = true
-
-# Error handling
 thiserror.workspace = true
 anyhow.workspace = true
-
-# Logging
 tracing.workspace = true
-
-# Storage
 directories = "5.0"
 
 [build-dependencies]
