@@ -1,8 +1,8 @@
 # ShardDen UML Styler - 设计文档
 
-> **Date:** 2026-02-27
+> **Date:** 2026-02-28
 > **Project:** ShardDen UML Styler（砾穴UML范儿）
-> **Status:** Design Approved
+> **Status:** Design Approved (v2.0)
 
 ---
 
@@ -17,6 +17,7 @@
 | **核心价值** | 让开发者快速生成美观的架构图/流程图，无需手写繁琐的样式参数 |
 | **所属项目** | ShardDen（砾穴）工具集 |
 | **技术栈** | Rust Core + WASM + Next.js + Tauri |
+| **架构原则** | CLI 弱化，前端为主，混合渲染架构 |
 
 ### 1.2 问题陈述
 
@@ -29,6 +30,7 @@
 | **导出受限** | 导出图片分辨率固定，放大后模糊，无法满足演示/打印需求 |
 | **工具分散** | PlantUML 和 Mermaid 工具各自独立，用户需要在多个网站切换 |
 | **无离线支持** | 大多数在线工具依赖网络，断网无法使用 |
+| **分享困难** | 难以分享图表给他人，需要截图或导出发送 |
 
 ### 1.3 目标用户
 
@@ -52,29 +54,38 @@
 | **语法高亮** | 支持 PlantUML 和 Mermaid 语法高亮 |
 | **自动补全** | 智能提示关键字和常用语法片段 |
 | **模板库** | 内置基础模板，覆盖常见图表场景 |
+| **URL 分享** | LZ-String 压缩，生成可分享链接 |
 
-### 2.2 渲染引擎
+### 2.2 渲染引擎（混合架构）
 
-| 引擎 | 渲染方式 | 说明 |
-|------|---------|------|
-| **Mermaid Engine** | 本地渲染 (mermaid.js) | 纯前端，无需网络 |
-| **PlantUML Engine** | 公共服务器渲染 | plantuml-encoder + PlantUML Server |
-| **Future Engines** | 待定 | D2, Graphviz, WaveDrom 等 |
+| 引擎 | 渲染方式 | Rust/WASM 职责 | 前端职责 |
+|------|---------|----------------|----------|
+| **Mermaid Engine** | 本地渲染 (mermaid.js) | 返回 `FrontendJS` 标识 | 使用 mermaid.js 本地渲染 |
+| **PlantUML Engine** | 公共服务器渲染 | 返回 `ServerURL` | 请求 PlantUML 服务器获取图片 |
+| **Future Engines** | 待扩展 | 返回对应 RenderHint | 根据标识选择渲染方式 |
 
-**插件化设计原则：**
+**RenderHint 设计（核心）：**
 
+```rust
+pub enum RenderHint {
+    FrontendJS,                    // 前端 JS 渲染
+    ServerURL(String),             // 服务器渲染 URL
+    WasmReady(Vec<u8>),            // 未来：WASM 直接渲染
+}
+
+pub trait Engine {
+    fn name(&self) -> &str;
+    fn render(&self, code: &str, theme: &Theme) -> Result<RenderHint, EngineError>;
+    fn validate(&self, code: &str) -> Result<Vec<Diagnostic>, EngineError>;
+    fn get_themes(&self) -> Vec<Theme>;
+    fn get_templates(&self) -> Vec<Template>;
+}
 ```
-Engine Interface (统一接口)
-├── parse(code: string): AST
-├── render(ast: AST, theme: Theme): Image
-├── getThemes(): Theme[]
-└── getTemplates(): Template[]
-```
 
-新增引擎只需：
+**插件化原则：**
 1. 实现 Engine Interface
-2. 注册到 Engine Registry
-3. 前端自动识别并加载
+2. 返回适当的 RenderHint
+3. 前端自动识别渲染方式
 
 ### 2.3 主题系统
 
@@ -90,15 +101,19 @@ Engine Interface (统一接口)
 - **复用官方主题**：PlantUML 官方主题 (Cerulean, Sketchy, Toy, Vibrant 等)、Mermaid 官方主题 (default, dark, forest, neutral 等)
 - **扩展自定义主题**：基于官方主题扩展，或全新设计
 
-#### 2.3.3 主题微调
+#### 2.3.3 主题微调（全局）
 
-| 参数 | 说明 |
-|------|------|
-| **主色调** | Primary color，影响标题、边框、强调元素 |
-| **字体** | 字体族、字号 |
-| **线条粗细** | 边框线条宽度 |
-| **背景色** | 图表背景颜色 |
-| **文字颜色** | 标签、注释文字颜色 |
+| 参数 | 说明 | 影响范围 |
+|------|------|---------|
+| **主色调** | Primary color | 所有引擎的强调色 |
+| **字体** | 字体族、字号 | 所有引擎的文字 |
+| **线条粗细** | 边框线条宽度 | 所有引擎的边框 |
+| **背景色** | 图表背景颜色 | 所有引擎的背景 |
+| **文字颜色** | 标签、注释文字颜色 | 所有引擎的文字 |
+
+**全局微调实现：**
+- Mermaid：通过 `themeVariables` 配置注入
+- PlantUML：转换为 PlantUML 样式参数（如 `skinParam`）
 
 ### 2.4 导出系统
 
@@ -109,7 +124,7 @@ Engine Interface (统一接口)
 | **PNG** | 通用格式，粘贴到文档/聊天 |
 | **SVG** | 矢量图，可缩放，适合演示文稿 |
 | **PDF** | 文档打印、高清输出 |
-| **临时链接** | 生成临时分享链接 |
+| **分享链接** | 生成 URL 分享图表（LZ-String 编码） |
 
 #### 2.4.2 分辨率控制（差异化功能）
 
@@ -119,12 +134,19 @@ Engine Interface (统一接口)
 | **自定义 DPI** | 输入具体 DPI 值（如 150, 300, 600），满足打印需求 |
 | **自定义尺寸** | 输入具体宽高像素值，精确控制输出尺寸 |
 
-### 2.5 存储方案
+### 2.5 错误处理
+
+| 展示方式 | 描述 |
+|----------|------|
+| **编辑器标记** | Monaco 中高亮错误行，hover 显示错误详情 |
+| **错误面板** | 预览区域显示错误信息，包含错误位置和描述 |
+
+### 2.6 存储方案
 
 | 版本 | 存储策略 | 说明 |
 |------|---------|------|
-| **Web 版** | 无存储 | 纯浏览器运行，数据不上传服务器，隐私友好 |
-| **Desktop 版** | 本地存储 | 支持历史记录、收藏模板、用户配置持久化 |
+| **Web 版** | 无存储 | 纯浏览器运行，数据不上传服务器，隐私友好；URL 分享替代持久化 |
+| **Desktop 版** | 本地存储 | 支持历史记录、收藏模板、用户配置持久化、自定义主题保存 |
 
 ---
 
@@ -133,12 +155,14 @@ Engine Interface (统一接口)
 | 对比维度 | 竞品现状 | ShardDen UML Styler |
 |---------|---------|------------------------|
 | **主题丰富度** | 2-5 个基础主题 | 20+ 丰富主题库 |
-| **主题微调** | 不支持 | 支持主色/字体/线条微调 |
+| **全局主题微调** | 不支持 | 支持主色/字体/线条微调，应用到所有引擎 |
 | **导出分辨率** | 固定分辨率 | 预设 + DPI + 尺寸全支持 |
 | **多引擎支持** | 单一引擎 | PlantUML + Mermaid + 未来扩展 |
+| **URL 分享** | 部分支持 | LZ-String 压缩，完整状态分享 |
 | **离线使用** | 不支持 | Desktop 版支持离线 |
 | **隐私保护** | 代码上传服务器 | Web 版纯本地，Desktop 版数据本地存储 |
-| **扩展性** | 单体应用 | 插件化架构，新增引擎无需改核心代码 |
+| **扩展性** | 单体应用 | 插件化 RenderHint 架构，支持混合渲染 |
+| **错误定位** | 简单提示 | 编辑器标记 + 错误面板双重展示 |
 
 ---
 
@@ -152,15 +176,15 @@ Engine Interface (统一接口)
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │                    Frontend (Next.js + React)                   │   │
+│  │                    Frontend (Next.js + React)                     │   │
 │  │  ┌───────────────┐  ┌───────────────┐  ┌───────────────────┐   │   │
 │  │  │    Editor     │  │    Preview    │  │    Theme Panel    │   │   │
 │  │  │   Component   │  │   Component   │  │    Component      │   │   │
 │  │  │               │  │               │  │                   │   │   │
 │  │  │ • Monaco/     │  │ • SVG/Canvas  │  │ • Theme List      │   │   │
-│  │  │   CodeMirror  │  │ • Real-time   │  │ • Theme Preview   │   │   │
-│  │  │ • Syntax      │  │   Render      │  │ • Fine-tune       │   │   │
-│  │  │   Highlight   │  │ • Zoom/Pan    │  │   Controls        │   │   │
+│  │  │   CodeMirror  │  │ • Error Panel │  │ • Theme Preview   │   │   │
+│  │  │ • Syntax      │  │ • Zoom/Pan    │  │ • Fine-tune       │   │   │
+│  │  │   Highlight   │  │               │  │   Controls        │   │   │
 │  │  │ • Auto-       │  │               │  │                   │   │   │
 │  │  │   Complete    │  │               │  │                   │   │   │
 │  │  └───────────────┘  └───────────────┘  └───────────────────┘   │   │
@@ -172,43 +196,59 @@ Engine Interface (统一接口)
 │  │  └───────────────────────────────────────────────────────────┘  │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 │                                   │                                     │
-│                                   │ API Calls                           │
+│                                   │ RenderHint                          │
 │                                   ▼                                     │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │                    Engine Registry (Core)                        │   │
+│  │                    Engine Registry (Rust/WASM)                    │   │
 │  │                                                                  │   │
 │  │  Engine Interface:                                               │   │
-│  │  ├── parse(code: string): AST                                   │   │
-│  │  ├── render(ast: AST, theme: Theme): Image                      │   │
-│  │  ├── getThemes(): Theme[]                                       │   │
-│  │  └── getTemplates(): Template[]                                 │   │
+│  │  ├── render(code, theme): RenderHint                          │   │
+│  │  ├── validate(code): Diagnostic[]                             │   │
+│  │  ├── getThemes(): Theme[]                                     │   │
+│  │  └── getTemplates(): Template[]                               │   │
 │  │                                                                  │   │
 │  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │   │
 │  │  │   Mermaid       │  │   PlantUML      │  │   Future...     │  │   │
 │  │  │   Engine        │  │   Engine        │  │   Engine        │  │   │
 │  │  │                 │  │                 │  │                 │  │   │
-│  │  │ • mermaid.js    │  │ • plantuml-     │  │ • D2            │  │   │
-│  │  │ • Local render  │  │   encoder       │  │ • Graphviz      │  │   │
-│  │  │ • All diagram   │  │ • Server render │  │ • WaveDrom      │  │   │
-│  │  │   types         │  │ • All diagram   │  │ • ...           │  │   │
-│  │  │                 │  │   types         │  │                 │  │   │
+│  │  │ returns:        │  │ returns:        │  │ returns:        │  │   │
+│  │  │ FrontendJS      │  │ ServerURL(url)  │  │ WasmReady       │  │   │
 │  │  └─────────────────┘  └─────────────────┘  └─────────────────┘  │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│                                                                         │
+│  Frontend Rendering Logic:                                             │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │  if RenderHint == FrontendJS    → mermaid.js.render()         │   │
+│  │  if RenderHint == ServerURL     → fetch(url) → display         │   │
+│  │  if RenderHint == WasmReady    → display from bytes           │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 │                                   │                                     │
 │                                   ▼                                     │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │                    Theme System                                  │   │
+│  │                    Theme System                                    │   │
 │  │  ┌─────────────────────────────────────────────────────────┐    │   │
 │  │  │                    Shared Themes                         │    │   │
-│  │  │  Default | Dark | Business Blue | Sketchy | ...         │    │   │
+│  │  │  Default | Dark | Business Blue | Sketchy | ...       │    │   │
 │  │  └─────────────────────────────────────────────────────────┘    │   │
 │  │  ┌───────────────────────┐  ┌───────────────────────┐          │   │
 │  │  │  PlantUML Themes      │  │  Mermaid Themes       │          │   │
-│  │  │  Cerulean | Sketchy   │  │  forest | neutral     │          │   │
-│  │  │  Toy | Vibrant | ...  │  │  dark | ...           │          │   │
+│  │  │  Cerulean | Sketchy  │  │  forest | neutral     │          │   │
+│  │  │  Toy | Vibrant | ... │  │  dark | ...           │          │   │
 │  │  └───────────────────────┘  └───────────────────────┘          │   │
+│  │  ┌─────────────────────────────────────────────────────────┐    │   │
+│  │  │              Global Fine-tune (统一微调)                  │    │   │
+│  │  │  Primary Color | Font | Line Width | Background        │    │   │
+│  │  └─────────────────────────────────────────────────────────┘    │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
-│                                   │                                     │
+│                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │                    URL Share System                              │   │
+│  │  ┌─────────────────────────────────────────────────────────┐    │   │
+│  │  │  LZ-String Encode: code + theme + engine → URL        │    │   │
+│  │  │  Decode: URL → state → restore editor                  │    │   │
+│  │  └─────────────────────────────────────────────────────────┘    │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│                                                                         │
 │                                   ▼                                     │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
 │  │                    Export System                                 │   │
@@ -218,20 +258,22 @@ Engine Interface (统一接口)
 │  │  └─────────────┘  └─────────────┘  └─────────────┘             │   │
 │  │  ┌─────────────────────────────────────────────────────────┐   │   │
 │  │  │              Resolution Control                          │   │   │
-│  │  │  • Preset: 1x / 2x / 3x / 4x                             │   │   │
-│  │  │  • Custom DPI: 150 / 300 / 600                           │   │   │
-│  │  │  • Custom Size: Width x Height                            │   │   │
+│  │  │  • Preset: 1x / 2x / 3x / 4x                         │   │   │
+│  │  │  • Custom DPI: 150 / 300 / 600                        │   │   │
+│  │  │  • Custom Size: Width x Height                         │   │   │
 │  │  └─────────────────────────────────────────────────────────┘   │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 │                                                                         │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │                    Storage Layer                                 │   │
-│  │  ┌───────────────────────┐  ┌───────────────────────┐           │   │
-│  │  │       Web             │  │       Desktop         │           │   │
-│  │  │  • No storage         │  │  • Local file storage │           │   │
-│  │  │  • Privacy-first      │  │  • History records    │           │   │
-│  │  │  • Data in memory     │  │  • Saved templates    │           │   │
-│  │  └───────────────────────┘  └───────────────────────┘           │   │
+│  │                    Storage Layer                                  │   │
+│  │  ┌───────────────────────┐  ┌───────────────────────┐          │   │
+│  │  │       Web             │  │       Desktop         │          │   │
+│  │  │  • No storage         │  │  • Local file storage │          │   │
+│  │  │  • URL share         │  │  • History records    │          │   │
+│  │  │  • Privacy-first     │  │  • Saved templates    │          │   │
+│  │  │                      │  │  • Custom themes      │          │   │
+│  │  │                      │  │  • Config persist     │          │   │
+│  │  └───────────────────────┘  └───────────────────────┘          │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 │                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -241,38 +283,24 @@ Engine Interface (统一接口)
 
 ```
 packages/tools/diagram-studio/
-├── src/
-│   ├── lib.rs                    # WASM 导出入口
-│   ├── engine/                   # 渲染引擎
+├── src/                              # Rust Core (WASM)
+│   ├── lib.rs                        # WASM 导出入口
+│   ├── engine/                       # 渲染引擎
 │   │   ├── mod.rs
-│   │   ├── interface.rs          # Engine Interface 定义
-│   │   ├── registry.rs           # Engine 注册表
-│   │   ├── mermaid/              # Mermaid 引擎
-│   │   │   ├── mod.rs
-│   │   │   ├── parser.rs
-│   │   │   ├── renderer.rs
-│   │   │   └── templates.rs
-│   │   └── plantuml/             # PlantUML 引擎
-│   │       ├── mod.rs
-│   │       ├── parser.rs
-│   │       ├── renderer.rs
-│   │       └── templates.rs
-│   ├── theme/                    # 主题系统
+│   │   ├── interface.rs              # Engine Interface + RenderHint 定义
+│   │   ├── registry.rs               # Engine 注册表
+│   │   ├── mermaid.rs                # Mermaid 引擎 → returns FrontendJS
+│   │   └── plantuml.rs               # PlantUML 引擎 → returns ServerURL
+│   ├── theme/                        # 主题系统
 │   │   ├── mod.rs
-│   │   ├── shared/               # 共享主题
+│   │   ├── shared/                   # 共享主题
 │   │   │   ├── default.rs
 │   │   │   ├── dark.rs
 │   │   │   ├── business.rs
 │   │   │   └── sketchy.rs
-│   │   ├── mermaid/              # Mermaid 独立主题
-│   │   └── plantuml/             # PlantUML 独立主题
-│   ├── export/                   # 导出系统
-│   │   ├── mod.rs
-│   │   ├── png.rs
-│   │   ├── svg.rs
-│   │   ├── pdf.rs
-│   │   └── resolution.rs        # 分辨率控制
-│   └── templates/                # 内置模板
+│   │   ├── mermaid/                  # Mermaid 独立主题
+│   │   └── plantuml/                 # PlantUML 独立主题
+│   └── templates/                    # 内置模板
 │       ├── mermaid/
 │       │   ├── sequence.md
 │       │   ├── flowchart.md
@@ -281,66 +309,97 @@ packages/tools/diagram-studio/
 │           ├── sequence.puml
 │           ├── flowchart.puml
 │           └── class.puml
-├── cli/                          # CLI 入口
+│
+├── cli/                              # CLI (弱化)
 │   ├── Cargo.toml
-│   └── main.rs
+│   └── main.rs                       # 输出提示，引导用户使用 Web 端
+│
 └── tests/
     ├── engine_tests.rs
-    ├── theme_tests.rs
-    └── export_tests.rs
+    └── theme_tests.rs
 ```
 
-### 4.3 前端目录结构
+**前端目录结构（放在 packages/web 中）：**
 
 ```
 packages/web/src/app/tools/diagram-studio/
-├── page.tsx                      # 页面入口
-├── layout.tsx                    # 布局
+├── page.tsx                          # 页面入口
+├── layout.tsx                        # 布局
 ├── components/
 │   ├── Editor/
-│   │   ├── CodeEditor.tsx       # 代码编辑器
-│   │   ├── SyntaxHighlight.tsx  # 语法高亮配置
-│   │   └── AutoComplete.tsx     # 自动补全
+│   │   ├── CodeEditor.tsx           # Monaco Editor 封装
+│   │   ├── SyntaxHighlight.tsx      # 语法高亮配置
+│   │   ├── AutoComplete.tsx         # 自动补全
+│   │   └── ErrorMarkers.tsx         # 错误标记
 │   ├── Preview/
-│   │   ├── PreviewPanel.tsx     # 预览面板
-│   │   ├── ZoomControls.tsx     # 缩放控制
-│   │   └── ExportPreview.tsx    # 导出预览
+│   │   ├── PreviewPanel.tsx         # 预览面板
+│   │   ├── ErrorPanel.tsx           # 错误展示面板
+│   │   ├── ZoomControls.tsx         # 缩放控制
+│   │   └── ExportPreview.tsx        # 导出预览
 │   ├── Theme/
-│   │   ├── ThemeSelector.tsx    # 主题选择器
-│   │   ├── ThemePreview.tsx     # 主题预览
-│   │   └── ThemeTuner.tsx       # 主题微调面板
+│   │   ├── ThemeSelector.tsx        # 主题选择器
+│   │   ├── ThemePreview.tsx         # 主题预览
+│   │   └── ThemeTuner.tsx           # 全局微调面板
 │   ├── Export/
-│   │   ├── ExportPanel.tsx     # 导出面板
-│   │   ├── ResolutionControl.tsx # 分辨率控制
-│   │   └── FormatSelector.tsx  # 格式选择
+│   │   ├── ExportPanel.tsx          # 导出面板
+│   │   ├── ResolutionControl.tsx    # 分辨率控制
+│   │   └── FormatSelector.tsx       # 格式选择
+│   ├── Share/
+│   │   ├── ShareButton.tsx          # 分享按钮
+│   │   ├── ShareModal.tsx           # 分享弹窗
+│   │   └── UrlEncoder.ts            # LZ-String 编码/解码
 │   └── Template/
-│       ├── TemplateLibrary.tsx  # 模板库
-│       └── TemplateCard.tsx     # 模板卡片
+│       ├── TemplateLibrary.tsx       # 模板库
+│       └── TemplateCard.tsx         # 模板卡片
 ├── hooks/
-│   ├── useEngine.ts             # 引擎 Hook
-│   ├── useTheme.ts              # 主题 Hook
-│   └── useExport.ts             # 导出 Hook
+│   ├── useEngine.ts                 # 引擎 Hook (根据 RenderHint 渲染)
+│   ├── useTheme.ts                  # 主题 Hook
+│   ├── useExport.ts                 # 导出 Hook
+│   └── useShare.ts                  # 分享 Hook
 └── lib/
     ├── engines/
-    │   ├── mermaid.ts            # Mermaid 引擎封装
-    │   └── plantuml.ts           # PlantUML 引擎封装
-    └── wasm/
-        └── index.ts              # WASM 绑定
+    │   ├── mermaid.ts               # Mermaid.js 渲染器
+    │   ├── plantuml.ts              # PlantUML 服务器请求
+    │   └── base.ts                  # 引擎基类
+    ├── wasm/
+    │   └── index.ts                 # WASM 绑定
+    └── share/
+        └── lz-string.ts             # LZ-String 压缩
 ```
 
-### 4.4 技术选型
+### 4.3 技术选型
 
 | 组件 | 技术选型 | 说明 |
 |------|---------|------|
 | **前端框架** | Next.js 14 + React 18 | 遵循 ShardDen 现有架构 |
 | **代码编辑器** | Monaco Editor | VS Code 同款编辑器，语法高亮和补全成熟 |
-| **Mermaid 渲染** | mermaid.js | 官方库，纯本地渲染 |
+| **Mermaid 渲染** | mermaid.js | 官方库，纯前端本地渲染 |
 | **PlantUML 渲染** | plantuml-encoder + PlantUML Server | 公共服务器渲染 |
+| **URL 压缩** | lz-string | Mermaid Live 同款压缩算法 |
 | **SVG 导出** | 原生 SVG API | 无需额外依赖 |
 | **PNG 导出** | html-to-image / canvas | 高质量截图 |
 | **PDF 导出** | jsPDF / pdf-lib | PDF 生成 |
-| **状态管理** | Zustand / React Context | 轻量级状态管理 |
+| **状态管理** | React Context + useState | 轻量级状态管理 |
 | **样式方案** | Tailwind CSS | 遵循 ShardDen 现有架构 |
+
+### 4.4 CLI 设计（弱化）
+
+```rust
+// packages/tools/diagram-studio/cli/main.rs
+
+fn main() {
+    println!("ShardDen UML Styler CLI");
+    println!("========================");
+    println!();
+    println!("⚠️  CLI 暂不支持图形编辑器功能");
+    println!();
+    println!("请使用 Web 端体验完整功能：");
+    println!("  📖  https://shard-den.com/tools/diagram-studio");
+    println!();
+    println!("或下载 Desktop 版获得离线能力：");
+    println!("  💻  https://shard-den.com/downloads");
+}
+```
 
 ---
 
@@ -351,8 +410,8 @@ packages/web/src/app/tools/diagram-studio/
 | 阶段 | 内容 | 里程碑 | 预计时间 |
 |------|------|--------|---------|
 | **Phase 1** | 核心框架 + Mermaid 引擎 | 基础可用版本 | 2-3 周 |
-| **Phase 2** | PlantUML 引擎 + 扩展主题库 | 双引擎完整版 | 2-3 周 |
-| **Phase 3** | 导出系统完善 + Desktop 存储 | 全平台支持 | 1-2 周 |
+| **Phase 2** | PlantUML 引擎 + 扩展主题 + URL 分享 | 完整功能版 | 2-3 周 |
+| **Phase 3** | Desktop 存储增强 | 全平台支持 | 1-2 周 |
 | **Phase 4** | D2/Graphviz 等新引擎 | 生态扩展 | 按需迭代 |
 
 ### 5.2 Phase 1 详细任务
@@ -363,7 +422,7 @@ packages/web/src/app/tools/diagram-studio/
 |------|------|
 | 项目初始化 | 创建目录结构，配置依赖 |
 | 编辑器组件 | Monaco Editor 集成，左右分屏布局 |
-| 实时预览 | Mermaid 基础渲染 |
+| 实时预览 | Mermaid 本地渲染 |
 | 基础模板 | 5-10 个常用模板 |
 
 #### Week 2: Mermaid 引擎完善
@@ -374,6 +433,7 @@ packages/web/src/app/tools/diagram-studio/
 | 自动补全 | 关键字和语法片段补全 |
 | 共享主题 | 实现 Default, Dark, Business 主题 |
 | Mermaid 独立主题 | 实现 forest, neutral 主题 |
+| 错误处理 | 编辑器标记 + 错误面板 |
 
 #### Week 3: 导出功能
 
@@ -392,22 +452,23 @@ packages/web/src/app/tools/diagram-studio/
 | PlantUML 渲染 | 集成 plantuml-encoder，调用公共服务器 |
 | 语法高亮 | PlantUML 语法高亮配置 |
 | 自动补全 | PlantUML 关键字补全 |
+| 错误处理 | PlantUML 错误解析和展示 |
 
-#### Week 5: 主题扩展
+#### Week 5: 主题扩展 + URL 分享
 
 | 任务 | 说明 |
 |------|------|
 | PlantUML 官方主题 | Cerulean, Sketchy, Toy, Vibrant |
 | 自定义主题扩展 | 5-10 个自定义主题 |
-| 主题微调面板 | 主色、字体、线条粗细调整 |
+| 全局微调面板 | 主色、字体、线条粗细调整 |
+| URL 分享 | LZ-String 编码，生成分享链接 |
 
 #### Week 6: 功能完善
 
 | 任务 | 说明 |
 |------|------|
 | PDF 导出 | PDF 格式导出 |
-| 临时链接 | 生成分享链接 |
-| 错误处理 | 语法错误提示 |
+| 分享链接解析 | 从 URL 恢复编辑器状态 |
 | 性能优化 | 大图渲染优化 |
 
 ### 5.4 Phase 3 详细任务
@@ -416,27 +477,62 @@ packages/web/src/app/tools/diagram-studio/
 |------|------|
 | Desktop 存储 | 集成 Tauri 存储 API |
 | 历史记录 | 保存/加载历史项目 |
-| 收藏模板 | 用户自定义模板 |
+| 收藏模板 | 用户自定义模板保存 |
+| 自定义主题保存 | 用户主题持久化 |
 | 配置持久化 | 主题、分辨率等配置保存 |
+| 离线支持 | Mermaid 完全离线渲染 |
 
 ---
 
 ## 6. 接口设计
 
-### 6.1 Engine Interface
+### 6.1 Engine Interface (核心)
 
 ```rust
 // packages/tools/diagram-studio/src/engine/interface.rs
 
+/// 渲染提示 - 告诉前端如何渲染
+pub enum RenderHint {
+    /// 前端 JS 渲染（如 Mermaid）
+    FrontendJS,
+    /// 服务器渲染 URL（如 PlantUML）
+    ServerURL(String),
+    /// 未来：WASM 直接渲染
+    WasmReady(Vec<u8>),
+}
+
+/// 引擎错误
+#[derive(Debug)]
+pub enum EngineError {
+    ParseError(String),
+    RenderError(String),
+    ValidationError(Vec<Diagnostic>),
+    NetworkError(String),
+}
+
+/// 诊断信息（语法错误）
+#[derive(Debug, Clone)]
+pub struct Diagnostic {
+    pub line: usize,
+    pub column: usize,
+    pub message: String,
+    pub severity: Severity,
+}
+
+#[derive(Debug, Clone)]
+pub enum Severity {
+    Error,
+    Warning,
+    Info,
+}
+
+/// 引擎 trait
 pub trait Engine {
     /// 引擎名称
     fn name(&self) -> &str;
     
-    /// 解析代码为 AST
-    fn parse(&self, code: &str) -> Result<AST, EngineError>;
-    
-    /// 渲染 AST 为图片
-    fn render(&self, ast: &AST, theme: &Theme) -> Result<RenderResult, EngineError>;
+    /// 渲染图表 - 返回 RenderHint 让前端决定渲染方式
+    fn render(&self, code: &str, theme: &Theme) -> Result<RenderHint, EngineError>;
     
     /// 获取支持的图表类型
     fn supported_diagrams(&self) -> Vec<DiagramType>;
@@ -451,21 +547,26 @@ pub trait Engine {
     fn validate(&self, code: &str) -> Result<Vec<Diagnostic>, EngineError>;
 }
 
-pub struct RenderResult {
-    pub svg: String,
-    pub width: u32,
-    pub height: u32,
+/// 图表类型
+pub enum DiagramType {
+    Sequence,
+    Flowchart,
+    Class,
+    State,
+    // ... 其他类型
 }
 
+/// 主题
 pub struct Theme {
     pub id: String,
     pub name: String,
     pub category: ThemeCategory,
-    pub primary_color: String,
-    pub background_color: String,
-    pub font_family: String,
-    pub font_size: u16,
-    pub line_width: u16,
+    // 全局微调参数
+    pub primary_color: Option<String>,
+    pub background_color: Option<String>,
+    pub font_family: Option<String>,
+    pub font_size: Option<u16>,
+    pub line_width: Option<u16>,
 }
 
 pub enum ThemeCategory {
@@ -473,37 +574,43 @@ pub enum ThemeCategory {
     MermaidSpecific,
     PlantUMLSpecific,
 }
+
+/// 模板
+pub struct Template {
+    pub id: String,
+    pub name: String,
+    pub diagram_type: DiagramType,
+    pub code: String,
+    pub description: String,
+}
 ```
 
-### 6.2 Export Interface
+### 6.2 URL 分享接口
 
-```rust
-// packages/tools/diagram-studio/src/export/mod.rs
+```typescript
+// packages/web/src/app/tools/diagram-studio/lib/share/types.ts
 
-pub trait Exporter {
-    /// 导出为指定格式
-    fn export(&self, svg: &str, options: &ExportOptions) -> Result<Vec<u8>, ExportError>;
-    
-    /// 支持的格式
-    fn format(&self) -> ExportFormat;
+interface ShareState {
+  code: string;           // 图表代码
+  engine: 'mermaid' | 'plantuml';  // 引擎类型
+  theme: string;          // 主题 ID
+  themeTuning?: {         // 全局微调参数
+    primaryColor?: string;
+    fontFamily?: string;
+    lineWidth?: number;
+    backgroundColor?: string;
+    textColor?: string;
+  };
+  viewport?: {            // 视口位置
+    x: number;
+    y: number;
+    zoom: number;
+  };
 }
 
-pub struct ExportOptions {
-    pub resolution: Resolution,
-    pub quality: u8,
-}
-
-pub enum Resolution {
-    Preset(u8),           // 1x, 2x, 3x, 4x
-    Dpi(u16),             // 150, 300, 600
-    Custom { width: u32, height: u32 },
-}
-
-pub enum ExportFormat {
-    Png,
-    Svg,
-    Pdf,
-}
+// 压缩/解压
+function encodeState(state: ShareState): string;
+function decodeState(encoded: string): ShareState | null;
 ```
 
 ---
@@ -604,8 +711,9 @@ class Dog extends Animal {
 |------|------|---------|
 | PlantUML 服务器不稳定 | 渲染失败、延迟高 | 缓存机制、备用服务器、后续探索 WASM 方案 |
 | Mermaid 大图渲染性能 | 渲染慢、卡顿 | 虚拟滚动、延迟渲染、Web Worker |
-| 主题兼容性 | 不同引擎主题效果不一致 | 充分测试、主题适配层 |
+| 主题兼容性 | 不同引擎主题效果不一致 | 全局微调需转换为主题参数，充分测试 |
 | 导出分辨率精度 | 高分辨率导出失真 | SVG 优先、DPI 校准 |
+| URL 分享长度限制 | 超长图表无法分享 | LZ-String 压缩，超长提示用户精简 |
 
 ---
 
@@ -639,6 +747,8 @@ class Dog extends Animal {
 - [PlantUML 官方文档](https://plantuml.com/)
 - [Monaco Editor 文档](https://microsoft.github.io/monaco-editor/)
 - [Tauri 文档](https://tauri.app/)
+- [Mermaid Live Editor](https://mermaid.live/) - URL 分享机制参考
+- [LZ-String 库](https://pieroxy.net/blog/pages/lz-string/index.html)
 
 ### 11.2 相关项目
 
@@ -648,5 +758,6 @@ class Dog extends Animal {
 
 ---
 
-**文档版本:** 1.0  
-**最后更新:** 2026-02-27
+**文档版本:** 2.0  
+**最后更新:** 2026-02-28  
+**状态:** 已批准，可进入实现阶段
