@@ -105,7 +105,24 @@ export function InputPanel({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-0.5">
+            <button onClick={onClear} className="flex items-center gap-1 px-2.5 py-1.5 text-xs xl:text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--hover)] rounded">
+              <Trash2 className="w-3.5 h-3.5" /><span className="hidden sm:inline">清除</span>
+            </button>
+            <button onClick={onFormat} className="flex items-center gap-1 px-2.5 py-1.5 text-xs xl:text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--hover)] rounded">
+              <FileJson className="w-3.5 h-3.5" /><span className="hidden sm:inline">格式化</span>
+            </button>
+            <button onClick={onPaste} className="flex items-center gap-1 px-2.5 py-1.5 text-xs xl:text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--hover)] rounded">
+              <Clipboard className="w-3.5 h-3.5" /><span className="hidden sm:inline">粘贴</span>
+            </button>
+            <button onClick={onUrlImport} className="flex items-center gap-1 px-2.5 py-1.5 text-xs xl:text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--hover)] rounded">
+              <Link2 className="w-3.5 h-3.5" /><span className="hidden sm:inline">URL 导入</span>
+            </button>
+            <label className="flex items-center gap-1 px-2.5 py-1.5 text-xs xl:text-sm text-[var(--text-secondary)] bg-[var(--hover)] rounded cursor-pointer">
+              <Upload className="w-3.5 h-3.5" /><span className="hidden sm:inline">上传</span>
+              <input type="file" accept=".json,application/json" onChange={onFileUpload} className="hidden" />
+            </label>
+          </div>
             <button onClick={onClear} className="flex items-center gap-1 px-2 py-1 text-xs text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--hover)] rounded">
               <Trash2 className="w-3.5 h-3.5" /><span className="hidden sm:inline">清除</span>
             </button>

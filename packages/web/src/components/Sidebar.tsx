@@ -34,7 +34,7 @@ export function Sidebar({ isDesktop = false, onClose }: SidebarProps) {
   }, [isDesktop]);
 
   return (
-    <aside className="w-64 h-screen bg-[var(--surface)] border-r border-[var(--border)] flex flex-col relative">
+    <aside className="w-52 h-screen bg-[var(--surface)] border-r border-[var(--border)] flex flex-col relative">
       {/* Logo */}
       <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
         <h1 className="text-xl font-bold text-[var(--text)]">

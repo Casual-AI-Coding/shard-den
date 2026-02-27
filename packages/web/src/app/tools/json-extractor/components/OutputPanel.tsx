@@ -38,7 +38,7 @@ export function OutputPanel({
           value={output}
           readOnly
           placeholder="结果将显示在这里..."
-          className="w-full h-full min-h-[200px] p-4 bg-transparent font-mono text-sm text-[var(--text)] placeholder-[var(--text-secondary)] focus:outline-none resize-none"
+          className="w-full h-full min-h-[200px] p-4 bg-transparent font-mono text-sm xl:text-base text-[var(--text)] placeholder-[var(--text-secondary)] focus:outline-none resize-none"
           spellCheck={false}
         />
       </div>

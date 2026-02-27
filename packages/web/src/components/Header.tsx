@@ -20,7 +20,7 @@ export function Header({ title, children }: HeaderProps) {
         {/* Mobile: Hamburger menu */}
         <button
           onClick={() => setIsMobileMenuOpen(true)}
-          className="lg:hidden p-1.5 -ml-1.5 text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--hover)] rounded-lg transition-colors"
+          className="xl:hidden p-1.5 -ml-1.5 text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--hover)] rounded-lg transition-colors"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -28,14 +28,14 @@ export function Header({ title, children }: HeaderProps) {
         {/* Desktop: Breadcrumb */}
         <Link 
           href="/" 
-          className="hidden lg:block text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors text-sm"
+          className="hidden xl:block text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors text-sm"
         >
           砾穴
         </Link>
-        <ChevronRight className="hidden lg:block w-4 h-4 text-[var(--text-secondary)]" />
+        <ChevronRight className="hidden xl:block w-4 h-4 text-[var(--text-secondary)]" />
         
         <h1 className="text-lg font-semibold text-[var(--text)]">{title}</h1>
-        <div className="hidden lg:block">
+        <div className="hidden xl:block">
           {children}
         </div>
       </div>
