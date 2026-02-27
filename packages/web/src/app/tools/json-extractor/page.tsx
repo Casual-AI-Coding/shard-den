@@ -274,6 +274,12 @@ export default function JsonExtractorPage() {
         success('已复制: ' + jp);
       } else {
         success('未找到对应的 JSONPath');
+      }
+    } else {
+      success('请先选中内容');
+    }
+    setContextMenu(null);
+        success('未找到对应的 JSONPath');
               }
     } else {
       success('请先选中内容');
