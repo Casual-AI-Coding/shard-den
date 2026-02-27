@@ -11,6 +11,14 @@ module.exports = {
     'hidden',
     'lg:block',
     'lg:hidden',
+    'xl:block',
+    'xl:hidden',
+  ],
+    'translate-x-0',
+    '-translate-x-full',
+    'hidden',
+    'lg:block',
+    'lg:hidden',
   ],
   theme: {
     extend: {
