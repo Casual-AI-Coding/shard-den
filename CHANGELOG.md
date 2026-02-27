@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-02-28
+
+### Added
+- Tauri Desktop integration (`@tauri-apps/cli`)
+- Tauri API binding in `packages/web/src/lib/tauri.ts`
+- Configuration save/load for Desktop mode
+- History saving after extraction in Desktop mode
+- JSON path detection using `json-cursor-path` library
+- Comprehensive test coverage for JSON extractor components
+- Test setup file for web tests
+
+### Fixed
+- Broken `findJsonPathByPosition` replaced with working implementation
+- Sidebar not showing on first load (hydration issue)
+- Missing `xl:block` / `xl:hidden` in Tailwind safelist
+- Desktop dev workflow (`npm run dev:desktop`)
+- Cargo.toml bin name collision (PDB files)
+- Various syntax errors introduced during refactoring
+
+### Changed
+- Responsive breakpoints: sidebar now shows at `xl` (≥1280px) instead of `lg`
+- Narrower sidebar width (`w-52` vs `w-64`)
+- Increased font sizes on xl screens
+- Adjusted panel gap and min-height for better desktop use
+
+### Performance
+- Improved test coverage
+
+## [0.2.6] - 2026-02-25
+
 ## [0.2.6] - 2026-02-25
 
 ### Added
