@@ -310,6 +310,7 @@ export default function JsonExtractorPage() {
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 xl:gap-6 h-full">
             <div className="h-full min-h-[400px] xl:min-h-[500px]">
+              <InputPanel
             <div className="h-full min-h-[500px]">
               <InputPanel input={input} onInputChange={setInput} paths={paths} onPathsChange={setPaths}
                 onExtract={handleExtract} onClear={handleClear} onFormat={handleFormatJson}
