@@ -40,7 +40,7 @@ export function Sidebar({ isDesktop = false, onClose }: SidebarProps) {
         <h1 className="text-xl font-bold text-[var(--text)]">
           砾穴 <span className="text-[var(--accent)]">ShardDen</span>
           <span className="text-sm text-[var(--text-secondary)]"> v</span>
-          <span className="text-xs text-[var(--accent)]">{packageJson.version}</span>
+          <span className="text-sm text-[var(--accent)]">{packageJson.version}</span>
         </h1>
         {onClose && (
           <button
