@@ -3436,6 +3436,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "shard-den-uml-styler"
+version = "0.2.7"
+dependencies = [
+ "console_error_panic_hook",
+ "serde",
+ "serde-wasm-bindgen",
+ "shard-den-core",
+ "thiserror 1.0.69",
+ "tracing",
+ "wasm-bindgen",
+ "wasm-bindgen-test",
+]
+
+[[package]]
+name = "shard-den-uml-styler-cli"
+version = "0.2.7"
+dependencies = [
+ "shard-den-core",
+]
+
+[[package]]
 name = "shard-den-wasm"
 version = "0.2.7"
 dependencies = [
