@@ -320,8 +320,8 @@ jobs:
           # Publish in dependency order
           cargo publish -p shard-den-core
           cargo publish -p shard-den-json-extractor
+          cargo publish -p shard-den-uml-styler
           cargo publish -p shard-den
-
   # 创建 Release 并上传所有产物
   release:
     name: Create Release
@@ -359,20 +359,22 @@ jobs:
           cargo install shard-den
           cargo install shard-den-core
           cargo install shard-den-json-extractor
+          cargo install shard-den-uml-styler
           ```
 
           Or add to your `Cargo.toml`:
           ```toml
           [dependencies]
-          shard-den = "0.2"
-          shard-den-core = "0.2"
-          shard-den-json-extractor = "0.2"
+          shard-den = "0.3"
+          shard-den-core = "0.3"
+          shard-den-json-extractor = "0.3"
+          shard-den-uml-styler = "0.3"
           ```
 
           - [shard-den](https://crates.io/crates/shard-den)
           - [shard-den-core](https://crates.io/crates/shard-den-core)
           - [shard-den-json-extractor](https://crates.io/crates/shard-den-json-extractor)
-
+          - [shard-den-uml-styler](https://crates.io/crates/shard-den-uml-styler)
           ### CLI
 
           **Linux:**
