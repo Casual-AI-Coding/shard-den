@@ -42,7 +42,7 @@ jobs:
       
     - name: Coverage
       run: cargo tarpaulin --packages shard-den-core --packages shard-den-json-extractor --packages shard-den-uml-styler --fail-under 50
-      run: cargo tarpaulin --packages shard-den-core --packages shard-den-json-extractor --fail-under 50
+
 
   web-check:
     name: Web Checks
