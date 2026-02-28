@@ -35,6 +35,7 @@ jobs:
         cargo clippy --workspace --exclude shard-den-desktop -- -D warnings
     
     - name: Test
+      run: cargo test -p shard-den-core -p shard-den-json-extractor -p shard-den-uml-styler
       run: cargo test -p shard-den-core -p shard-den-json-extractor
     
     - name: Install tarpaulin
