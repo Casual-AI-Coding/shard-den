@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-03-01
+
+### Added
+- **UML Styler Tool** - 全新 UML 图表编辑器
+  - Monaco Editor 代码编辑器，支持 PlantUML/Mermaid 语法高亮
+  - Mermaid.js 本地渲染，实时预览
+  - 12+ 内置主题，支持共享/独立主题模式
+  - PNG/SVG 导出，支持多分辨率选择
+  - 内置模板库（时序图、流程图、类图等）
+  - URL 分享功能 (LZ-String 压缩)
+- `shard-den-uml-styler` Rust 包 (90.67% 测试覆盖率)
+- 新增依赖: mermaid, @monaco-editor/react, lz-string
+
+### Fixed
+- UML Styler 组件使用全局主题 CSS 变量替代硬编码颜色
+
+### Performance
+- Rust 核心代码: +2,286 行
+- Web 前端代码: +1,800 行
 ## [0.2.7] - 2026-02-28
 
 ### Added
@@ -224,7 +243,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CLI = Core**: Native Rust, no WASM overhead
 - **Shared Core**: Same Rust code compiled for all targets
 
-[Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.2.6...HEAD
+[Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.0
+[0.2.7]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.7
 [0.2.6]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.6
 [0.2.5]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.5
 [0.2.4]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.4

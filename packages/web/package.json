@@ -1,6 +1,6 @@
 {
   "name": "shard-den-web",
-  "version": "0.2.7",
+  "version": "0.3.0",
   "private": true,
   "description": "Web frontend for ShardDen",
   "scripts": {
