@@ -57,3 +57,26 @@ vi.mock('@/lib/platform', () => ({
 
 // Global timeout for tests
 vi.setConfig({ testTimeout: 10000 });
+
+// Mock mermaid
+vi.mock('mermaid', () => ({
+  default: {
+    initialize: vi.fn(),
+    render: vi.fn().mockResolvedValue({ svg: '<svg>test</svg>' }),
+  },
+}));
+
+// Mock @monaco-editor/react
+vi.mock('@monaco-editor/react', () => ({
+  default: function MockEditor({ value, onChange }: any) {
+    return (
+      <textarea
+        data-testid="monaco-editor"
+        value={value}
+        onChange={(e: any) => onChange?.(e.target.value)}
+      />
+    );
+  },
+  OnMount: {},
+}));
+vi.setConfig({ testTimeout: 10000 });

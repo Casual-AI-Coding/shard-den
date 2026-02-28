@@ -12,6 +12,8 @@ export default defineConfig({
       include: [
         'src/app/tools/json-extractor/**/*.tsx',
         'src/app/tools/json-extractor/**/*.ts',
+        'src/app/tools/uml-styler/**/*.tsx',
+        'src/app/tools/uml-styler/**/*.ts',
       ],
       exclude: [
         'node_modules/',

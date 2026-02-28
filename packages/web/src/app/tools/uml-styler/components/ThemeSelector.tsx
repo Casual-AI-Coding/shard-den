@@ -1,5 +1,7 @@
 'use client';
 
+import React from 'react';
+
 interface ThemeSelectorProps {
   theme: string;
   onThemeChange: (theme: string) => void;
