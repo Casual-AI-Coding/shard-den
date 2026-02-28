@@ -29,9 +29,3 @@ shard-den-uml-styler = { version = "0.3.0", path = "../tools/uml-styler", option
 default = ["json"]
 json = ["dep:shard-den-json-extractor"]
 uml = ["dep:shard-den-uml-styler"]
-
-default = ["json"]
-json = ["dep:shard-den-json-extractor"]
-uml = ["dep:shard-den-uml-styler"]
-default = ["json"]
-json = ["dep:shard-den-json-extractor"]
