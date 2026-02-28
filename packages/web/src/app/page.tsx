@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FileJson, Plus, Menu } from 'lucide-react';
+import { FileJson, Plus, Menu, GitBranch } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useLayout } from '@/lib/layout-context';
 
@@ -12,6 +12,13 @@ const tools = [
     title: 'JSON Extractor',
     description: '使用 JSONPath 从 JSON 中提取字段',
     icon: FileJson,
+  },
+  {
+    name: 'UML Styler',
+    path: '/tools/uml-styler',
+    title: 'UML Styler',
+    description: 'UML 图表编辑器，支持 Mermaid',
+    icon: GitBranch,
   },
 ];
 
