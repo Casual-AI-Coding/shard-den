@@ -36,7 +36,6 @@ jobs:
     
     - name: Test
       run: cargo test -p shard-den-core -p shard-den-json-extractor -p shard-den-uml-styler
-      run: cargo test -p shard-den-core -p shard-den-json-extractor
     
     - name: Install tarpaulin
       run: cargo install cargo-tarpaulin
