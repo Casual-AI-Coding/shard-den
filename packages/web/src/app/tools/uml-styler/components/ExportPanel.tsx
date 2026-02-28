@@ -146,12 +146,12 @@ export default function ExportPanel({ code, theme, engine, scale = 2 }: ExportPa
             className="fixed inset-0 z-40" 
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
+          <div className="absolute right-0 top-full mt-1 w-40 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg z-50">
             <div className="p-1">
               <button
                 onClick={() => handleExport('png')}
                 disabled={!code.trim()}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-hover)] rounded disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="w-4 h-4 bg-blue-600 rounded text-white text-xs flex items-center justify-center">P</span>
                 PNG
@@ -159,7 +159,7 @@ export default function ExportPanel({ code, theme, engine, scale = 2 }: ExportPa
               <button
                 onClick={() => handleExport('svg')}
                 disabled={!code.trim()}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-hover)] rounded disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="w-4 h-4 bg-green-600 rounded text-white text-xs flex items-center justify-center">S</span>
                 SVG
@@ -167,7 +167,7 @@ export default function ExportPanel({ code, theme, engine, scale = 2 }: ExportPa
               <button
                 onClick={() => handleExport('pdf')}
                 disabled={!code.trim()}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-hover)] rounded disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="w-4 h-4 bg-red-600 rounded text-white text-xs flex items-center justify-center">P</span>
                 PDF

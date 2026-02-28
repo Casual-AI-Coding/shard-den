@@ -92,13 +92,13 @@ export default function Preview({ code, theme, engine, onError, onThemeChange, o
   };
 
   return (
-    <div ref={containerRef} className="h-full flex flex-col bg-white">
+    <div ref={containerRef} className="h-full flex flex-col bg-[var(--surface)]">
       {/* Header Toolbar - 主题 + 缩放控制 */}
-      <div className="h-12 px-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between shrink-0">
+      <div className="h-12 px-4 bg-[var(--bg)] border-b border-[var(--border)] flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-slate-700">预览</span>
+          <span className="text-sm font-medium text-[var(--text)]">预览</span>
           {isRendering && (
-            <span className="text-xs text-blue-500 animate-pulse">渲染中...</span>
+            <span className="text-xs text-blue-400 animate-pulse">渲染中...</span>
           )}
         </div>
         <div className="flex items-center gap-3">
@@ -106,20 +106,20 @@ export default function Preview({ code, theme, engine, onError, onThemeChange, o
           <ThemeSelector theme={theme} onThemeChange={onThemeChange || (() => {})} />
           
           {/* Zoom controls */}
-          <div className="flex items-center gap-1 border-l border-slate-300 pl-3">
+          <div className="flex items-center gap-1 border-l border-[var(--border)] pl-3">
             <button
               onClick={handleZoomOut}
-              className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded transition-colors cursor-pointer"
+              className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] rounded transition-colors cursor-pointer"
               title="缩小"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
               </svg>
             </button>
-            <span className="text-sm text-slate-600 w-12 text-center">{zoom}%</span>
+            <span className="text-sm text-[var(--text-secondary)] w-12 text-center">{zoom}%</span>
             <button
               onClick={handleZoomIn}
-              className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded transition-colors cursor-pointer"
+              className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] rounded transition-colors cursor-pointer"
               title="放大"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -128,14 +128,14 @@ export default function Preview({ code, theme, engine, onError, onThemeChange, o
             </button>
             <button
               onClick={handleZoomFit}
-              className="px-2 py-1 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded transition-colors cursor-pointer"
+              className="px-2 py-1 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] rounded transition-colors cursor-pointer"
               title="适应窗口"
             >
               适应
             </button>
             <button
               onClick={handleFullscreen}
-              className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded transition-colors cursor-pointer"
+              className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] rounded transition-colors cursor-pointer"
               title="全屏"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,10 +149,10 @@ export default function Preview({ code, theme, engine, onError, onThemeChange, o
       {/* Content */}
       <div className="flex-1 overflow-auto relative">
         {isRendering && (
-          <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+          <div className="absolute inset-0 bg-[var(--surface)]/80 flex items-center justify-center z-10">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-              <p className="text-slate-500 text-sm">正在渲染...</p>
+              <p className="text-[var(--text-secondary)] text-sm">正在渲染...</p>
             </div>
           </div>
         )}
@@ -160,7 +160,7 @@ export default function Preview({ code, theme, engine, onError, onThemeChange, o
         {/* Error State */}
         {error && (
           <div className="h-full flex items-center justify-center p-8">
-            <div className="text-center bg-red-50 p-6 rounded-lg border border-red-200 max-w-md">
+            <div className="text-center bg-red-500/10 p-6 rounded-lg border border-red-500/30 max-w-md">
               <svg className="w-12 h-12 mx-auto mb-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
@@ -185,9 +185,9 @@ export default function Preview({ code, theme, engine, onError, onThemeChange, o
 
         {/* Empty State */}
         {!error && !svg && !isRendering && (
-          <div className="h-full flex items-center justify-center text-slate-400">
+          <div className="h-full flex items-center justify-center text-[var(--text-secondary)]">
             <div className="text-center">
-              <svg className="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-16 h-16 mx-auto mb-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
               </svg>
               <p className="text-lg">无图表显示</p>
@@ -198,11 +198,11 @@ export default function Preview({ code, theme, engine, onError, onThemeChange, o
       </div>
 
       {/* Bottom Toolbar - 分享 + 导出 + 分辨率 */}
-      <div className="h-12 px-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+      <div className="h-12 px-4 bg-[var(--bg)] border-t border-[var(--border)] flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
           <button 
             onClick={onShare}
-            className="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded transition-colors cursor-pointer"
+            className="px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] rounded transition-colors cursor-pointer"
           >
             分享
           </button>
@@ -210,11 +210,11 @@ export default function Preview({ code, theme, engine, onError, onThemeChange, o
         <div className="flex items-center gap-3">
           {/* Resolution selector */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500">分辨率:</span>
+            <span className="text-xs text-[var(--text-secondary)]">分辨率:</span>
             <select
               value={scale}
               onChange={(e) => setScale(Number(e.target.value) as 1 | 2 | 3 | 4)}
-              className="px-2 py-1 text-sm bg-white border border-slate-300 rounded hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="px-2 py-1 text-sm bg-[var(--surface)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
               <option value={1}>1x</option>
               <option value={2}>2x</option>

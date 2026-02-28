@@ -122,12 +122,12 @@ export default function CodeEditor({
   return (
     <div className="h-full flex flex-col">
       {/* Toolbar */}
-      <div className="h-12 px-4 bg-slate-50 border-b border-slate-200 flex items-center gap-2 shrink-0">
+      <div className="h-12 px-4 bg-[var(--bg)] border-b border-[var(--border)] flex items-center gap-2 shrink-0">
         {/* Engine Selector */}
         <select
           value={engine}
           onChange={(e) => onEngineChange(e.target.value as 'mermaid' | 'plantuml')}
-          className="px-3 py-1.5 text-sm bg-white border border-slate-300 rounded hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+          className="px-3 py-1.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
         >
           <option value="mermaid">Mermaid</option>
           <option value="plantuml" disabled>PlantUML (Coming Soon)</option>
@@ -136,7 +136,7 @@ export default function CodeEditor({
         {/* Format Button */}
         <button
           onClick={handleFormat}
-          className="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded transition-colors"
+          className="px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] rounded transition-colors"
           title="Format code"
         >
           格式化
@@ -145,7 +145,7 @@ export default function CodeEditor({
         {/* Clear Button */}
         <button
           onClick={handleClear}
-          className="px-3 py-1.5 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+          className="px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
           title="Clear editor"
         >
           清空
