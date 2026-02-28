@@ -101,23 +101,6 @@ export default function UMLStylerPage() {
                 onThemeChange={handleThemeChange}
                 onShare={handleShare}
               />
-            <div className="flex-1 min-w-[500px] flex flex-col bg-[var(--surface)]">
-              {/* Preview Toolbar - 功能按钮移到这里 */}
-              <div className="h-12 px-4 bg-[var(--bg)] border-b border-[var(--border)] flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-2">
-                  <ThemeSelector theme={theme} onThemeChange={handleThemeChange} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={handleShare}
-                    className="px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--hover)] rounded transition-colors"
-                  >
-                    分享
-                  </button>
-                  <ExportPanel code={code} theme={theme} engine={engine} />
-                </div>
-              </div>
-            </div>
             </div>
           </div>
         )}
