@@ -27,18 +27,18 @@ version = "0.2.3"
 | `packages/core/Cargo.toml` | workspace=true | 自动 | 使用 workspace 版本 |
 | `packages/cli/Cargo.toml` | workspace=true | 自动 | CLI 主包 |
 | `packages/wasm/Cargo.toml` | workspace=true | 自动 | WASM 绑定包 |
-| `packages/tools/json-extractor/Cargo.toml` | workspace=true | 手动 | 发布到 crates.io 时需指定 |
+| `packages/tools/**/Cargo.toml` | workspace=true | 手动 | 发布到 crates.io 时需指定 |
 | `packages/desktop/Cargo.toml` | workspace=true | 自动 | Desktop 主包 |
 | `packages/desktop/src-tauri/Cargo.toml` | workspace=true | 自动 | Tauri 内部包 |
 
 **发布到 crates.io 时的特殊处理**：
 
 ```toml
-# json-extractor 发布时需要显式版本
+# 所有的工具（例如json-extractor、uml-styler等） 发布时需要显式版本
 shard-den-core = { version = "0.2.3", path = "../../core" }
 
 # CLI 发布时需要显式版本
-shard-den-json-extractor = { version = "0.2.3", path = "../tools/json-extractor", optional = true }
+shard-den-** = { version = "0.2.3", path = "../tools/**", optional = true }
 ```
 
 ---
@@ -170,9 +170,9 @@ version = "0.2.3"
 
 ---
 
-### 5. packages/tools/json-extractor/Cargo.toml
+### 5. packages/tools/**/Cargo.toml
 
-**文件**: `packages/tools/json-extractor/Cargo.toml`
+**文件**: `packages/tools/**/Cargo.toml`
 
 ```toml
 # 必须使用显式版本（不能使用 workspace = true）
@@ -191,6 +191,8 @@ shard-den-core = { version = "0.2.3", path = "../../core" }
 # 必须使用显式版本（不能使用 workspace = true）
 shard-den-core = { version = "0.2.3", path = "../core" }
 shard-den-json-extractor = { version = "0.2.3", path = "../tools/json-extractor", optional = true }
+shard-den-uml-styler = { version = "0.2.3", path = "../tools/uml-styler", optional = true }
+# ... 其他工具，后续新增都需要补充
 ```
 
 **说明**: 发布到 crates.io 时，依赖必须显式指定版本（无论版本是否一致）。
@@ -205,19 +207,21 @@ shard-den-json-extractor = { version = "0.2.3", path = "../tools/json-extractor"
 2. `CHANGELOG.md`
 3. `packages/web/package.json`
 4. `README.md`
-5. `packages/tools/json-extractor/Cargo.toml`
+5. `packages/tools/**/Cargo.toml`
 6. `packages/cli/Cargo.toml` ← 最后修改
 
 ## 快速命令
+
+**以json-extractor为例，所有工具都需要修改**
 
 ```bash
 # 1. 修改版本号 (Cargo.toml)
 sed -i 's/version = ".*"/version = "0.2.3"/' Cargo.toml
 
-# 2. 修改 json-extractor 依赖版本
+# 2. 修改 工具 依赖版本（以json-extractor为例，所有工具都需要修改）
 sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "0.2.3"/' packages/tools/json-extractor/Cargo.toml
 
-# 3. 修改 CLI 依赖版本
+# 3. 修改 CLI 依赖版本（以json-extractor为例，所有工具都需要修改）
 sed -i 's/shard-den-json-extractor = { version = ".*"/shard-den-json-extractor = { version = "0.2.3"/' packages/cli/Cargo.toml
 ```
 

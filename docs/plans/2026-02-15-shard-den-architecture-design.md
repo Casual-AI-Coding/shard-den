@@ -1336,7 +1336,7 @@ impl JsonExtractor {
    - Current: `logger.rs` exists but isn't called anywhere
    - Should add to:
      - `packages/desktop/src/main.rs`: `shard_den_core::init_logger()`
-     - `packages/tools/json-extractor/cli/main.rs`: `shard_den_core::init_logger()`
+     - `packages/tools/**/cli/main.rs`: `shard_den_core::init_logger()`
 
 ### 14.2 Design Decisions to Make
 

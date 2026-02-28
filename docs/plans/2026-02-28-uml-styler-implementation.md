@@ -282,7 +282,7 @@ pub trait Engine {
 ### 4.2 目录结构
 
 ```
-packages/tools/diagram-studio/
+packages/tools/uml-styler/
 ├── src/                              # Rust Core (WASM)
 │   ├── lib.rs                        # WASM 导出入口
 │   ├── engine/                       # 渲染引擎
@@ -322,7 +322,7 @@ packages/tools/diagram-studio/
 **前端目录结构（放在 packages/web 中）：**
 
 ```
-packages/web/src/app/tools/diagram-studio/
+packages/web/src/app/tools/uml-styler/
 ├── page.tsx                          # 页面入口
 ├── layout.tsx                        # 布局
 ├── components/
@@ -385,7 +385,7 @@ packages/web/src/app/tools/diagram-studio/
 ### 4.4 CLI 设计（弱化）
 
 ```rust
-// packages/tools/diagram-studio/cli/main.rs
+// packages/tools/uml-styler/cli/main.rs
 
 fn main() {
     println!("ShardDen UML Styler CLI");
@@ -394,7 +394,7 @@ fn main() {
     println!("⚠️  CLI 暂不支持图形编辑器功能");
     println!();
     println!("请使用 Web 端体验完整功能：");
-    println!("  📖  https://shard-den.com/tools/diagram-studio");
+    println!("  📖  https://shard-den.com/tools/uml-styler");
     println!();
     println!("或下载 Desktop 版获得离线能力：");
     println!("  💻  https://shard-den.com/downloads");
@@ -489,7 +489,7 @@ fn main() {
 ### 6.1 Engine Interface (核心)
 
 ```rust
-// packages/tools/diagram-studio/src/engine/interface.rs
+// packages/tools/uml-styler/src/engine/interface.rs
 
 /// 渲染提示 - 告诉前端如何渲染
 pub enum RenderHint {
@@ -588,7 +588,7 @@ pub struct Template {
 ### 6.2 URL 分享接口
 
 ```typescript
-// packages/web/src/app/tools/diagram-studio/lib/share/types.ts
+// packages/web/src/app/tools/uml-styler/lib/share/types.ts
 
 interface ShareState {
   code: string;           // 图表代码
