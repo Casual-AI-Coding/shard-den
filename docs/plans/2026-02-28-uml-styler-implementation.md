@@ -377,10 +377,30 @@ packages/web/src/app/tools/uml-styler/
 | **PlantUML 渲染** | plantuml-encoder + PlantUML Server | 公共服务器渲染 |
 | **URL 压缩** | lz-string | Mermaid Live 同款压缩算法 |
 | **SVG 导出** | 原生 SVG API | 无需额外依赖 |
-| **PNG 导出** | html-to-image / canvas | 高质量截图 |
-| **PDF 导出** | jsPDF / pdf-lib | PDF 生成 |
+| **PNG 导出** | html-to-image | 支持高 DPI 缩放，比 canvas 方案更可靠 |
+| **PDF 导出** | pdf-lib | 支持矢量图嵌入，更适合 SVG 导出 |
 | **状态管理** | React Context + useState | 轻量级状态管理 |
 | **样式方案** | Tailwind CSS | 遵循 ShardDen 现有架构 |
+
+#### 技术选型决策理由
+
+**Monaco Editor vs CodeMirror:**
+- 选择 **Monaco Editor**
+- 理由：VS Code 同款，语法高亮和自动补全生态更成熟，对 Mermaid/PlantUML 的语言支持更好
+
+**html-to-image vs canvas:**
+- 选择 **html-to-image**
+- 理由：
+  1. 支持高 DPI 缩放（对 2x/4x 导出至关重要）
+  2. 自动处理 foreignObject 和 SVG
+  3. 比 canvas 方案更可靠
+
+**pdf-lib vs jsPDF:**
+- 选择 **pdf-lib**
+- 理由：
+  1. 支持矢量图嵌入，保持 SVG 矢量特性
+  2. 更好的字体支持
+  3. 可以嵌入 SVG 作为矢量而非位图
 
 ### 4.4 CLI 设计（弱化）
 
@@ -400,6 +420,116 @@ fn main() {
     println!("  💻  https://shard-den.com/downloads");
 }
 ```
+
+#### CLI 弱化说明
+
+UML Styler CLI 被弱化为引导页，原因如下：
+
+| 原因 | 说明 |
+|------|------|
+| **交互本质** | 图表编辑器需要实时预览，CLI 无法提供良好体验 |
+| **替代方案** | 自动化场景可直接使用 `mermaid-cli` 或 `plantuml` 命令行工具 |
+| **架构符合** | 此工具属于 "GUI 原生" 类型，CLI 不是最佳载体 |
+
+**Phase 4 扩展计划：**
+
+```rust
+// 未来可能支持的 CLI 功能
+// uml-styler render input.mmd --theme dark --output diagram.svg
+// uml-styler export input.puml --format png --scale 2x
+```
+
+---
+
+---
+
+## 4.5 性能指标
+
+### 4.5.1 加载性能
+
+| 指标 | 目标值 | 说明 |
+|------|--------|------|
+| WASM 初始化 | < 500ms | 从加载到可用 |
+| 首屏渲染 | < 1s | 包含 WASM 初始化 + 默认图表渲染 |
+| WASM 包体积 | < 500KB | gzip 压缩后 |
+
+### 4.5.2 渲染性能
+
+| 指标 | 目标值 | 说明 |
+|------|--------|------|
+| Mermaid 渲染 | < 1s | 中等复杂度图表 (20-50 节点) |
+| Mermaid 大图渲染 | < 5s | >100 节点图表 |
+| PlantUML 服务器响应 | < 3s | 网络请求超时 10s |
+| 实时预览防抖 | 300ms | 输入停止后触发渲染 |
+
+### 4.5.3 导出性能
+
+| 指标 | 目标值 | 说明 |
+|------|--------|------|
+| SVG 导出 | < 500ms | 直接序列化 |
+| PNG 导出 (1x) | < 1s | html-to-image |
+| PNG 导出 (4x) | < 3s | 高 DPI 缩放 |
+| PDF 导出 | < 2s | 包含矢量图嵌入 |
+
+### 4.5.4 分享性能
+
+| 指标 | 目标值 | 说明 |
+|------|--------|------|
+| URL 编码 | < 100ms | LZ-String 压缩 |
+| URL 解码 | < 50ms | LZ-String 解压 |
+| URL 长度限制 | < 8KB | 超长提示用户精简 |
+
+### 4.5.5 性能优化策略
+
+| 场景 | 策略 |
+|------|------|
+| Mermaid 大图 | Web Worker 后台渲染、延迟渲染、虚拟滚动 |
+| PlantUML 服务器 | 本地缓存、备用服务器、错误重试 |
+| 导出高分辨率 | 分块渲染、渐进式导出 |
+| WASM 加载 | 代码分割、懒加载 |
+
+---
+
+## 4.6 可访问性 (a11y)
+
+### 4.6.1 键盘导航
+
+Tab 顺序：编辑器 → 预览区 → 引擎选择器 → 主题选择器 → 导出按钮
+
+| 快捷键 | 功能 |
+|--------|------|
+| `Ctrl/Cmd + S` | 导出当前图表 |
+| `Ctrl/Cmd + Shift + C` | 复制分享链接 |
+| `Ctrl/Cmd + E` | 切换引擎 |
+| `Ctrl/Cmd + T` | 打开主题选择器 |
+| `Escape` | 关闭弹窗 |
+
+### 4.6.2 对比度标准
+
+所有主题配色满足 **WCAG AA 标准** (对比度 ≥ 4.5:1)：
+
+| 主题 | 对比度验证 |
+|------|-----------|
+| Default | ✅ 文字/背景对比度 7:1 |
+| Dark | ✅ 文字/背景对比度 8:1 |
+| Business | ✅ 文字/背景对比度 5:1 |
+| Sketchy | ✅ 文字/背景对比度 6:1 |
+
+### 4.6.3 焦点指示
+
+- 所有可交互元素有清晰的焦点样式 (2px 蓝色边框)
+- 焦点样式与主题适配 (深色主题使用亮色边框)
+- 禁用状态的元素不参与 Tab 导航
+
+### 4.6.4 屏幕阅读器支持
+
+| 元素 | ARIA 标签 |
+|------|----------|
+| 编辑器 | `aria-label="图表代码编辑器"` |
+| 预览区 | `aria-label="图表预览" role="img"` |
+| 错误面板 | `aria-live="polite" role="alert"` |
+| 主题选择器 | `aria-label="主题选择器"` |
+| 导出按钮 | `aria-label="导出图表"` |
 
 ---
 
@@ -491,6 +621,8 @@ fn main() {
 ```rust
 // packages/tools/uml-styler/src/engine/interface.rs
 
+use shard_den_core::{ShardDenError, Result};
+
 /// 渲染提示 - 告诉前端如何渲染
 pub enum RenderHint {
     /// 前端 JS 渲染（如 Mermaid）
@@ -501,13 +633,27 @@ pub enum RenderHint {
     WasmReady(Vec<u8>),
 }
 
-/// 引擎错误
-#[derive(Debug)]
+/// 引擎错误 - 集成 Core 错误类型
+#[derive(Debug, thiserror::Error)]
 pub enum EngineError {
+    #[error("Parse error: {0}")]
     ParseError(String),
+    
+    #[error("Render error: {0}")]
     RenderError(String),
+    
+    #[error("Validation error")]
     ValidationError(Vec<Diagnostic>),
+    
+    #[error("Network error: {0}")]
     NetworkError(String),
+}
+
+/// 将 EngineError 转换为 ShardDenError
+impl From<EngineError> for ShardDenError {
+    fn from(e: EngineError) -> Self {
+        ShardDenError::tool_error("uml-styler", e.to_string())
+    }
 }
 
 /// 诊断信息（语法错误）
@@ -532,7 +678,7 @@ pub trait Engine {
     fn name(&self) -> &str;
     
     /// 渲染图表 - 返回 RenderHint 让前端决定渲染方式
-    fn render(&self, code: &str, theme: &Theme) -> Result<RenderHint, EngineError>;
+    fn render(&self, code: &str, theme: &Theme) -> Result<RenderHint>;
     
     /// 获取支持的图表类型
     fn supported_diagrams(&self) -> Vec<DiagramType>;
@@ -544,8 +690,8 @@ pub trait Engine {
     fn get_templates(&self) -> Vec<Template>;
     
     /// 验证语法
-    fn validate(&self, code: &str) -> Result<Vec<Diagnostic>, EngineError>;
-}
+    fn validate(&self, code: &str) -> Result<Vec<Diagnostic>>;
+    }
 
 /// 图表类型
 pub enum DiagramType {
@@ -705,7 +851,144 @@ class Dog extends Animal {
 
 ---
 
-## 9. 风险与应对
+## 9. 测试策略
+
+### 9.1 覆盖率目标
+
+遵循 AGENTS.md 规范，所有模块必须达到 **≥ 85%** 测试覆盖率。
+
+| 模块 | 最低覆盖率 | 测试工具 | CI 命令 |
+|------|-----------|----------|--------|
+| Rust Engine | **≥ 85%** | `cargo tarpaulin` | `cargo tarpaulin --packages shard-den-uml-styler --fail-under 85` |
+| Rust Theme | **≥ 85%** | `cargo tarpaulin` | 同上 |
+| TypeScript/Web | **≥ 85%** | `vitest` | `npm run test:coverage -- --threshold=85` |
+
+### 9.2 测试类型
+
+#### Rust 测试
+
+**Unit Tests (`#[cfg(test)]` 模块):**
+- Engine trait 实现测试
+- 主题转换逻辑测试
+- RenderHint 返回值测试
+- 错误处理测试
+
+**Integration Tests (`tests/` 目录):**
+- 完整渲染流程测试
+- 引擎切换测试
+- 多主题应用测试
+
+**WASM Bindings Tests (`wasm-bindgen-test`):**
+```rust
+#[wasm_bindgen_test]
+fn test_wasm_render() {
+    let engine = MermaidEngine::new();
+    let result = engine.render("graph TD\nA-->B", &Theme::default());
+    assert!(result.is_ok());
+}
+```
+
+#### TypeScript 测试
+
+**Component Tests (React Testing Library):**
+- Editor 组件：输入、语法高亮、错误标记
+- Preview 组件：渲染结果、缩放、错误面板
+- ThemePanel 组件：主题选择、微调参数
+- ExportPanel 组件：格式选择、分辨率控制
+
+**Hook Tests:**
+- `useEngine`: 引擎切换、渲染调用
+- `useTheme`: 主题状态、微调参数
+- `useExport`: 导出功能
+- `useShare`: URL 编码解码
+
+**E2E Tests (Playwright):**
+| 测试场景 | 验证点 |
+|---------|--------|
+| 编辑→渲染→导出主流程 | 完整用户流程 |
+| URL 分享→恢复状态 | 编码解码正确性 |
+| 错误处理 | 错误提示显示 |
+| 移动端响应式 | Tab 导航正常 |
+
+### 9.3 测试用例清单
+
+#### Rust Core 测试
+
+```rust
+// packages/tools/uml-styler/tests/engine_tests.rs
+
+#[test]
+fn test_mermaid_engine_returns_frontend_js() {
+    let engine = MermaidEngine::new();
+    let hint = engine.render("graph TD\nA-->B", &Theme::default()).unwrap();
+    assert!(matches!(hint, RenderHint::FrontendJS));
+}
+
+#[test]
+fn test_plantuml_engine_returns_server_url() {
+    let engine = PlantUmlEngine::new();
+    let hint = engine.render("@startuml\nA-->B\n@enduml", &Theme::default()).unwrap();
+    assert!(matches!(hint, RenderHint::ServerURL(_)));
+}
+
+#[test]
+fn test_validate_returns_diagnostics() {
+    let engine = MermaidEngine::new();
+    let result = engine.validate("invalid syntax");
+    assert!(result.is_ok());
+    let diagnostics = result.unwrap();
+    assert!(!diagnostics.is_empty());
+}
+
+#[test]
+fn test_theme_conversion() {
+    let theme = Theme {
+        id: "shared/dark".to_string(),
+        primary_color: Some("#3B82F6".to_string()),
+        ..Default::default()
+    };
+    let mermaid_config = theme.to_mermaid_config();
+    assert!(mermaid_config.contains("#3B82F6"));
+}
+```
+
+#### TypeScript 组件测试
+
+```typescript
+// packages/web/src/app/tools/uml-styler/__tests__/Editor.test.tsx
+
+describe('CodeEditor', () => {
+  it('renders with syntax highlighting', () => {
+    render(<CodeEditor />);
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
+  });
+
+  it('shows error markers on invalid syntax', async () => {
+    render(<CodeEditor />);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'invalid' } });
+    await waitFor(() => {
+      expect(screen.getByTestId('error-marker')).toBeInTheDocument();
+    });
+  });
+});
+```
+
+### 9.4 CI 集成
+
+```yaml
+# .github/workflows/test.yml
+- name: Rust Coverage Check
+  run: cargo tarpaulin --packages shard-den-uml-styler --fail-under 85
+
+- name: Web Coverage Check  
+  run: |
+    cd packages/web
+    npm run test:coverage -- --threshold=85
+```
+
+---
+
+## 10. 风险与应对
 
 | 风险 | 影响 | 应对措施 |
 |------|------|---------|
@@ -717,21 +1000,21 @@ class Dog extends Animal {
 
 ---
 
-## 10. 后续规划
+## 11. 后续规划
 
-### 10.1 短期（Phase 4）
+### 11.1 短期（Phase 4）
 
 - D2 引擎支持
 - Graphviz/DOT 支持
 - WaveDrom 时序图支持
 
-### 10.2 中期
+### 11.2 中期
 
 - Desktop 版离线 PlantUML（WASM 方案）
 - AI 辅助：自然语言生成图表
 - 协作功能（Desktop 版）
 
-### 10.3 长期
+### 11.3 长期
 
 - 图表库/社区模板分享
 - VS Code 插件
@@ -739,9 +1022,9 @@ class Dog extends Animal {
 
 ---
 
-## 11. 附录
+## 12. 附录
 
-### 11.1 参考资源
+### 12.1 参考资源
 
 - [Mermaid 官方文档](https://mermaid.js.org/)
 - [PlantUML 官方文档](https://plantuml.com/)
@@ -749,15 +1032,22 @@ class Dog extends Animal {
 - [Tauri 文档](https://tauri.app/)
 - [Mermaid Live Editor](https://mermaid.live/) - URL 分享机制参考
 - [LZ-String 库](https://pieroxy.net/blog/pages/lz-string/index.html)
+### 12.2 设计文档
 
-### 11.2 相关项目
+| 文档 | 路径 | 说明 |
+|------|------|------|
+| UI 原型图 | [docs/designs/uml-styler/ui/prototype.md](../designs/uml-styler/ui/prototype.md) | 三端布局、组件设计、交互流程 |
+| 功能流程图 | [docs/designs/uml-styler/flows/flow.md](../designs/uml-styler/flows/flow.md) | 状态管理、错误处理、导出流程 |
+| 时序图 | [docs/designs/uml-styler/flows/sequence.mmd](../designs/uml-styler/flows/sequence.mmd) | 核心流程序列图 |
 
+
+### 12.3 相关项目
 - [Mermaid Live Editor](https://mermaid.live/)
 - [PlantUML Online](https://www.plantuml.com/plantuml/uml/)
 - [D2 Playground](https://play.d2lang.com/)
 
 ---
 
-**文档版本:** 2.0  
+**文档版本:** 2.3
 **最后更新:** 2026-02-28  
 **状态:** 已批准，可进入实现阶段

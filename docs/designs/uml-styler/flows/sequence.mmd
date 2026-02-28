@@ -1,0 +1,207 @@
+sequenceDiagram
+    autonumber
+    participant U as 用户
+    participant E as Editor
+    participant W as WASM
+    participant EN as Engine
+    participant R as Renderer
+    participant P as Preview
+
+    Note over U,P: 编辑-渲染主流程
+
+    U->>E: 输入图表代码
+    E->>E: 防抖 300ms
+    E->>W: validate(code)
+    W->>EN: Engine.validate()
+    EN-->>W: Diagnostic[]
+    
+    alt 语法错误
+        W-->>E: 错误列表
+        E->>E: 显示错误波浪线
+        E->>P: 显示错误面板
+    else 语法正确
+        W-->>E: 验证通过
+        E->>W: render(code, theme)
+        W->>EN: Engine.render()
+        EN-->>W: RenderHint
+        
+        alt FrontendJS (Mermaid)
+            W-->>E: RenderHint::FrontendJS
+            E->>R: mermaid.js.render()
+            R-->>E: SVG String
+        else ServerURL (PlantUML)
+            W-->>E: RenderHint::ServerURL(url)
+            E->>R: fetch(url)
+            R-->>E: SVG/PNG
+        end
+        
+        E->>P: 更新预览
+        P-->>U: 显示图表
+    end
+
+---
+
+sequenceDiagram
+    autonumber
+    participant U as 用户
+    participant E as Editor
+    participant S as ShareService
+    participant URL as 浏览器 URL
+
+    Note over U,URL: URL 分享流程
+
+    U->>E: 点击分享按钮
+    E->>S: 获取当前状态
+    S->>S: 收集 state
+    S->>S: JSON.stringify(state)
+    S->>S: LZ-String.compressToEncodedURIComponent()
+    S->>URL: 更新 hash: #/d/{encoded}
+    S-->>E: 返回完整 URL
+    E-->>U: 显示分享弹窗
+
+    Note over U,URL: 分享链接打开
+
+    U->>URL: 打开分享链接
+    URL->>E: 读取 hash
+    E->>S: 解析 hash
+    S->>S: LZ-String.decompressFromEncodedURIComponent()
+    S->>S: JSON.parse()
+    S-->>E: 返回 state
+    E->>E: 恢复编辑器状态
+    E->>E: 触发渲染
+
+---
+
+sequenceDiagram
+    autonumber
+    participant U as 用户
+    participant P as Preview
+    participant E as Exporter
+    participant C as Canvas/PDF
+
+    Note over U,C: 导出流程 (PNG/SVG/PDF)
+
+    U->>P: 点击导出按钮
+    P->>E: 获取 SVG 元素
+    
+    alt PNG 导出
+        E->>E: 应用分辨率缩放
+        E->>C: 创建 Canvas
+        E->>C: drawImage(SVG)
+        C-->>E: Blob
+        E->>E: 下载文件
+    else SVG 导出
+        E->>E: 序列化 SVG
+        E->>E: 添加 XML 声明
+        E->>E: 下载文件
+    else PDF 导出
+        E->>E: 转换为高分辨率 Canvas
+        E->>C: jsPDF 创建文档
+        C->>C: 设置页面尺寸
+        E->>C: 添加图片
+        alt 包含标题
+            E->>C: 添加标题文字
+        end
+        alt 包含日期
+            E->>C: 添加日期文字
+        end
+        C-->>E: Blob
+        E->>E: 下载文件
+    end
+    
+    E-->>U: 显示成功提示
+
+---
+
+sequenceDiagram
+    autonumber
+    participant P as Page
+    participant W as WASM
+    participant R as Engine Registry
+
+    Note over P,R: WASM 初始化流程
+
+    P->>P: 页面加载
+    P->>P: 显示加载状态
+    P->>W: initWasm()
+
+    alt 初始化成功
+        W-->>P: 就绪
+        P->>R: 初始化引擎
+        R-->>P: 返回可用引擎列表
+        P->>P: 设置 isWasmReady = true
+        P->>P: 隐藏加载状态
+        P->>P: 显示编辑器
+    else 初始化失败
+        W-->>P: 错误
+        P->>P: 设置 wasmError
+        P->>P: 隐藏加载状态
+        P->>P: 显示错误提示
+        P->>P: 显示刷新按钮
+    end
+
+---
+
+sequenceDiagram
+    autonumber
+    participant E as Engine
+    participant F as Frontend
+    participant S as PlantUML Server
+
+    Note over E,S: PlantUML 服务器错误处理
+
+    E->>F: 返回 ServerURL
+    F->>S: GET {encoded_url}
+
+    alt 成功
+        S-->>F: 200 OK + SVG/PNG
+        F->>F: 显示预览
+    else 超时 (10s)
+        S-->>F: Timeout
+        F->>F: 显示错误: "服务器响应超时"
+        F->>F: 显示重试按钮
+    else 服务器错误 (5xx)
+        S-->>F: 500 Error
+        F->>F: 显示错误: "服务器暂时不可用"
+        F->>F: 显示稍后重试提示
+    else 语法错误 (400)
+        S-->>F: 400 + 错误 SVG
+        F->>F: 解析错误 SVG
+        F->>F: 显示语法错误位置
+    end
+
+---
+
+sequenceDiagram
+    autonumber
+    participant U as 用户
+    participant F as Frontend
+    participant T as Tauri
+    participant FS as 文件系统
+
+    Note over U,FS: Desktop 存储流程
+
+    Note over U,FS: 保存历史记录
+    U->>F: 渲染成功
+    F->>F: 收集历史条目
+    F->>T: invoke('save_history', entry)
+    T->>FS: 追加到 history.json
+    FS-->>T: 成功
+    T-->>F: 确认
+
+    Note over U,FS: 加载历史记录
+    U->>F: 打开历史面板
+    F->>T: invoke('load_history', {limit: 20})
+    T->>FS: 读取 history.json
+    FS-->>T: 历史列表
+    T-->>F: 返回列表
+    F-->>U: 显示历史列表
+
+    Note over U,FS: 保存自定义模板
+    U->>F: 点击保存为模板
+    F->>F: 收集模板数据
+    F->>T: invoke('save_template', template)
+    T->>FS: 保存到 templates/{id}.json
+    FS-->>T: 成功
+    T-->>F: 确认
+    F-->>U: 显示保存成功
