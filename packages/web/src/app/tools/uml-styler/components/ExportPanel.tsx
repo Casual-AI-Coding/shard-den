@@ -2,8 +2,6 @@
 
 import React, { useState, useRef } from 'react';
 
-import { useState, useRef } from 'react';
-
 interface ExportPanelProps {
   code: string;
   theme: string;
@@ -15,7 +13,6 @@ type ExportFormat = 'png' | 'svg';
 export default function ExportPanel({ code, theme, engine }: ExportPanelProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [scale, setScale] = useState<1 | 2 | 3 | 4>(2);
-  const previewRef = useRef<HTMLDivElement>(null);
 
   const exportSVG = async () => {
     const svgElement = document.querySelector('#mermaid-preview svg') as SVGSVGElement;

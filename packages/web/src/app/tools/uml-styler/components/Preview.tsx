@@ -1,10 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-
-import { useEffect, useRef, useState, useCallback } from 'react';
 import mermaid from 'mermaid';
-
 interface PreviewProps {
   code: string;
   theme: string;

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FileJson, Star, History, Settings, X } from 'lucide-react';
+import { FileJson, Star, History, Settings, X, GitBranch } from 'lucide-react';
 import packageJson from '../../package.json';
 import { loadHistory, type HistoryEntry } from '@/lib/tauri';
 
@@ -14,6 +14,12 @@ const tools = [
     icon: FileJson,
     description: '使用 JSONPath 提取字段'
   },
+  {
+    name: 'UML Styler',
+    path: '/tools/uml-styler',
+    icon: GitBranch,
+    description: 'UML 图表编辑器，支持 Mermaid'
+  }
 ];
 
 interface SidebarProps {
@@ -66,8 +72,8 @@ export function Sidebar({ isDesktop = false, onClose }: SidebarProps) {
                 <Link
                   href={tool.path}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive
-                      ? 'bg-[var(--accent)] text-[var(--bg)]'
-                      : 'text-[var(--text-secondary)] hover:bg-[var(--hover)] hover:text-[var(--text)]'
+                    ? 'bg-[var(--accent)] text-[var(--bg)]'
+                    : 'text-[var(--text-secondary)] hover:bg-[var(--hover)] hover:text-[var(--text)]'
                     }`}
                 >
                   <Icon className="w-4 h-4" />
