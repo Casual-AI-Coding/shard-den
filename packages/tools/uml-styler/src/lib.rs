@@ -14,7 +14,7 @@ mod wasm;
 pub use engine::{DiagramType, Engine, EngineRegistry, RenderHint};
 pub use error::{EngineError, Diagnostic, Severity};
 pub use theme::{Theme, ThemeCategory, ThemeTuning};
-pub use templates::Template;
+pub use templates::{Template, get_mermaid_templates};
 
 #[cfg(feature = "wasm")]
 pub use wasm::*;

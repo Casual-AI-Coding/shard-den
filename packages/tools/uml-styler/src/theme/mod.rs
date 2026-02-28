@@ -92,6 +92,18 @@ impl Theme {
         self
     }
 
+    /// 设置文字颜色
+    pub fn with_text_color(mut self, color: impl Into<String>) -> Self {
+        self.tuning.text_color = Some(color.into());
+        self
+    }
+
+    /// 设置字体族
+    pub fn with_font_family(mut self, family: impl Into<String>) -> Self {
+        self.tuning.font_family = Some(family.into());
+        self
+    }
+
     /// 转换为 Mermaid 主题配置
     /// 返回 (主题名, themeVariables)
     pub fn to_mermaid_config(&self) -> (String, Option<String>) {
@@ -256,4 +268,14 @@ mod tests {
         assert!(params.is_some());
         assert!(params.unwrap().contains("ArrowColor #3B82F6"));
     }
+}
+
+pub mod shared;
+pub mod mermaid;
+
+/// 获取所有主题
+pub fn get_all_themes() -> Vec<Theme> {
+    let mut themes = shared::get_shared_themes();
+    themes.extend(mermaid::get_mermaid_themes());
+    themes
 }

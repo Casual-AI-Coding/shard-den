@@ -70,31 +70,33 @@ impl MermaidEngine {
     /// 获取 Mermaid 内置模板
     fn get_mermaid_templates(&self) -> Vec<Template> {
         vec![
-            Template {
-                id: "mermaid/sequence".to_string(),
-                name: "Sequence Diagram".to_string(),
-                code: r#"sequenceDiagram
+            Template::new(
+                "mermaid/sequence",
+                "Sequence Diagram",
+                r#"sequenceDiagram
     participant A as Alice
     participant B as Bob
     A->>B: Hello!
-    B-->>A: Hi!"#
-                    .to_string(),
-                description: "Basic sequence diagram".to_string(),
-            },
-            Template {
-                id: "mermaid/flowchart".to_string(),
-                name: "Flowchart".to_string(),
-                code: r#"flowchart TD
+    B-->>A: Hi!"#,
+                "Basic sequence diagram",
+                DiagramType::Sequence,
+            ),
+            Template::new(
+                "mermaid/flowchart",
+                "Flowchart",
+                r#"flowchart TD
     A[Start] --> B{Decision}
     B -->|Yes| C[Action 1]
-    B -->|No| D[Action 2]"#
-                    .to_string(),
-                description: "Basic flowchart".to_string(),
-            },
-            Template {
-                id: "mermaid/class".to_string(),
-                name: "Class Diagram".to_string(),
-                code: r#"classDiagram
+    B -->|No| D[Action 2]
+    C --> E[End]
+    D --> E"#,
+                "Basic flowchart",
+                DiagramType::Flowchart,
+            ),
+            Template::new(
+                "mermaid/class",
+                "Class Diagram",
+                r#"classDiagram
     class Animal {
         +name: String
         +makeSound()
@@ -103,12 +105,14 @@ impl MermaidEngine {
         +breed: String
         +bark()
     }
-    Animal <|-- Dog"#
-                    .to_string(),
-                description: "Basic class diagram".to_string(),
-            },
+    Animal <|-- Dog"#,
+                "Basic class diagram",
+                DiagramType::Class,
+            ),
         ]
     }
+
+    /// 简单的 Mermaid 语法检测
 
     /// 简单的 Mermaid 语法检测
     fn detect_diagram_type(&self, code: &str) -> Option<DiagramType> {

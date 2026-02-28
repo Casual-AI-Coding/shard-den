@@ -30,3 +30,7 @@ name = "shard_den_uml_styler"
 [[test]]
 name = "engine_interface_test"
 path = "tests/engine_interface_test.rs"
+
+[[test]]
+name = "theme_templates_test"
+path = "tests/theme_templates_test.rs"
