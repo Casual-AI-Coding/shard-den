@@ -1,16 +1,18 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 
 interface EditorProps {
   code: string;
   onChange: (code: string) => void;
+  onCursorChange?: (line: number, col: number) => void;
   engine: 'mermaid' | 'plantuml';
+  onEngineChange: (engine: 'mermaid' | 'plantuml') => void;
 }
 
-// Mermaid 语法高亮配置
+// Mermaid syntax highlight config
 const MERMAID_LANGUAGE_CONFIG = {
   comments: {
     lineComment: '%%',
@@ -58,26 +60,32 @@ const MERMAID_TOKEN_PROVIDER = {
           '@default': 'identifier',
         },
       }],
-      [/[\"']([^\"']*)[\"']/, 'string'],
+      [/["']([^"']*)["']/, 'string'],
       [/\d+/, 'number'],
     ],
   },
 };
 
-export default function CodeEditor({ code, onChange, engine }: EditorProps) {
+export default function CodeEditor({ 
+  code, 
+  onChange, 
+  onCursorChange,
+  engine, 
+  onEngineChange 
+}: EditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
-  const handleEditorMount: OnMount = (editor, monaco) => {
+  const handleEditorMount: OnMount = useCallback((editor, monaco) => {
     editorRef.current = editor;
 
-    // 注册 Mermaid 语言
+    // Register Mermaid language
     if (!monaco.languages.getLanguages().some((lang: { id: string }) => lang.id === 'mermaid')) {
       monaco.languages.register({ id: 'mermaid' });
       monaco.languages.setLanguageConfiguration('mermaid', MERMAID_LANGUAGE_CONFIG as any);
       monaco.languages.setMonarchTokensProvider('mermaid', MERMAID_TOKEN_PROVIDER as any);
     }
 
-    // 设置编辑器选项
+    // Set editor options
     editor.updateOptions({
       minimap: { enabled: false },
       fontSize: 14,
@@ -85,26 +93,74 @@ export default function CodeEditor({ code, onChange, engine }: EditorProps) {
       wordWrap: 'on',
       automaticLayout: true,
       scrollBeyondLastLine: false,
+      padding: { top: 16, bottom: 16 },
     });
-  };
+
+    // Listen to cursor position changes
+    editor.onDidChangeCursorPosition((e) => {
+      if (onCursorChange) {
+        onCursorChange(e.position.lineNumber, e.position.column);
+      }
+    });
+  }, [onCursorChange]);
 
   const handleChange = (value: string | undefined) => {
     onChange(value || '');
   };
 
+  const handleClear = () => {
+    onChange('');
+    editorRef.current?.focus();
+  };
+
+  const handleFormat = () => {
+    // Simple formatting: trim trailing whitespace from each line
+    const formatted = code.split('\n').map(line => line.trimEnd()).join('\n');
+    onChange(formatted);
+  };
+
   return (
     <div className="h-full flex flex-col">
-      <div className="px-4 py-2 border-b bg-gray-50 text-sm font-medium">
-        {engine === 'mermaid' ? 'Mermaid' : 'PlantUML'} Editor
+      {/* Toolbar */}
+      <div className="h-12 px-4 bg-slate-50 border-b border-slate-200 flex items-center gap-2 shrink-0">
+        {/* Engine Selector */}
+        <select
+          value={engine}
+          onChange={(e) => onEngineChange(e.target.value as 'mermaid' | 'plantuml')}
+          className="px-3 py-1.5 text-sm bg-white border border-slate-300 rounded hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+        >
+          <option value="mermaid">Mermaid</option>
+          <option value="plantuml" disabled>PlantUML (Coming Soon)</option>
+        </select>
+
+        {/* Format Button */}
+        <button
+          onClick={handleFormat}
+          className="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded transition-colors"
+          title="Format code"
+        >
+          格式化
+        </button>
+
+        {/* Clear Button */}
+        <button
+          onClick={handleClear}
+          className="px-3 py-1.5 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+          title="Clear editor"
+        >
+          清空
+        </button>
       </div>
-      <div className="flex-1">
+
+      {/* Editor */}
+      <div className="flex-1 min-h-0">
         <Editor
           height="100%"
           language={engine === 'mermaid' ? 'mermaid' : 'markdown'}
           value={code}
           onChange={handleChange}
           onMount={handleEditorMount}
-          theme="vs"
+          theme="vs-dark"
           options={{
             minimap: { enabled: false },
             fontSize: 14,
@@ -112,6 +168,11 @@ export default function CodeEditor({ code, onChange, engine }: EditorProps) {
             wordWrap: 'on',
             automaticLayout: true,
             scrollBeyondLastLine: false,
+            padding: { top: 16, bottom: 16 },
+            fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
+            renderLineHighlight: 'line',
+            cursorBlinking: 'smooth',
+            smoothScrolling: true,
           }}
         />
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 
 interface ExportPanelProps {
   code: string;
@@ -8,188 +8,174 @@ interface ExportPanelProps {
   engine: 'mermaid' | 'plantuml';
 }
 
-type ExportFormat = 'png' | 'svg';
-
 export default function ExportPanel({ code, theme, engine }: ExportPanelProps) {
-  const [isExporting, setIsExporting] = useState(false);
-  const [scale, setScale] = useState<1 | 2 | 3 | 4>(2);
+  const [isOpen, setIsOpen] = useState(false);
 
-  const exportSVG = async () => {
-    const svgElement = document.querySelector('#mermaid-preview svg') as SVGSVGElement;
-    if (!svgElement) {
-      alert('No diagram to export');
-      return;
-    }
-
-    // Clone SVG
-    const clonedSvg = svgElement.cloneNode(true) as SVGSVGElement;
+  const handleExport = async (format: 'png' | 'svg' | 'pdf') => {
+    setIsOpen(false);
     
-    // Get dimensions
-    const bbox = svgElement.getBBox();
-    const width = bbox.width + bbox.x;
-    const height = bbox.height + bbox.y;
-    
-    // Set attributes
-    clonedSvg.setAttribute('width', String(width));
-    clonedSvg.setAttribute('height', String(height));
-    clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    
-    // Serialize
-    const serializer = new XMLSerializer();
-    const svgString = serializer.serializeToString(clonedSvg);
-    const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-    
-    // Download
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `diagram-${Date.now()}.svg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  const exportPNG = async () => {
-    const svgElement = document.querySelector('#mermaid-preview svg') as SVGSVGElement;
-    if (!svgElement) {
-      alert('No diagram to export');
-      return;
-    }
-
-    // Clone SVG
-    const clonedSvg = svgElement.cloneNode(true) as SVGSVGElement;
-    
-    // Get dimensions
-    const bbox = svgElement.getBBox();
-    const width = bbox.width + bbox.x;
-    const height = bbox.height + bbox.y;
-    
-    // Scale for higher resolution
-    const scaledWidth = width * scale;
-    const scaledHeight = height * scale;
-    
-    // Set attributes
-    clonedSvg.setAttribute('width', String(width));
-    clonedSvg.setAttribute('height', String(height));
-    clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    
-    // Add background
-    const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    background.setAttribute('width', '100%');
-    background.setAttribute('height', '100%');
-    background.setAttribute('fill', 'white');
-    clonedSvg.insertBefore(background, clonedSvg.firstChild);
-    
-    // Serialize
-    const serializer = new XMLSerializer();
-    const svgString = serializer.serializeToString(clonedSvg);
-    
-    // Create canvas
-    const canvas = document.createElement('canvas');
-    canvas.width = scaledWidth;
-    canvas.height = scaledHeight;
-    const ctx = canvas.getContext('2d');
-    
-    if (!ctx) {
-      alert('Failed to create canvas context');
-      return;
-    }
-    
-    // Fill background
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, scaledWidth, scaledHeight);
-    
-    // Create image from SVG
-    const img = new Image();
-    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(svgBlob);
-    
-    return new Promise<void>((resolve, reject) => {
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
-        URL.revokeObjectURL(url);
-        
-        // Convert to PNG
-        canvas.toBlob((blob) => {
-          if (!blob) {
-            reject(new Error('Failed to create blob'));
-            return;
-          }
-          
-          // Download
-          const pngUrl = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = pngUrl;
-          link.download = `diagram-${Date.now()}.png`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(pngUrl);
-          resolve();
-        }, 'image/png');
-      };
-      
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error('Failed to load SVG'));
-      };
-      
-      img.src = url;
-    });
-  };
-
-  const handleExport = async (format: ExportFormat) => {
     if (!code.trim()) {
       alert('No diagram to export');
       return;
     }
 
-    setIsExporting(true);
+    const svgElement = document.querySelector('.mermaid-preview svg') as SVGSVGElement;
+    if (!svgElement) {
+      alert('No diagram to export. Please render a diagram first.');
+      return;
+    }
+
     try {
       if (format === 'svg') {
-        await exportSVG();
-      } else {
-        await exportPNG();
+        const clonedSvg = svgElement.cloneNode(true) as SVGSVGElement;
+        const bbox = svgElement.getBBox();
+        const width = bbox.width + bbox.x;
+        const height = bbox.height + bbox.y;
+        
+        clonedSvg.setAttribute('width', String(width));
+        clonedSvg.setAttribute('height', String(height));
+        clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(clonedSvg);
+        const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `diagram-${Date.now()}.svg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else if (format === 'png') {
+        const clonedSvg = svgElement.cloneNode(true) as SVGSVGElement;
+        const bbox = svgElement.getBBox();
+        const width = bbox.width + bbox.x;
+        const height = bbox.height + bbox.y;
+        
+        const scale = 2;
+        const scaledWidth = width * scale;
+        const scaledHeight = height * scale;
+        
+        clonedSvg.setAttribute('width', String(width));
+        clonedSvg.setAttribute('height', String(height));
+        clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        
+        const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        background.setAttribute('width', '100%');
+        background.setAttribute('height', '100%');
+        background.setAttribute('fill', 'white');
+        clonedSvg.insertBefore(background, clonedSvg.firstChild);
+        
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(clonedSvg);
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = scaledWidth;
+        canvas.height = scaledHeight;
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) return;
+        
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, scaledWidth, scaledHeight);
+        
+        const img = new Image();
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => {
+            ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+            URL.revokeObjectURL(url);
+            
+            canvas.toBlob((blob) => {
+              if (!blob) {
+                reject(new Error('Failed to create blob'));
+                return;
+              }
+              
+              const pngUrl = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = pngUrl;
+              link.download = `diagram-${Date.now()}.png`;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(pngUrl);
+              resolve();
+            }, 'image/png');
+          };
+          
+          img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('Failed to load SVG'));
+          };
+          
+          img.src = url;
+        });
+      } else if (format === 'pdf') {
+        alert('PDF export will be available in Phase 2');
       }
-    } catch (error) {
-      console.error('Export error:', error);
-      alert(`Export failed: ${error}`);
-    } finally {
-      setIsExporting(false);
+    } catch (err) {
+      console.error('Export error:', err);
+      alert(`Export failed: ${err}`);
     }
   };
 
   return (
-    <div className="flex items-center gap-2">
-      {/* Scale selector */}
-      <select
-        value={scale}
-        onChange={(e) => setScale(Number(e.target.value) as 1 | 2 | 3 | 4)}
-        className="px-2 py-1 border rounded text-sm"
-        title="Export scale"
-      >
-        <option value={1}>1x</option>
-        <option value={2}>2x</option>
-        <option value={3}>3x</option>
-        <option value={4}>4x</option>
-      </select>
-      
-      {/* Export buttons */}
+    <div className="relative">
       <button
-        onClick={() => handleExport('png')}
-        disabled={isExporting}
-        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
       >
-        {isExporting ? 'Exporting...' : 'PNG'}
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
+        <span>导出</span>
+        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
       </button>
-      <button
-        onClick={() => handleExport('svg')}
-        disabled={isExporting}
-        className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        SVG
-      </button>
+
+      {/* Dropdown */}
+      {isOpen && (
+        <>
+          <div 
+            className="fixed inset-0 z-40" 
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
+            <div className="p-1">
+              <button
+                onClick={() => handleExport('png')}
+                disabled={!code.trim()}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="w-4 h-4 bg-blue-600 rounded text-white text-xs flex items-center justify-center">P</span>
+                PNG
+              </button>
+              <button
+                onClick={() => handleExport('svg')}
+                disabled={!code.trim()}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="w-4 h-4 bg-green-600 rounded text-white text-xs flex items-center justify-center">S</span>
+                SVG
+              </button>
+              <button
+                onClick={() => handleExport('pdf')}
+                disabled={!code.trim()}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="w-4 h-4 bg-red-600 rounded text-white text-xs flex items-center justify-center">P</span>
+                PDF
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
