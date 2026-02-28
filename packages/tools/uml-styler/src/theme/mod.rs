@@ -37,6 +37,28 @@ pub struct ThemeTuning {
     pub text_color: Option<String>,
 }
 
+impl ThemeTuning {
+    pub fn with_font_family(mut self, family: impl Into<String>) -> Self {
+        self.font_family = Some(family.into());
+        self
+    }
+    
+    pub fn with_font_size(mut self, size: u16) -> Self {
+        self.font_size = Some(size);
+        self
+    }
+    
+    pub fn with_line_width(mut self, width: u16) -> Self {
+        self.line_width = Some(width);
+        self
+    }
+    
+    pub fn with_text_color(mut self, color: impl Into<String>) -> Self {
+        self.text_color = Some(color.into());
+        self
+    }
+}
+
 /// 主题
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "wasm", derive(Serialize, Deserialize))]
@@ -103,6 +125,19 @@ impl Theme {
         self.tuning.font_family = Some(family.into());
         self
     }
+
+    /// 设置字号
+    pub fn with_font_size(mut self, size: u16) -> Self {
+        self.tuning.font_size = Some(size);
+        self
+    }
+
+    /// 设置线条粗细
+    pub fn with_line_width(mut self, width: u16) -> Self {
+        self.tuning.line_width = Some(width);
+        self
+    }
+
 
     /// 转换为 Mermaid 主题配置
     /// 返回 (主题名, themeVariables)
@@ -267,6 +302,82 @@ mod tests {
         assert_eq!(name, "cerulean");
         assert!(params.is_some());
         assert!(params.unwrap().contains("ArrowColor #3B82F6"));
+    }
+
+    #[test]
+    fn test_theme_to_mermaid_config_with_all_tuning() {
+        let theme = Theme::default()
+            .with_primary_color("#3B82F6")
+            .with_background_color("#FFFFFF")
+            .with_text_color("#000000");
+        let (name, vars) = theme.to_mermaid_config();
+        assert_eq!(name, "default");
+        let vars = vars.unwrap();
+        assert!(vars.contains("primaryColor '#3B82F6'"));
+        assert!(vars.contains("background '#FFFFFF'"));
+        assert!(vars.contains("primaryTextColor '#000000'"));
+    }
+
+    #[test]
+    fn test_theme_to_plantuml_config_with_all_tuning() {
+        let theme = Theme::default()
+            .with_primary_color("#3B82F6")
+            .with_background_color("#FFFFFF")
+            .with_text_color("#000000")
+            .with_font_family("Arial");
+        let (name, params) = theme.to_plantuml_config();
+        assert_eq!(name, "cerulean");
+        let params = params.unwrap();
+        assert!(params.contains("ArrowColor #3B82F6"));
+        assert!(params.contains("BackgroundColor #FFFFFF"));
+        assert!(params.contains("FontColor #000000"));
+        assert!(params.contains("FontName Arial"));
+    }
+
+    #[test]
+    fn test_theme_to_mermaid_config_shared_dark() {
+        let theme = Theme::new("shared/dark", "Dark", ThemeCategory::Shared);
+        let (name, _) = theme.to_mermaid_config();
+        assert_eq!(name, "dark");
+    }
+
+    #[test]
+    fn test_theme_to_plantuml_config_plantuml_sketchy() {
+        let theme = Theme::new("plantuml/sketchy", "Sketchy", ThemeCategory::PlantUMLSpecific);
+        let (name, _) = theme.to_plantuml_config();
+        assert_eq!(name, "sketchy");
+    }
+
+    #[test]
+    fn test_theme_with_font_family() {
+        let theme = Theme::default().with_font_family("Inter");
+        assert_eq!(theme.tuning.font_family, Some("Inter".to_string()));
+    }
+
+    #[test]
+    fn test_theme_with_font_size() {
+        let theme = Theme::default().with_font_size(14);
+        assert_eq!(theme.tuning.font_size, Some(14));
+    }
+
+    #[test]
+    fn test_theme_with_line_width() {
+        let theme = Theme::default().with_line_width(2);
+        assert_eq!(theme.tuning.line_width, Some(2));
+    }
+
+    #[test]
+    fn test_theme_tuning_builder() {
+        let tuning = ThemeTuning::default()
+            .with_font_family("Arial")
+            .with_font_size(12)
+            .with_line_width(3)
+            .with_text_color("#000000");
+        
+        assert_eq!(tuning.font_family, Some("Arial".to_string()));
+        assert_eq!(tuning.font_size, Some(12));
+        assert_eq!(tuning.line_width, Some(3));
+        assert_eq!(tuning.text_color, Some("#000000".to_string()));
     }
 }
 

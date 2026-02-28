@@ -260,4 +260,50 @@ mod tests {
         let diag_type = engine.detect_diagram_type("flowchart TD\nA-->B");
         assert_eq!(diag_type, Some(DiagramType::Flowchart));
     }
+    #[test]
+    fn test_mermaid_validate_valid_code() {
+        let engine = MermaidEngine::new();
+        let diagnostics = engine.validate("flowchart TD\nA-->B").unwrap();
+        // 不应该有错误
+        assert!(diagnostics.is_empty() || diagnostics[0].severity != Severity::Error);
+    }
+
+    #[test]
+    fn test_mermaid_validate_unknown_type() {
+        let engine = MermaidEngine::new();
+        let diagnostics = engine.validate("someUnknownType\nA-->B").unwrap();
+        // 应该有警告
+        assert!(!diagnostics.is_empty());
+        assert_eq!(diagnostics[0].severity, Severity::Warning);
+    }
+
+    #[test]
+    fn test_mermaid_detect_all_types() {
+        let engine = MermaidEngine::new();
+        
+        assert_eq!(engine.detect_diagram_type("sequenceDiagram\nA->>B"), Some(DiagramType::Sequence));
+        assert_eq!(engine.detect_diagram_type("flowchart TD\nA-->B"), Some(DiagramType::Flowchart));
+        assert_eq!(engine.detect_diagram_type("graph TD\nA-->B"), Some(DiagramType::Flowchart));
+        assert_eq!(engine.detect_diagram_type("classDiagram\nclass A"), Some(DiagramType::Class));
+        assert_eq!(engine.detect_diagram_type("stateDiagram-v2\n[*] --> A"), Some(DiagramType::State));
+        assert_eq!(engine.detect_diagram_type("erDiagram\nA ||--o{ B"), Some(DiagramType::ErDiagram));
+        assert_eq!(engine.detect_diagram_type("mindmap\nroot((A))"), Some(DiagramType::Mindmap));
+        assert_eq!(engine.detect_diagram_type("gantt\ntitle Test"), Some(DiagramType::Gantt));
+        assert_eq!(engine.detect_diagram_type("journey\ntitle Test"), Some(DiagramType::Activity));
+    }
+
+    #[test]
+    fn test_mermaid_detect_unknown() {
+        let engine = MermaidEngine::new();
+        assert_eq!(engine.detect_diagram_type("unknown keyword"), None);
+        assert_eq!(engine.detect_diagram_type(""), None);
+    }
+
+    #[test]
+    fn test_mermaid_engine_with_theme() {
+        let engine = MermaidEngine::new();
+        let theme = Theme::new("mermaid/forest", "Forest", ThemeCategory::MermaidSpecific);
+        let result = engine.render("flowchart TD\nA-->B", &theme).unwrap();
+        assert!(matches!(result, RenderHint::FrontendJS));
+    }
 }

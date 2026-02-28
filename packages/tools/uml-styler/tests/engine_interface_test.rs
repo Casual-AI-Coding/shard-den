@@ -47,3 +47,46 @@ fn test_diagram_type_all_variants() {
     ];
     assert_eq!(types.len(), 11);
 }
+
+#[test]
+fn test_engine_registry_new() {
+    let registry = shard_den_uml_styler::engine::EngineRegistry::new();
+    assert!(registry.list_engines().is_empty());
+}
+
+#[test]
+fn test_engine_registry_register() {
+    use shard_den_uml_styler::engine::Engine;
+    use shard_den_uml_styler::engine::MermaidEngine;
+    
+    let mut registry = shard_den_uml_styler::engine::EngineRegistry::new();
+    let engine = Box::new(MermaidEngine::new());
+    registry.register(engine);
+    
+    let engines = registry.list_engines();
+    assert_eq!(engines.len(), 1);
+    assert_eq!(engines[0], "mermaid");
+}
+
+#[test]
+fn test_engine_registry_get_engine() {
+    use shard_den_uml_styler::engine::Engine;
+    use shard_den_uml_styler::engine::MermaidEngine;
+    
+    let mut registry = shard_den_uml_styler::engine::EngineRegistry::new();
+    let engine = Box::new(MermaidEngine::new());
+    registry.register(engine);
+    
+    let found = registry.get_engine("mermaid");
+    assert!(found.is_some());
+    assert_eq!(found.unwrap().name(), "mermaid");
+    
+    let not_found = registry.get_engine("unknown");
+    assert!(not_found.is_none());
+}
+
+#[test]
+fn test_engine_registry_default() {
+    let registry = shard_den_uml_styler::engine::EngineRegistry::default();
+    assert!(registry.list_engines().is_empty());
+}
