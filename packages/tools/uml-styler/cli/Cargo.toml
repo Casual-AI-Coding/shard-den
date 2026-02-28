@@ -1,0 +1,15 @@
+[package]
+name = "shard-den-uml-styler-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "UML Styler CLI for ShardDen"
+
+[[bin]]
+name = "shard-den-uml-styler"
+path = "main.rs"
+
+[dependencies]
+shard-den-core = { version = "0.2.7", path = "../../../core" }

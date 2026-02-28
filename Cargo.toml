@@ -5,6 +5,8 @@ members = [
     "packages/wasm",
     "packages/cli",
     "packages/tools/json-extractor",
+    "packages/tools/uml-styler",
+    "packages/tools/uml-styler/cli",
     "packages/desktop",
 ]
 
@@ -19,6 +21,7 @@ repository = "https://github.com/oGsLP/shard-den"
 # Internal crates
 shard-den-core = { path = "packages/core" }
 shard-den-json-extractor = { path = "packages/tools/json-extractor" }
+shard-den-uml-styler = { path = "packages/tools/uml-styler" }
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

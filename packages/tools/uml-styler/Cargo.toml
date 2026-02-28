@@ -1,0 +1,28 @@
+[package]
+name = "shard-den-uml-styler"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "UML Styler tool for ShardDen"
+
+[features]
+default = []
+wasm = ["wasm-bindgen", "serde-wasm-bindgen"]
+
+[dependencies]
+serde.workspace = true
+shard-den-core = { version = "0.2.7", path = "../../core" }
+thiserror.workspace = true
+tracing.workspace = true
+
+wasm-bindgen = { workspace = true, optional = true }
+serde-wasm-bindgen = { version = "0.6", optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "shard_den_uml_styler"
