@@ -8,10 +8,6 @@ interface ExportPanelProps {
   engine: 'mermaid' | 'plantuml';
   scale?: 1 | 2 | 3 | 4;
 }
-  code: string;
-  theme: string;
-  engine: 'mermaid' | 'plantuml';
-}
 
 export default function ExportPanel({ code, theme, engine, scale = 2 }: ExportPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -59,9 +55,6 @@ export default function ExportPanel({ code, theme, engine, scale = 2 }: ExportPa
         const width = bbox.width + bbox.x;
         const height = bbox.height + bbox.y;
         
-        const exportScale = scale;
-        const scaledWidth = width * exportScale;
-        const scaledHeight = height * exportScale;
         const scaledWidth = width * scale;
         const scaledHeight = height * scale;
         
