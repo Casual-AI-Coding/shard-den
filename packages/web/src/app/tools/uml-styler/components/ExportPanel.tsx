@@ -6,9 +6,14 @@ interface ExportPanelProps {
   code: string;
   theme: string;
   engine: 'mermaid' | 'plantuml';
+  scale?: 1 | 2 | 3 | 4;
+}
+  code: string;
+  theme: string;
+  engine: 'mermaid' | 'plantuml';
 }
 
-export default function ExportPanel({ code, theme, engine }: ExportPanelProps) {
+export default function ExportPanel({ code, theme, engine, scale = 2 }: ExportPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleExport = async (format: 'png' | 'svg' | 'pdf') => {
@@ -54,7 +59,9 @@ export default function ExportPanel({ code, theme, engine }: ExportPanelProps) {
         const width = bbox.width + bbox.x;
         const height = bbox.height + bbox.y;
         
-        const scale = 2;
+        const exportScale = scale;
+        const scaledWidth = width * exportScale;
+        const scaledHeight = height * exportScale;
         const scaledWidth = width * scale;
         const scaledHeight = height * scale;
         

@@ -93,6 +93,15 @@ export default function UMLStylerPage() {
 
             {/* Right: Preview (60%) */}
             <div className="flex-1 min-w-[500px] flex flex-col bg-[var(--surface)]">
+              <Preview 
+                code={code} 
+                theme={theme}
+                engine={engine}
+                onError={handleError}
+                onThemeChange={handleThemeChange}
+                onShare={handleShare}
+              />
+            <div className="flex-1 min-w-[500px] flex flex-col bg-[var(--surface)]">
               {/* Preview Toolbar - 功能按钮移到这里 */}
               <div className="h-12 px-4 bg-[var(--bg)] border-b border-[var(--border)] flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
@@ -108,26 +117,7 @@ export default function UMLStylerPage() {
                   <ExportPanel code={code} theme={theme} engine={engine} />
                 </div>
               </div>
-              
-              <Preview 
-                code={code} 
-                theme={theme}
-                engine={engine}
-                onError={handleError}
-              />
-              
-              {/* Error Panel */}
-              {error && (
-                <div className="mx-4 mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <span className="text-red-500 text-lg">⚠️</span>
-                    <div>
-                      <h4 className="font-medium text-red-800 dark:text-red-200">渲染错误</h4>
-                      <p className="text-sm text-red-600 dark:text-red-300 mt-1">{error}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
+            </div>
             </div>
           </div>
         )}
