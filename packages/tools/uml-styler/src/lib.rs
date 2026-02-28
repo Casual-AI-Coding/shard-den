@@ -11,7 +11,7 @@ pub mod templates;
 mod wasm;
 
 // Re-exports
-pub use engine::{Engine, RenderHint};
+pub use engine::{DiagramType, Engine, EngineRegistry, RenderHint};
 pub use error::{EngineError, Diagnostic, Severity};
 pub use theme::{Theme, ThemeCategory};
 pub use templates::Template;
