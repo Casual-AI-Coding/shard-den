@@ -18,3 +18,13 @@ pub struct Theme {
     pub name: String,
     pub category: ThemeCategory,
 }
+
+impl Default for Theme {
+    fn default() -> Self {
+        Self {
+            id: "shared/default".to_string(),
+            name: "Default".to_string(),
+            category: ThemeCategory::Shared,
+        }
+    }
+}
