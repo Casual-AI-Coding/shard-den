@@ -5,7 +5,7 @@
 use crate::engine::{DiagramType, Engine, RenderHint};
 use crate::error::{Diagnostic, EngineError, Severity};
 use crate::templates::Template;
-use crate::theme::{Theme, ThemeCategory};
+use crate::theme::{Theme, ThemeCategory, ThemeTuning};
 
 /// Mermaid 引擎
 #[derive(Debug)]
@@ -44,21 +44,25 @@ impl MermaidEngine {
                 id: "mermaid/default".to_string(),
                 name: "Default".to_string(),
                 category: ThemeCategory::MermaidSpecific,
+                tuning: ThemeTuning::default(),
             },
             Theme {
                 id: "mermaid/dark".to_string(),
                 name: "Dark".to_string(),
                 category: ThemeCategory::MermaidSpecific,
+                tuning: ThemeTuning::default(),
             },
             Theme {
                 id: "mermaid/forest".to_string(),
                 name: "Forest".to_string(),
                 category: ThemeCategory::MermaidSpecific,
+                tuning: ThemeTuning::default(),
             },
             Theme {
                 id: "mermaid/neutral".to_string(),
                 name: "Neutral".to_string(),
                 category: ThemeCategory::MermaidSpecific,
+                tuning: ThemeTuning::default(),
             },
         ]
     }
