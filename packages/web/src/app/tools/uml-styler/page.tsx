@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Editor from './components/Editor';
 import Preview from './components/Preview';
 import ThemeSelector from './components/ThemeSelector';
 import ExportPanel from './components/ExportPanel';
 import TemplateLibrary from './components/TemplateLibrary';
+import { Header } from '@/components/Header';
 
 export default function UMLStylerPage() {
   const [code, setCode] = useState<string>('flowchart TD\n    A[Start] --> B[End]');
@@ -47,94 +48,90 @@ export default function UMLStylerPage() {
   }, []);
 
   const handleShare = useCallback(() => {
-    // Generate shareable URL with code encoded
     const encoded = btoa(encodeURIComponent(code));
     const url = `${window.location.origin}${window.location.pathname}?code=${encoded}`;
     navigator.clipboard.writeText(url).then(() => {
-      alert('Share link copied to clipboard!');
+      alert('分享链接已复制到剪贴板！');
     }).catch(() => {
-      alert('Failed to copy link');
+      alert('复制失败');
     });
   }, [code]);
 
-  if (isLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">正在初始化...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="h-screen flex flex-col bg-slate-50">
-      {/* Header */}
-      <header className="h-14 px-4 bg-white border-b border-slate-200 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2">
-          <svg className="w-6 h-6 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-            <path d="M8 7h8M8 11h8M8 15h4" />
-          </svg>
-          <span className="text-xl font-bold text-slate-900">UML Styler</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <ThemeSelector theme={theme} onThemeChange={handleThemeChange} />
-          <button 
-            onClick={handleShare}
-            className="px-3 py-1.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
-          >
-            分享
-          </button>
-          <ExportPanel code={code} theme={theme} engine={engine} />
-        </div>
-      </header>
-
-      {/* Main Content */}
+    <>
+      <Header title="UML Styler" />
       <main className="flex-1 flex overflow-hidden">
-        {/* Left: Editor (40%) */}
-        <div className="w-2/5 min-w-[400px] flex flex-col border-r border-slate-200 bg-white">
-          <Editor 
-            code={code} 
-            onChange={handleCodeChange}
-            onCursorChange={handleCursorChange}
-            engine={engine}
-            onEngineChange={handleEngineChange}
-          />
-          {/* Editor Toolbar */}
-          <div className="h-12 px-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
-            <TemplateLibrary onSelect={setCode} />
-            <div className="text-xs text-slate-500">
-              Ln {cursorPosition.line}, Col {cursorPosition.col}
+        {isLoading ? (
+          <div className="flex-1 flex items-center justify-center bg-[var(--bg)]">
+            <div className="flex items-center gap-3 text-[var(--text-secondary)]">
+              <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span>正在初始化...</span>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex-1 flex">
+            {/* Left: Editor (40%) */}
+            <div className="w-2/5 min-w-[400px] flex flex-col border-r border-[var(--border)] bg-[var(--surface)]">
+              <Editor 
+                code={code} 
+                onChange={handleCodeChange}
+                onCursorChange={handleCursorChange}
+                engine={engine}
+                onEngineChange={handleEngineChange}
+              />
+              {/* Editor Toolbar */}
+              <div className="h-12 px-4 bg-[var(--bg)] border-t border-[var(--border)] flex items-center justify-between shrink-0">
+                <TemplateLibrary onSelect={setCode} />
+                <div className="text-xs text-[var(--text-secondary)]">
+                  Ln {cursorPosition.line}, Col {cursorPosition.col}
+                </div>
+              </div>
+            </div>
 
-        {/* Right: Preview (60%) */}
-        <div className="flex-1 min-w-[500px] flex flex-col bg-white">
-          <Preview 
-            code={code} 
-            theme={theme}
-            engine={engine}
-            onError={handleError}
-          />
-        </div>
+            {/* Right: Preview (60%) */}
+            <div className="flex-1 min-w-[500px] flex flex-col bg-[var(--surface)]">
+              {/* Preview Toolbar - 功能按钮移到这里 */}
+              <div className="h-12 px-4 bg-[var(--bg)] border-b border-[var(--border)] flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2">
+                  <ThemeSelector theme={theme} onThemeChange={handleThemeChange} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={handleShare}
+                    className="px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--hover)] rounded transition-colors"
+                  >
+                    分享
+                  </button>
+                  <ExportPanel code={code} theme={theme} engine={engine} />
+                </div>
+              </div>
+              
+              <Preview 
+                code={code} 
+                theme={theme}
+                engine={engine}
+                onError={handleError}
+              />
+              
+              {/* Error Panel */}
+              {error && (
+                <div className="mx-4 mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <span className="text-red-500 text-lg">⚠️</span>
+                    <div>
+                      <h4 className="font-medium text-red-800 dark:text-red-200">渲染错误</h4>
+                      <p className="text-sm text-red-600 dark:text-red-300 mt-1">{error}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
-
-      {/* Error Panel */}
-      {error && (
-        <div className="mx-4 mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-start gap-3">
-            <span className="text-red-500 text-lg">⚠️</span>
-            <div>
-              <h4 className="font-medium text-red-800">渲染错误</h4>
-              <p className="text-sm text-red-600 mt-1">{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
