@@ -68,6 +68,23 @@ impl Storage {
             entries = entries.split_off(entries.len() - 1000);
         }
 
+        // Limit file size to 10MB
+        let json = serde_json::to_string(&entries)?;
+        if json.len() > 10 * 1024 * 1024 {
+            entries = entries.split_off(entries.len() - 500);
+        }
+
+        self.save_history_entries(&entries)
+    }
+    pub fn add_history(&self, entry: HistoryEntry) -> shard_den_core::Result<()> {
+        let mut entries = self.load_history_entries()?;
+        entries.push(entry);
+
+        // Keep only last 1000 entries
+        if entries.len() > 1000 {
+            entries = entries.split_off(entries.len() - 1000);
+        }
+
         self.save_history_entries(&entries)
     }
 
