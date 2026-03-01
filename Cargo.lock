@@ -3389,6 +3389,7 @@ dependencies = [
 name = "shard-den-core"
 version = "0.3.0"
 dependencies = [
+ "base64 0.22.1",
  "chrono",
  "insta",
  "mockall",
@@ -3396,7 +3397,6 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "thiserror 1.0.69",
- "tracing",
  "tracing-subscriber",
 ]
 

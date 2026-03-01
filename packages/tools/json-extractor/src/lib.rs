@@ -18,6 +18,33 @@ pub use extract::{ExtractResult, Extractor};
 pub use format::{Formatter, OutputFormat};
 pub use path::{JsonPath, PathParser};
 
+use shard_den_core::ShardDenError;
+
+/// Maximum allowed JSON nesting depth to prevent stack overflow
+const MAX_JSON_DEPTH: usize = 128;
+
+/// Check JSON value depth recursively
+fn check_json_depth(value: &serde_json::Value, depth: usize) -> Result<(), String> {
+    if depth > MAX_JSON_DEPTH {
+        return Err(format!("JSON too deeply nested (max: {})", MAX_JSON_DEPTH));
+    }
+
+    match value {
+        serde_json::Value::Array(arr) => {
+            for item in arr {
+                check_json_depth(item, depth + 1)?;
+            }
+        }
+        serde_json::Value::Object(obj) => {
+            for (_, v) in obj {
+                check_json_depth(v, depth + 1)?;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
 /// Pure Rust JSON Extractor (for CLI)
 #[allow(dead_code)]
 pub struct JsonExtractorCore {
@@ -39,6 +66,7 @@ impl JsonExtractorCore {
         let paths_vec: Vec<String> = paths.split(',').map(|s| s.trim().to_string()).collect();
 
         let value: serde_json::Value = serde_json::from_str(json)?;
+        check_json_depth(&value, 0).map_err(ShardDenError::invalid_input)?;
         let result = self.extractor.extract(&value, &paths_vec)?;
 
         // Return just the extracted values as JSON array
@@ -60,6 +88,7 @@ impl JsonExtractorCore {
         let paths_vec: Vec<String> = paths.split(',').map(|s| s.trim().to_string()).collect();
 
         let value: serde_json::Value = serde_json::from_str(json)?;
+        check_json_depth(&value, 0).map_err(ShardDenError::invalid_input)?;
         let result = self.extractor.extract(&value, &paths_vec)?;
 
         // Get all extracted values (flatten arrays from jsonpath)
@@ -79,6 +108,7 @@ impl JsonExtractorCore {
 
     pub fn detect_paths(&self, json: &str) -> shard_den_core::Result<Vec<String>> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        check_json_depth(&value, 0).map_err(ShardDenError::invalid_input)?;
         Ok(self.path_parser.detect_paths(&value))
     }
 }
@@ -118,6 +148,7 @@ impl JsonExtractor {
 
         let value: serde_json::Value =
             serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        check_json_depth(&value, 0).map_err(|e| JsValue::from_str(&e))?;
 
         let result = self
             .extractor
@@ -152,6 +183,7 @@ impl JsonExtractor {
 
         let value: serde_json::Value =
             serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        check_json_depth(&value, 0).map_err(|e| JsValue::from_str(&e))?;
 
         let result = self
             .extractor
@@ -191,6 +223,7 @@ impl JsonExtractor {
     pub fn detect_paths(&self, json: &str) -> Result<String, JsValue> {
         let value: serde_json::Value =
             serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        check_json_depth(&value, 0).map_err(|e| JsValue::from_str(&e))?;
 
         let paths = self.path_parser.detect_paths(&value);
 
@@ -330,5 +363,24 @@ mod tests {
         let json = r#"{"value": 42}"#;
         let result = extractor.extract_with_format(json, "$.value", OutputFormat::Text);
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_json_depth_limit() {
+        // Test that deeply nested JSON is rejected
+        let extractor = JsonExtractorCore::new();
+
+        // Create JSON with 200 levels of nesting
+        let mut json = "{\"a\":".to_string();
+        for _ in 0..199 {
+            json.push_str("{\"a\":");
+        }
+        json.push_str("1");
+        for _ in 0..200 {
+            json.push_str("}");
+        }
+
+        let result = extractor.extract(&json, "$.a");
+        assert!(result.is_err());
     }
 }

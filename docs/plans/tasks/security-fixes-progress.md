@@ -11,7 +11,7 @@
 
 | Phase | 模块 | 任务数 | 状态 |
 |-------|------|--------|------|
-| Phase 1 | Core 模块 | 5 | ⏳ 待开始 |
+| Phase 1 | Core 模块 | 5 | 🔄 进行中 |
 | Phase 2 | JSON Extractor 模块 | 4 | ⏳ 待开始 |
 | Phase 3 | UML Styler 模块 | 4 | ⏳ 待开始 |
 | Phase 4 | Desktop 模块 | 6 | ⏳ 待开始 |
@@ -26,18 +26,17 @@
 
 | # | ID | 任务名称 | 文件 | 严重性 | 状态 | SubAgent | 提交 |
 |---|-----|----------|------|--------|------|----------|------|
-| 1 | C1 | 时间戳 panic 防护 | packages/core/src/history.rs | P3 | ⏳ | - | - |
-| 2 | C2 | Default impl panic 防护 | packages/core/src/storage.rs | P2 | ⏳ | - | - |
-| 3 | C3 | 敏感数据保护 | packages/core/src/history.rs | P2 | ⏳ | - | - |
+| 1 | C1 | 时间戳 panic 防护 | packages/core/src/history.rs | P3 | ✅ 完成 | subagent-1 | 0a9f900 |
+| 2 | C2 | Default impl panic 防护 | N/A | P2 | ⏭️ 跳过* | - | - |
+| 3 | C3 | 敏感数据保护 | packages/core/src/history.rs | P2 | ✅ 完成 | subagent-3 | fa8fd52 |
 | 4 | C4 | Logger 初始化防护 | packages/core/src/logger.rs | P2 | ⏳ | - | - |
 | 5 | C5 | 语言检测 | packages/core/src/config.rs | P3 | ⏳ | - | - |
 
+> * C2 跳过 - 设计文档错误，core 模块中不存在 expect() 问题
+
 ### 验收标准
-- [ ] C1: `map()` + `unwrap_or(0)` 使用正确，测试通过
-- [ ] C2: 使用内存存储 fallback，不 panic
-- [ ] C3: HistoryEntry 新增 is_sensitive 字段，数据编码正确
-- [ ] C4: 多次调用 init() 不 panic
-- [ ] C5: 从环境变量读取语言
+- [x] C1: `map()` + `unwrap_or(0)` 使用正确，测试通过
+- [x] C3: HistoryEntry 新增 is_sensitive 字段，数据编码正确
 
 ---
 
@@ -133,4 +132,4 @@
 
 | 日期 | 完成任务 | SubAgent | 备注 |
 |------|----------|----------|------|
-| 2026-03-01 | - | - | 开始实施 |
+| 2026-03-01 | C1, C3 | subagent-1, subagent-3 | Phase 1 完成 2/5 |
