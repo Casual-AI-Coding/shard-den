@@ -60,9 +60,16 @@ pub struct UiConfig {
 
 impl Default for UiConfig {
     fn default() -> Self {
+        // 从 LANG 环境变量读取语言设置，格式如 "zh_CN.UTF-8"
+        // 取第一部分（如 "zh_CN"），不存在时回退到 "zh-CN"
+        let language = std::env::var("LANG")
+            .ok()
+            .and_then(|l| l.split('.').next().map(|s| s.to_string()))
+            .unwrap_or_else(|| "zh-CN".to_string());
+
         Self {
             theme: Theme::System,
-            language: "zh-CN".to_string(),
+            language,
         }
     }
 }
