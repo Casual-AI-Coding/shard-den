@@ -26,21 +26,39 @@ pub struct HistoryEntry {
     pub output: String,
     pub timestamp: DateTime<Utc>,
     pub metadata: HashMap<String, String>,
+    pub is_sensitive: bool,
 }
 
 impl HistoryEntry {
     /// Create a new history entry
     pub fn new(
         tool: impl Into<String>, input: impl Into<String>, output: impl Into<String>,
+        is_sensitive: bool,
     ) -> Self {
         Self {
             id: generate_id(),
             tool: tool.into(),
-            input: input.into(),
-            output: output.into(),
+            input: if is_sensitive {
+                Self::obfuscate(input)
+            } else {
+                input.into()
+            },
+            output: if is_sensitive {
+                Self::obfuscate(output)
+            } else {
+                output.into()
+            },
             timestamp: Utc::now(),
             metadata: HashMap::new(),
+            is_sensitive,
         }
+    }
+
+    /// Obfuscate data using base64 encoding
+    fn obfuscate(data: impl Into<String>) -> String {
+        use base64::Engine;
+        let data = data.into();
+        base64::engine::general_purpose::STANDARD.encode(data.as_bytes())
     }
 
     /// Add metadata to the entry
@@ -79,7 +97,7 @@ mod tests {
 
     #[test]
     fn test_history_entry_creation() {
-        let entry = HistoryEntry::new("json-extractor", "{}", "result");
+        let entry = HistoryEntry::new("json-extractor", "{}", "result", false);
         assert_eq!(entry.tool, "json-extractor");
         assert_eq!(entry.input, "{}");
         assert_eq!(entry.output, "result");
@@ -87,8 +105,7 @@ mod tests {
 
     #[test]
     fn test_history_entry_metadata() {
-        let entry =
-            HistoryEntry::new("json-extractor", "{}", "result").with_metadata("format", "json");
+        let entry = HistoryEntry::new("json-extractor", "{}", "result", false).with_metadata("format", "json");
         assert_eq!(entry.metadata.get("format"), Some(&"json".to_string()));
     }
 }
