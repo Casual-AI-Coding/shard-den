@@ -254,6 +254,37 @@ cargo tauri build                           # Build app
 
 ## RELEASE PROCESS (发布流程)
 
+详细发布流程见 [版本管理规范](./docs/summary/version-management.md)
+
+### 快速发布命令
+
+```bash
+VERSION="0.3.0"
+
+# 1. Cargo.toml (workspace)
+sed -i 's/version = ".*"/version = "$VERSION"/' Cargo.toml
+
+# 2. crates.io 显式版本 (所有工具)
+sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "$VERSION"/' packages/tools/json-extractor/Cargo.toml
+sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "$VERSION"/' packages/tools/uml-styler/Cargo.toml
+sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "$VERSION"/' packages/tools/uml-styler/cli/Cargo.toml
+sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "$VERSION"/' packages/cli/Cargo.toml
+sed -i 's/shard-den-json-extractor = { version = ".*"/shard-den-json-extractor = { version = "$VERSION"/' packages/cli/Cargo.toml
+sed -i 's/shard-den-uml-styler = { version = ".*"/shard-den-uml-styler = { version = "$VERSION"/' packages/cli/Cargo.toml
+
+# 3. npm 包版本
+sed -i 's/"version": ".*"/"version": "$VERSION"/' package.json
+sed -i 's/"version": ".*"/"version": "$VERSION"/' packages/web/package.json
+
+# 4. README 版本徽章
+sed -i 's/version-[0-9.]*/version-$VERSION/' README.md
+
+# 5. 提交并打 tag
+git add -A && git commit -m "release: bump version to v$VERSION"
+git tag -a v$VERSION -m "Release v$VERSION"
+git push && git push origin v$VERSION
+```
+
 ### Version Management (版本管理)
 
 **版本真实源**: `Cargo.toml` (workspace)

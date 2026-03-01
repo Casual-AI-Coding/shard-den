@@ -34,12 +34,18 @@ version = "0.2.3"
 **发布到 crates.io 时的特殊处理**：
 
 ```toml
-# 所有的工具（例如json-extractor、uml-styler等） 发布时需要显式版本
+# 工具主包发布时需要显式版本
 shard-den-core = { version = "0.2.3", path = "../../core" }
 
 # CLI 发布时需要显式版本
 shard-den-** = { version = "0.2.3", path = "../tools/**", optional = true }
+
+# ⚠️ 重要：每个工具的 CLI 子项目也需要更新！
+# 例如：packages/tools/uml-styler/cli/Cargo.toml
+shard-den-core = { version = "0.2.3", path = "../../../core" }
 ```
+
+> **容易遗漏**：工具的 `cli/` 子项目（如 `packages/tools/uml-styler/cli/Cargo.toml`）也需要更新 `shard-den-core` 版本。
 
 ---
 
@@ -199,6 +205,21 @@ shard-den-uml-styler = { version = "0.2.3", path = "../tools/uml-styler", option
 
 ---
 
+### 7. packages/tools/*/cli/Cargo.toml (CLI 子项目)
+
+**文件**: `packages/tools/*/cli/Cargo.toml`
+
+```toml
+# 必须使用显式版本
+shard-den-core = { version = "0.2.3", path = "../../../core" }
+```
+
+**说明**: 每个工具的 CLI 子项目也需要更新 `shard-den-core` 版本。
+
+> ⚠️ **重要**: 这是容易遗漏的地方！每次发布时检查所有 `cli/Cargo.toml` 文件。
+
+---
+
 ## 修改顺序
 
 建议按以下顺序修改：
@@ -208,7 +229,8 @@ shard-den-uml-styler = { version = "0.2.3", path = "../tools/uml-styler", option
 3. `packages/web/package.json`
 4. `README.md`
 5. `packages/tools/**/Cargo.toml`
-6. `packages/cli/Cargo.toml` ← 最后修改
+6. `packages/cli/Cargo.toml`
+7. `packages/tools/*/cli/Cargo.toml` ← 容易遗漏！
 
 ## 快速命令
 
@@ -218,11 +240,16 @@ shard-den-uml-styler = { version = "0.2.3", path = "../tools/uml-styler", option
 # 1. 修改版本号 (Cargo.toml)
 sed -i 's/version = ".*"/version = "0.2.3"/' Cargo.toml
 
-# 2. 修改 工具 依赖版本（以json-extractor为例，所有工具都需要修改）
+# 2. 修改工具依赖版本（所有工具都需要修改）
 sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "0.2.3"/' packages/tools/json-extractor/Cargo.toml
+sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "0.2.3"/' packages/tools/uml-styler/Cargo.toml
 
-# 3. 修改 CLI 依赖版本（以json-extractor为例，所有工具都需要修改）
+# 3. 修改 CLI 子项目依赖版本（容易遗漏！）
+sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "0.2.3"/' packages/tools/uml-styler/cli/Cargo.toml
+
+# 4. 修改主 CLI 依赖版本
 sed -i 's/shard-den-json-extractor = { version = ".*"/shard-den-json-extractor = { version = "0.2.3"/' packages/cli/Cargo.toml
+sed -i 's/shard-den-uml-styler = { version = ".*"/shard-den-uml-styler = { version = "0.2.3"/' packages/cli/Cargo.toml
 ```
 
 ### 策略 1: 手动同步 (当前方式)
@@ -271,6 +298,7 @@ sed -i 's/shard-den-json-extractor = { version = ".*"/shard-den-json-extractor =
 - [ ] `packages/web/package.json` 版本已同步
 - [ ] `packages/wasm/pkg/package.json` 版本已同步 (如需)
 - [ ] `README.md` 版本徽章已更新 (如需)
+- [ ] `packages/tools/*/cli/Cargo.toml` 版本已更新 (容易遗漏！)
 
 ### 发布后检查 (CI 自动处理)
 
