@@ -3454,7 +3454,10 @@ dependencies = [
 name = "shard-den-uml-styler-cli"
 version = "0.3.0"
 dependencies = [
+ "anyhow",
+ "clap",
  "shard-den-core",
+ "shard-den-uml-styler",
 ]
 
 [[package]]
