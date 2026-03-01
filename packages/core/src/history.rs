@@ -7,10 +7,12 @@ use std::collections::HashMap;
 /// Generate a simple unique ID without uuid crate
 fn generate_id() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
+    // Use map + unwrap_or to handle potential SystemTime errors gracefully
+    // (e.g., system clock set before UNIX_EPOCH)
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos();
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
     // Use a simple hash-based approach for uniqueness
     format!("{:x}-{:x}", timestamp, std::process::id())
 }
