@@ -12,4 +12,4 @@ name = "shard-den-uml-styler"
 path = "main.rs"
 
 [dependencies]
-shard-den-core = { version = "0.2.7", path = "../../../core" }
+shard-den-core = { version = "0.3.0", path = "../../../core" }
