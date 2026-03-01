@@ -258,6 +258,33 @@ cargo tauri build                           # Build app
 
 包含：版本源定义、需要更新的文件清单、修改顺序、完整发布检查清单。
 
+### Release Workflow
+
+Github Action Release Workflow自动执行以下步骤:
+
+| Step | Job | 说明 |
+|------|-----|------|
+| 1 | build-cli | 构建 CLI (4平台) |
+| 2 | build-wasm | 构建 WASM 包 |
+| 3 | build-web | 构建 Web 前端 |
+| 4 | deploy-vercel | 部署到 Vercel |
+| 5 | build-desktop | 构建 Desktop (7平台) |
+| 6 | publish-crates | 发布到 crates.io |
+| 7 | release | 创建 GitHub Release |
+
+### Artifacts (产物清单)
+
+| 类型 | 平台 | 格式 |
+|------|------|------|
+| CLI | Linux | `.tar.gz` |
+| CLI | macOS | `.tar.gz` |
+| CLI | Windows | `.zip` |
+| Web | All | `.tar.gz`, `.zip` |
+| WASM | All | `.tar.gz`, `.zip` |
+| Desktop | Linux | `.AppImage`, `.deb`, `.rpm` |
+| Desktop | Windows | `.msi`, `.exe` |
+| Desktop | macOS | `.dmg` |
+
 ## REFERENCE
 
 - [Version Management](./docs/summary/version-management.md) - 版本管理规范

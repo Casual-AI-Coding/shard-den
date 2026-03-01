@@ -27,7 +27,7 @@ version = "0.2.3"
 | `packages/core/Cargo.toml` | workspace=true | 自动 | 使用 workspace 版本 |
 | `packages/cli/Cargo.toml` | workspace=true | 自动 | CLI 主包 |
 | `packages/wasm/Cargo.toml` | workspace=true | 自动 | WASM 绑定包 |
-| `packages/tools/**/Cargo.toml` | workspace=true | 手动 | 发布到 crates.io 时需指定 |
+| `packages/tools/**/Cargo.toml` | workspace=true | 手动 | 发布到 crates.io 时需指定，**tools下所有的工具包** |
 | `packages/desktop/Cargo.toml` | workspace=true | 自动 | Desktop 主包 |
 | `packages/desktop/src-tauri/Cargo.toml` | workspace=true | 自动 | Tauri 内部包 |
 
@@ -38,14 +38,15 @@ version = "0.2.3"
 shard-den-core = { version = "0.2.3", path = "../../core" }
 
 # CLI 发布时需要显式版本
-shard-den-** = { version = "0.2.3", path = "../tools/**", optional = true }
+shard-den-{tool} = { version = "0.2.3", path = "../tools/**", optional = true }
 
 # ⚠️ 重要：每个工具的 CLI 子项目也需要更新！
-# 例如：packages/tools/uml-styler/cli/Cargo.toml
+# packages/tools/*/cli/Cargo.toml
+# 例如：uml-styler、json-extractor等
 shard-den-core = { version = "0.2.3", path = "../../../core" }
 ```
 
-> **容易遗漏**：工具的 `cli/` 子项目（如 `packages/tools/uml-styler/cli/Cargo.toml`）也需要更新 `shard-den-core` 版本。
+> **容易遗漏**：工具的所有 `cli/` 子项目（如 `packages/tools/uml-styler/cli/Cargo.toml`）也需要更新 `shard-den-core` 版本。
 
 ---
 
@@ -297,9 +298,8 @@ sed -i 's/shard-den-uml-styler = { version = ".*"/shard-den-uml-styler = { versi
 - [ ] `Cargo.toml` workspace 版本已更新
 
 #### 2. Cargo 包依赖显式版本 (crates.io 发布需要)
-- [ ] `packages/tools/json-extractor/Cargo.toml` - `shard-den-core` 版本
-- [ ] `packages/tools/uml-styler/Cargo.toml` - `shard-den-core` 版本
-- [ ] `packages/tools/uml-styler/cli/Cargo.toml` - `shard-den-core` 版本 (CLI 子项目，容易遗漏！)
+- [ ] `packages/tools/*/Cargo.toml` - `shard-den-core` 版本，**所有工具**
+- [ ] `packages/tools/*/cli/Cargo.toml` - `shard-den-core` 版本 ，**所有工具** (CLI 子项目，容易遗漏！)
 - [ ] `packages/cli/Cargo.toml` - `shard-den-core` 和所有工具包版本
 
 #### 3. npm 包版本
