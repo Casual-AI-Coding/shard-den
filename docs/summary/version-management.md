@@ -293,12 +293,27 @@ sed -i 's/shard-den-uml-styler = { version = ".*"/shard-den-uml-styler = { versi
 
 ### 发布前检查
 
+#### 1. Cargo.toml (workspace)
 - [ ] `Cargo.toml` workspace 版本已更新
-- [ ] `CHANGELOG.md` 已添加新版本条目
+
+#### 2. Cargo 包依赖显式版本 (crates.io 发布需要)
+- [ ] `packages/tools/json-extractor/Cargo.toml` - `shard-den-core` 版本
+- [ ] `packages/tools/uml-styler/Cargo.toml` - `shard-den-core` 版本
+- [ ] `packages/tools/uml-styler/cli/Cargo.toml` - `shard-den-core` 版本 (CLI 子项目，容易遗漏！)
+- [ ] `packages/cli/Cargo.toml` - `shard-den-core` 和所有工具包版本
+
+#### 3. npm 包版本
+- [ ] `package.json` 版本已同步
 - [ ] `packages/web/package.json` 版本已同步
 - [ ] `packages/wasm/pkg/package.json` 版本已同步 (如需)
+
+#### 4. 文档
+- [ ] `CHANGELOG.md` 已添加新版本条目
 - [ ] `README.md` 版本徽章已更新 (如需)
-- [ ] `packages/tools/*/cli/Cargo.toml` 版本已更新 (容易遗漏！)
+
+#### 5. Git 操作
+- [ ] 所有更改已提交
+- [ ] Git tag 已创建并推送
 
 ### 发布后检查 (CI 自动处理)
 
@@ -306,7 +321,6 @@ sed -i 's/shard-den-uml-styler = { version = ".*"/shard-den-uml-styler = { versi
 - [ ] GitHub Release 已创建
 - [ ] 所有平台产物已上传
 - [ ] Vercel 部署已完成
-
 ---
 
 ## 版本号规范
