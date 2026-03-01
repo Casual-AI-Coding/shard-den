@@ -269,8 +269,11 @@ cargo tauri build                           # Build app
 
 2. **更新 crates.io 依赖显式版本**:
    - `packages/tools/json-extractor/Cargo.toml` - `shard-den-core` 版本
-   - `packages/cli/Cargo.toml` - `shard-den-core` 和 `shard-den-json-extractor` 版本
+   - `packages/tools/uml-styler/Cargo.toml` - `shard-den-core` 版本
+   - `packages/tools/uml-styler/cli/Cargo.toml` - `shard-den-core` 版本 (CLI 子项目)
+   - `packages/cli/Cargo.toml` - `shard-den-core` 和所有工具包版本
 
+   > ⚠️ **重要**: 每个工具的 `cli/` 子项目也需要更新！这是容易遗漏的地方。
 3. **更新 npm 包版本**:
    - `package.json` - 根目录版本 (供 Web 标题使用)
    - `packages/web/package.json` - Web 包版本
@@ -305,9 +308,11 @@ sed -i 's/version = ".*"/version = "$VERSION"/' Cargo.toml
 
 # 2. crates.io 显式版本
 sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "$VERSION"/' packages/tools/json-extractor/Cargo.toml
+sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "$VERSION"/' packages/tools/uml-styler/Cargo.toml
+sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "$VERSION"/' packages/tools/uml-styler/cli/Cargo.toml
 sed -i 's/shard-den-core = { version = ".*"/shard-den-core = { version = "$VERSION"/' packages/cli/Cargo.toml
 sed -i 's/shard-den-json-extractor = { version = ".*"/shard-den-json-extractor = { version = "$VERSION"/' packages/cli/Cargo.toml
-
+sed -i 's/shard-den-uml-styler = { version = ".*"/shard-den-uml-styler = { version = "$VERSION"/' packages/cli/Cargo.toml
 # 3. npm 包版本
 sed -i 's/"version": ".*"/"version": "$VERSION"/' package.json
 sed -i 's/"version": ".*"/"version": "$VERSION"/' packages/web/package.json
