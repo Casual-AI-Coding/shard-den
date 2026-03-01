@@ -54,8 +54,16 @@ pub fn parse_paths(input: &str) -> Vec<String> {
 
     for ch in input.chars() {
         match (ch, escape_next, in_quotes) {
+            // Handle escape character
             ('\\', false, _) => escape_next = true,
+            // Handle escaped quote inside quotes - add quote and reset escape
+            ('"', true, true) => {
+                current.push('"');
+                escape_next = false;
+            }
+            // Handle quote toggle (only when not escaped)
             ('"', false, _) => in_quotes = !in_quotes,
+            // Handle comma separator (only when outside quotes)
             (',', false, false) => {
                 if !current.is_empty() {
                     paths.push(current.trim().to_string());
@@ -451,5 +459,12 @@ mod tests {
         // Test escape character
         let paths = parse_paths("a\\,b,c");
         assert_eq!(paths, vec!["a,b", "c"]);
+    }
+
+    #[test]
+    fn test_parse_paths_with_escaped_quote() {
+        // Test escaped quote inside quotes
+        let paths = parse_paths(r#"a\"b,c"#);
+        assert_eq!(paths, vec![r#"a"b"#, "c"]);
     }
 }
