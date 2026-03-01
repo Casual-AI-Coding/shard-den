@@ -23,6 +23,8 @@ impl PathParser {
     }
 
     /// Parse a path string into components
+    #[doc(hidden)]
+    #[deprecated(since = "0.3.0", note = "Not yet implemented - use extract() instead")]
     pub fn parse(&self, path: &str) -> Result<Vec<JsonPath>> {
         // TODO: Implement path parsing
         let _ = path;
@@ -30,6 +32,8 @@ impl PathParser {
     }
 
     /// Traverse a JSON value using the parsed path
+    #[doc(hidden)]
+    #[deprecated(since = "0.3.0", note = "Not yet implemented")]
     pub fn traverse<'a>(&self, value: &'a Value, path: &[JsonPath]) -> Result<Vec<&'a Value>> {
         // TODO: Implement traversal
         let _ = path;
