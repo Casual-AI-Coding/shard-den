@@ -162,7 +162,7 @@ mod tests {
             data_dir: temp_dir.path().to_path_buf(),
         };
 
-        let entry = HistoryEntry::new("test", "input", "output");
+        let entry = HistoryEntry::new("test", "input", "output", false);
         storage.add_history(entry.clone()).unwrap();
 
         let history = storage.list_history(None, 10).unwrap();
