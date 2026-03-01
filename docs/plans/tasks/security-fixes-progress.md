@@ -72,7 +72,7 @@
 | 10 | U1 | CLI 实现 | packages/tools/uml-styler/cli/main.rs | P1 | ✅ 完成 | ca5ec73 |
 | 11 | U2 | render() 实现 | packages/tools/uml-styler/src/engine/mermaid.rs | P1 | ✅ 按设计* | - |
 | 12 | U3 | 依赖路径修复 | packages/tools/uml-styler/cli/Cargo.toml | P1 | ✅ 完成 | 7d16334 |
-| 13 | U4 | SRP 重构 | packages/tools/uml-styler/src/theme/ | P2 | ⏭️ 延后 | - |
+13 | U4 | SRP 重构 | packages/tools/uml-styler/src/theme/ | P2 | ✅ 完成 | 5cc4ad5 |
 
 > * U2: MermaidEngine 返回 FrontendJS 是正确设计（需前端渲染），CLI 已实现自己的处理逻辑
 
@@ -80,7 +80,7 @@
 - [x] U1: 完整 CLI 功能，支持 style/themes/engines
 - [x] U2: 设计正确（返回 FrontendJS）
 - [x] U3: 路径正确，编译通过
-- [ ] U4: 拆分为 data.rs 和 transformer.rs（延后）
+- [x] U4: 拆分为 data.rs 和 transformer.rs
 
 ---
 
@@ -130,7 +130,15 @@
 | JSON Extractor | 52 | ✅ 通过 |
 | UML Styler | 13 | ✅ 通过 |
 | WASM | - | ✅ 编译通过 |
+## Code Review 修复记录
 
+| 问题 | 修复内容 | 提交 |
+|------|----------|------|
+| P2-1 | 移除 shell:allow-open 权限 | 24ffb2e |
+| P2-2 | 添加 Base64 混淆警告注释 | 24ffb2e |
+| P2-3 | 添加 parse_paths 转义引号处理 | 9f7f6f6 |
+| P3-1 | Theme 向后兼容性验证通过 | - |
+| P3-2 | 单元测试全部通过 (53 tests) | - |
 ---
 
 ## 跳过/延后任务说明
