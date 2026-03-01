@@ -4,17 +4,17 @@
 
 pub mod engine;
 pub mod error;
-pub mod theme;
 pub mod templates;
+pub mod theme;
 
 #[cfg(feature = "wasm")]
 mod wasm;
 
 // Re-exports
 pub use engine::{DiagramType, Engine, EngineRegistry, RenderHint};
-pub use error::{EngineError, Diagnostic, Severity};
+pub use error::{Diagnostic, EngineError, Severity};
+pub use templates::{get_mermaid_templates, Template};
 pub use theme::{Theme, ThemeCategory, ThemeTuning};
-pub use templates::{Template, get_mermaid_templates};
 
 #[cfg(feature = "wasm")]
 pub use wasm::*;

@@ -58,11 +58,11 @@ fn test_engine_registry_new() {
 fn test_engine_registry_register() {
     use shard_den_uml_styler::engine::Engine;
     use shard_den_uml_styler::engine::MermaidEngine;
-    
+
     let mut registry = shard_den_uml_styler::engine::EngineRegistry::new();
     let engine = Box::new(MermaidEngine::new());
     registry.register(engine);
-    
+
     let engines = registry.list_engines();
     assert_eq!(engines.len(), 1);
     assert_eq!(engines[0], "mermaid");
@@ -72,15 +72,15 @@ fn test_engine_registry_register() {
 fn test_engine_registry_get_engine() {
     use shard_den_uml_styler::engine::Engine;
     use shard_den_uml_styler::engine::MermaidEngine;
-    
+
     let mut registry = shard_den_uml_styler::engine::EngineRegistry::new();
     let engine = Box::new(MermaidEngine::new());
     registry.register(engine);
-    
+
     let found = registry.get_engine("mermaid");
     assert!(found.is_some());
     assert_eq!(found.unwrap().name(), "mermaid");
-    
+
     let not_found = registry.get_engine("unknown");
     assert!(not_found.is_none());
 }

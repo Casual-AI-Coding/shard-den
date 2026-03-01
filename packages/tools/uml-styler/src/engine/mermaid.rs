@@ -280,16 +280,43 @@ mod tests {
     #[test]
     fn test_mermaid_detect_all_types() {
         let engine = MermaidEngine::new();
-        
-        assert_eq!(engine.detect_diagram_type("sequenceDiagram\nA->>B"), Some(DiagramType::Sequence));
-        assert_eq!(engine.detect_diagram_type("flowchart TD\nA-->B"), Some(DiagramType::Flowchart));
-        assert_eq!(engine.detect_diagram_type("graph TD\nA-->B"), Some(DiagramType::Flowchart));
-        assert_eq!(engine.detect_diagram_type("classDiagram\nclass A"), Some(DiagramType::Class));
-        assert_eq!(engine.detect_diagram_type("stateDiagram-v2\n[*] --> A"), Some(DiagramType::State));
-        assert_eq!(engine.detect_diagram_type("erDiagram\nA ||--o{ B"), Some(DiagramType::ErDiagram));
-        assert_eq!(engine.detect_diagram_type("mindmap\nroot((A))"), Some(DiagramType::Mindmap));
-        assert_eq!(engine.detect_diagram_type("gantt\ntitle Test"), Some(DiagramType::Gantt));
-        assert_eq!(engine.detect_diagram_type("journey\ntitle Test"), Some(DiagramType::Activity));
+
+        assert_eq!(
+            engine.detect_diagram_type("sequenceDiagram\nA->>B"),
+            Some(DiagramType::Sequence)
+        );
+        assert_eq!(
+            engine.detect_diagram_type("flowchart TD\nA-->B"),
+            Some(DiagramType::Flowchart)
+        );
+        assert_eq!(
+            engine.detect_diagram_type("graph TD\nA-->B"),
+            Some(DiagramType::Flowchart)
+        );
+        assert_eq!(
+            engine.detect_diagram_type("classDiagram\nclass A"),
+            Some(DiagramType::Class)
+        );
+        assert_eq!(
+            engine.detect_diagram_type("stateDiagram-v2\n[*] --> A"),
+            Some(DiagramType::State)
+        );
+        assert_eq!(
+            engine.detect_diagram_type("erDiagram\nA ||--o{ B"),
+            Some(DiagramType::ErDiagram)
+        );
+        assert_eq!(
+            engine.detect_diagram_type("mindmap\nroot((A))"),
+            Some(DiagramType::Mindmap)
+        );
+        assert_eq!(
+            engine.detect_diagram_type("gantt\ntitle Test"),
+            Some(DiagramType::Gantt)
+        );
+        assert_eq!(
+            engine.detect_diagram_type("journey\ntitle Test"),
+            Some(DiagramType::Activity)
+        );
     }
 
     #[test]

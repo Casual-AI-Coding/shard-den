@@ -42,17 +42,17 @@ impl ThemeTuning {
         self.font_family = Some(family.into());
         self
     }
-    
+
     pub fn with_font_size(mut self, size: u16) -> Self {
         self.font_size = Some(size);
         self
     }
-    
+
     pub fn with_line_width(mut self, width: u16) -> Self {
         self.line_width = Some(width);
         self
     }
-    
+
     pub fn with_text_color(mut self, color: impl Into<String>) -> Self {
         self.text_color = Some(color.into());
         self
@@ -137,7 +137,6 @@ impl Theme {
         self.tuning.line_width = Some(width);
         self
     }
-
 
     /// 转换为 Mermaid 主题配置
     /// 返回 (主题名, themeVariables)
@@ -343,7 +342,11 @@ mod tests {
 
     #[test]
     fn test_theme_to_plantuml_config_plantuml_sketchy() {
-        let theme = Theme::new("plantuml/sketchy", "Sketchy", ThemeCategory::PlantUMLSpecific);
+        let theme = Theme::new(
+            "plantuml/sketchy",
+            "Sketchy",
+            ThemeCategory::PlantUMLSpecific,
+        );
         let (name, _) = theme.to_plantuml_config();
         assert_eq!(name, "sketchy");
     }
@@ -373,7 +376,7 @@ mod tests {
             .with_font_size(12)
             .with_line_width(3)
             .with_text_color("#000000");
-        
+
         assert_eq!(tuning.font_family, Some("Arial".to_string()));
         assert_eq!(tuning.font_size, Some(12));
         assert_eq!(tuning.line_width, Some(3));
@@ -381,8 +384,8 @@ mod tests {
     }
 }
 
-pub mod shared;
 pub mod mermaid;
+pub mod shared;
 
 /// 获取所有主题
 pub fn get_all_themes() -> Vec<Theme> {
