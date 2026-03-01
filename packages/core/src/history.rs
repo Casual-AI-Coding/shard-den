@@ -55,6 +55,10 @@ impl HistoryEntry {
     }
 
     /// Obfuscate data using base64 encoding
+    ///
+    /// ⚠️ WARNING: This is NOT encryption! Base64 is trivial to reverse.
+    /// This provides only basic obfuscation to prevent casual observation.
+    /// For actual security, use proper encryption (e.g., AES-256-GCM).
     fn obfuscate(data: impl Into<String>) -> String {
         use base64::Engine;
         let data = data.into();
@@ -105,7 +109,8 @@ mod tests {
 
     #[test]
     fn test_history_entry_metadata() {
-        let entry = HistoryEntry::new("json-extractor", "{}", "result", false).with_metadata("format", "json");
+        let entry = HistoryEntry::new("json-extractor", "{}", "result", false)
+            .with_metadata("format", "json");
         assert_eq!(entry.metadata.get("format"), Some(&"json".to_string()));
     }
 }
