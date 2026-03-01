@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-03-02
+
+### Security
+
+这是一次大规模安全加固工作，按模块分 5 个 Phase 实施：
+
+#### Core Module
+- **C1** - 时间戳 panic 防护 - `map() + unwrap_or(0)` (P3)
+- **C3** - 敏感数据保护 - 新增 `is_sensitive` 字段 + Base64 混淆 (P2)
+- **C4** - Logger 初始化防护 - 使用 `Once` 防止多次调用 panic (P2)
+- **C5** - 语言检测改进 - 从 `LANG` 环境变量读取 (P3)
+
+#### JSON Extractor Module
+- **J1** - **DoS 防护 - 文件大小限制 (10MB)** (P0 关键)
+- **J2** - JSON 深度限制 (128层) - 防止栈溢出 (P1)
+- **J3** - 健壮路径解析 - 支持引号内逗号、转义字符 (P2)
+- **J4** - Path 模块标记 deprecated (P2)
+
+#### UML Styler Module
+- **U1** - CLI 完整实现 - style/themes/engines 子命令 (P1)
+- **U3** - Cargo.toml 依赖路径修复 (P1)
+- **U4** - SRP 重构 - 拆分 theme/data.rs 和 theme/transformer.rs (P2)
+
+#### Desktop Module
+- **D1** - **CSP 安全策略配置** (P0 关键)
+- **D5** - Shell 权限限制 - 移除宽松的 `shell:allow-open` (P2)
+- **D6** - 历史文件大小限制 (10MB) + 条目数限制 (1000) (P2)
+
+#### WASM Module
+- **W1** - API 一致性 - `version()` 和 `ping()` 返回 `Result` (P3)
+
+### Added
+- 新增 `base64` 依赖用于敏感数据混淆
+- 新增大量单元测试: Core (+8), JSON Extractor (+52), UML Styler (+13)
+
+### Documentation
+- 新增 `docs/plans/iterations/2026-03-01-security-fixes-design.md` - 安全修复设计文档
+- 新增 `docs/plans/tasks/security-fixes-progress.md` - 任务进度跟踪
+
+
 ## [0.3.0] - 2026-03-01
 
 ### Added
@@ -243,7 +283,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CLI = Core**: Native Rust, no WASM overhead
 - **Shared Core**: Same Rust code compiled for all targets
 
-[Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.1
+[0.3.0]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.0
 [0.3.0]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.0
 [0.2.7]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.7
 [0.2.6]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.6
