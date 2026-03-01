@@ -21,12 +21,12 @@ pub fn start() {
 
 /// Get version info
 #[wasm_bindgen]
-pub fn version() -> String {
-    env!("CARGO_PKG_VERSION").to_string()
+pub fn version() -> Result<String, JsValue> {
+    Ok(env!("CARGO_PKG_VERSION").to_string())
 }
 
 /// Health check
 #[wasm_bindgen]
-pub fn ping() -> String {
-    "pong".to_string()
+pub fn ping() -> Result<String, JsValue> {
+    Ok("pong".to_string())
 }
