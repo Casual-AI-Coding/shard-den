@@ -44,6 +44,8 @@ enum Commands {
     Tools,
 }
 
+const MAX_FILE_SIZE: u64 = 10 * 1024 * 1024; // 10MB
+
 fn parse_format(format: &str) -> OutputFormat {
     match format.to_lowercase().as_str() {
         "csv" => OutputFormat::Csv,
@@ -55,7 +57,17 @@ fn parse_format(format: &str) -> OutputFormat {
 
 fn read_input(path: Option<&str>) -> Result<String> {
     match path {
-        Some(p) => std::fs::read_to_string(p).map_err(Into::into),
+        Some(p) => {
+            let metadata = std::fs::metadata(p)?;
+            if metadata.len() > MAX_FILE_SIZE {
+                anyhow::bail!(
+                    "File too large: {} bytes (max: {})",
+                    metadata.len(),
+                    MAX_FILE_SIZE
+                );
+            }
+            std::fs::read_to_string(p).map_err(Into::into)
+        }
         None => {
             let mut buffer = String::new();
             io::stdin().read_to_string(&mut buffer)?;
