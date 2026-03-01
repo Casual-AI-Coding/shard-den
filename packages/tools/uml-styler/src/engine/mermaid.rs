@@ -113,8 +113,6 @@ impl MermaidEngine {
     }
 
     /// 简单的 Mermaid 语法检测
-
-    /// 简单的 Mermaid 语法检测
     fn detect_diagram_type(&self, code: &str) -> Option<DiagramType> {
         let code_lower = code.to_lowercase();
         let trimmed = code_lower.trim();
