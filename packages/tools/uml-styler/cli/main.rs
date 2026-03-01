@@ -4,7 +4,7 @@
 
 use anyhow::{anyhow, Result};
 use clap::{Parser, Subcommand};
-use shard_den_uml_styler::theme::{get_all_themes, Theme, ThemeCategory};
+use shard_den_uml_styler::theme::{get_all_themes, Theme, ThemeCategory, ThemeTransformer};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -66,7 +66,8 @@ fn get_theme_by_name(name: &str) -> Result<Theme> {
 }
 
 fn style_mermaid(code: &str, theme: &Theme) -> Result<String> {
-    let (theme_name, theme_variables) = theme.to_mermaid_config();
+    let transformer = ThemeTransformer::from(theme.clone());
+    let (theme_name, theme_variables) = transformer.to_mermaid_config();
 
     let mut output = String::new();
 
@@ -104,7 +105,8 @@ fn main() -> Result<()> {
                 "mermaid" => style_mermaid(&code, &theme)?,
                 "plantuml" => {
                     // For PlantUML, we add skinparams
-                    let (theme_name, skin_params) = theme.to_plantuml_config();
+                    let transformer = ThemeTransformer::from(theme.clone());
+                    let (theme_name, skin_params) = transformer.to_plantuml_config();
                     let mut out = format!("!theme {}\n", theme_name);
                     if let Some(params) = skin_params {
                         out.push_str(&params);

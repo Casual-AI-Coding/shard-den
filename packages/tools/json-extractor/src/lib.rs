@@ -467,4 +467,26 @@ mod tests {
         let paths = parse_paths(r#"a\"b,c"#);
         assert_eq!(paths, vec![r#"a"b"#, "c"]);
     }
+
+    #[test]
+    fn test_extract_scalar_value_not_array() {
+        // Test extracting a scalar value which is not wrapped in array
+        let extractor = JsonExtractorCore::new();
+        let json = r#"{"value": 42}"#;
+        // Extract single value - should push directly (line 118/139)
+        let result = extractor.extract(json, "$.value");
+        assert!(result.is_ok());
+        let output = result.unwrap();
+        // Should contain the value
+        assert!(output.contains("42"));
+    }
+
+    #[test]
+    fn test_extract_with_format_scalar_value() {
+        // Test extract_with_format with scalar value (not array)
+        let extractor = JsonExtractorCore::new();
+        let json = r#"{"name": "test"}"#;
+        let result = extractor.extract_with_format(json, "$.name", OutputFormat::Text);
+        assert!(result.is_ok());
+    }
 }

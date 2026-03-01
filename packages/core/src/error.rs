@@ -54,7 +54,7 @@ impl ShardDenError {
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    
     #[test]
     fn test_tool_error() {
         let err = ShardDenError::tool_error("json-extractor", "invalid path");
@@ -67,4 +67,79 @@ mod tests {
         let err = ShardDenError::invalid_input("empty string");
         assert!(matches!(err, ShardDenError::InvalidInput(_)));
     }
+
+    #[test]
+    fn test_error_io() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::NotFound, "file not found");
+        let err = ShardDenError::from(io_err);
+        assert!(matches!(err, ShardDenError::Io(_)));
+    }
+
+    #[test]
+    fn test_error_json() {
+        let json_err = serde_json::from_str::<serde_json::Value>("invalid json").unwrap_err();
+        let err = ShardDenError::from(json_err);
+        assert!(matches!(err, ShardDenError::Json(_)));
+    }
+
+    #[test]
+    fn test_error_yaml() {
+        let yaml_err = serde_yaml::from_str::<serde_yaml::Value>("invalid: yaml: ").unwrap_err();
+        let err = ShardDenError::from(yaml_err);
+        assert!(matches!(err, ShardDenError::Yaml(_)));
+    }
+
+    #[test]
+    fn test_error_config() {
+        let err = ShardDenError::Config("missing required field".to_string());
+        assert!(matches!(err, ShardDenError::Config(_)));
+        assert!(err.to_string().contains("Configuration error"));
+    }
+
+    #[test]
+    fn test_error_not_found() {
+        let err = ShardDenError::NotFound("entry not found".to_string());
+        assert!(matches!(err, ShardDenError::NotFound(_)));
+        assert!(err.to_string().contains("Not found"));
+    }
+
+    #[test]
+    fn test_error_history() {
+        let err = ShardDenError::History("storage error".to_string());
+        assert!(matches!(err, ShardDenError::History(_)));
+        assert!(err.to_string().contains("History error"));
+    }
+
+    #[test]
+    fn test_error_unknown() {
+        let err = ShardDenError::Unknown("unexpected error".to_string());
+        assert!(matches!(err, ShardDenError::Unknown(_)));
+        assert!(err.to_string().contains("Unknown error"));
+    }
+
+    #[test]
+    fn test_error_display() {
+        let err = ShardDenError::tool_error("test-tool", "test message");
+        let display = err.to_string();
+        assert!(display.contains("test-tool"));
+        assert!(display.contains("test message"));
+    }
 }
+
+
+    #[test]
+    fn test_tool_error_with_string() {
+        // Test tool_error with String type
+        let err = ShardDenError::tool_error(
+            "test-tool".to_string(),
+            "test message".to_string()
+        );
+        assert!(matches!(err, ShardDenError::Tool { .. }));
+    }
+
+    #[test]
+    fn test_invalid_input_with_string() {
+        // Test invalid_input with String type
+        let err = ShardDenError::invalid_input("error message".to_string());
+        assert!(matches!(err, ShardDenError::InvalidInput(_)));
+    }

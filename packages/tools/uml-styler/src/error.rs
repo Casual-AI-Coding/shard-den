@@ -156,4 +156,66 @@ mod tests {
         let err = EngineError::UnsupportedDiagram("pie".to_string());
         assert!(err.to_string().contains("pie"));
     }
+
+    #[test]
+    fn test_engine_error_render_error() {
+        let err = EngineError::RenderError("Failed to render SVG".to_string());
+        assert!(err.to_string().contains("Render error"));
+        assert!(err.to_string().contains("Failed to render SVG"));
+    }
+
+    #[test]
+    fn test_engine_error_network_error() {
+        let err = EngineError::NetworkError("Connection timeout".to_string());
+        assert!(err.to_string().contains("Network error"));
+        assert!(err.to_string().contains("Connection timeout"));
+    }
+
+    #[test]
+    fn test_severity_as_str() {
+        assert_eq!(Severity::Error.as_str(), "error");
+        assert_eq!(Severity::Warning.as_str(), "warning");
+        assert_eq!(Severity::Info.as_str(), "info");
+    }
+
+    #[test]
+    fn test_diagnostic_all_severities() {
+        let err = Diagnostic::new(1, 1, "test", Severity::Error);
+        let warn = Diagnostic::new(1, 1, "test", Severity::Warning);
+        let info = Diagnostic::new(1, 1, "test", Severity::Info);
+        
+        assert_eq!(err.severity, Severity::Error);
+        assert_eq!(warn.severity, Severity::Warning);
+        assert_eq!(info.severity, Severity::Info);
+    }
 }
+
+
+    #[test]
+    fn test_diagnostic_with_string_message() {
+        // Test Diagnostic::new with String type message
+        let diag = Diagnostic::new(1, 1, "test".to_string(), Severity::Error);
+        assert_eq!(diag.message, "test");
+    }
+
+    #[test]
+    fn test_diagnostic_error_message_type() {
+        // Test Diagnostic::error with String type
+        let diag = Diagnostic::error(5, 10, "error".to_string());
+        assert_eq!(diag.severity, Severity::Error);
+        assert_eq!(diag.message, "error");
+    }
+
+    #[test]
+    fn test_diagnostic_warning_message_type() {
+        // Test Diagnostic::warning with String type
+        let diag = Diagnostic::warning(3, 7, "warning".to_string());
+        assert_eq!(diag.severity, Severity::Warning);
+    }
+
+    #[test]
+    fn test_diagnostic_info_message_type() {
+        // Test Diagnostic::info with String type
+        let diag = Diagnostic::info(2, 4, "info".to_string());
+        assert_eq!(diag.severity, Severity::Info);
+    }

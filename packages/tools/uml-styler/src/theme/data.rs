@@ -202,4 +202,81 @@ mod tests {
         assert_eq!(tuning.line_width, Some(3));
         assert_eq!(tuning.text_color, Some("#000000".to_string()));
     }
+
+    #[test]
+    fn test_theme_with_tuning_method() {
+        let mut tuning = ThemeTuning::default();
+        tuning.primary_color = Some("#FF0000".to_string());
+        tuning.font_family = Some("Arial".to_string());
+
+        let theme = Theme::default().with_tuning(tuning);
+
+        assert_eq!(theme.tuning.primary_color, Some("#FF0000".to_string()));
+        assert_eq!(theme.tuning.font_family, Some("Arial".to_string()));
+    }
+
+    #[test]
+    fn test_theme_with_background_color() {
+        let theme = Theme::default().with_background_color("#000000");
+        assert_eq!(theme.tuning.background_color, Some("#000000".to_string()));
+    }
+
+    #[test]
+    fn test_theme_with_text_color() {
+        let theme = Theme::default().with_text_color("#333333");
+        assert_eq!(theme.tuning.text_color, Some("#333333".to_string()));
+    }
+
+    #[test]
+    fn test_theme_tuning_default() {
+        let tuning = ThemeTuning::default();
+        assert_eq!(tuning.primary_color, None);
+        assert_eq!(tuning.background_color, None);
+        assert_eq!(tuning.font_family, None);
+        assert_eq!(tuning.font_size, None);
+        assert_eq!(tuning.line_width, None);
+        assert_eq!(tuning.text_color, None);
+    }
+
+    #[test]
+    fn test_theme_category_variants() {
+        assert_eq!(ThemeCategory::Shared, ThemeCategory::Shared);
+        assert_eq!(
+            ThemeCategory::MermaidSpecific,
+            ThemeCategory::MermaidSpecific
+        );
+        assert_eq!(
+            ThemeCategory::PlantUMLSpecific,
+            ThemeCategory::PlantUMLSpecific
+        );
+    }
+
+    #[test]
+    fn test_theme_tuning_set_fields_directly() {
+        // Test setting ThemeTuning fields directly
+        let mut tuning = ThemeTuning::default();
+        tuning.primary_color = Some("#FF0000".to_string());
+        tuning.background_color = Some("#FFFFFF".to_string());
+        assert_eq!(tuning.primary_color, Some("#FF0000".to_string()));
+        assert_eq!(tuning.background_color, Some("#FFFFFF".to_string()));
+    }
+
+    #[test]
+    fn test_theme_new_with_string_args() {
+        // Test Theme::new with String type arguments
+        let theme = Theme::new(
+            "mermaid/dark".to_string(),
+            "Dark".to_string(),
+            ThemeCategory::MermaidSpecific,
+        );
+        assert_eq!(theme.id, "mermaid/dark");
+        assert_eq!(theme.name, "Dark");
+    }
+
+    #[test]
+    fn test_theme_with_primary_color() {
+        // Test Theme::with_primary_color
+        let theme = Theme::default().with_primary_color("#00FF00");
+        assert_eq!(theme.tuning.primary_color, Some("#00FF00".to_string()));
+    }
 }

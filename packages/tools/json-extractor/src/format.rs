@@ -292,4 +292,23 @@ mod tests {
         let result = formatter.format(&value, OutputFormat::Text);
         assert!(result.is_ok());
     }
+
+    #[test]
+    fn test_format_csv_empty_headers() {
+        let formatter = Formatter::new();
+        // Test with array of objects that have no keys (edge case)
+        let value = json!([{}, {}]);
+        let result = formatter.format(&value, OutputFormat::Csv).unwrap();
+        // Should return empty string when headers are empty
+        assert_eq!(result, "");
+    }
+
+    #[test]
+    fn test_value_to_text_direct_string() {
+        let formatter = Formatter::new();
+        // Direct string value calls value_to_text
+        let value = json!("direct_string");
+        let result = formatter.format(&value, OutputFormat::Text).unwrap();
+        assert_eq!(result, "direct_string");
+    }
 }

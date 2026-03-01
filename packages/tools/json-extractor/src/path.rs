@@ -164,4 +164,47 @@ mod tests {
         let paths = parser.detect_paths(&value);
         assert!(paths.is_empty());
     }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_parse_deprecated() {
+        let parser = PathParser::new();
+        let result = parser.parse("data.items[0]");
+        // Deprecated method returns empty vec
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty());
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_traverse_deprecated() {
+        let parser = PathParser::new();
+        let value = json!({"key": "value"});
+        let result = parser.traverse(&value, &[]);
+        // Deprecated method returns the value itself
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().len(), 1);
+    }
+
+    #[test]
+    fn test_detect_paths_empty_array() {
+        let parser = PathParser::new();
+        let value = json!([]);
+        let paths = parser.detect_paths(&value);
+        // Empty array should return empty paths
+        assert!(paths.is_empty());
+    }
+
+    #[test]
+    fn test_detect_paths_complex_nested() {
+        let parser = PathParser::new();
+        let value = json!({
+            "users": [
+                {"name": "Alice", "age": 30},
+                {"name": "Bob", "age": 25}
+            ]
+        });
+        let paths = parser.detect_paths(&value);
+        assert!(paths.contains(&"$.users[*]".to_string()));
+    }
 }
