@@ -76,21 +76,8 @@ impl Storage {
 
         self.save_history_entries(&entries)
     }
-        self.save_history_entries(&entries)
-    }
 
     /// List history entries
-    pub fn add_history(&self, entry: HistoryEntry) -> shard_den_core::Result<()> {
-        let mut entries = self.load_history_entries()?;
-        entries.push(entry);
-
-        // Keep only last 1000 entries
-        if entries.len() > 1000 {
-            entries = entries.split_off(entries.len() - 1000);
-        }
-
-        self.save_history_entries(&entries)
-    }
 
     /// List history entries
     pub fn list_history(
