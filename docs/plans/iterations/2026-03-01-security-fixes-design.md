@@ -1,8 +1,9 @@
 # ShardDen 安全问题修复设计文档
 
 **文档日期**: 2026-03-01  
-**设计目标**: 修复代码审查中发现的 23 个问题 (P0: 2, P1: 7, P2: 7, P3: 7)  
-**实施策略**: 按模块分批修复
+**设计目标**: 修复代码审查中发现的 21 个问题 (P0: 2, P1: 6, P2: 6, P3: 7)  
+**实施策略**: 按模块分批修复  
+**版本**: 1.1 (修订版)
 
 ---
 
@@ -27,10 +28,15 @@
 | 严重性 | 数量 | 描述 |
 |--------|------|------|
 | **P0 (Critical)** | 2 | 安全漏洞、数据丢失风险 |
-| **P1 (High)** | 7 | 逻辑错误、panic 风险、安全问题 |
-| **P2 (Medium)** | 7 | 代码质量、架构问题 |
+| **P1 (High)** | 6 | 逻辑错误、panic 风险、安全问题 |
+| **P2 (Medium)** | 6 | 代码质量、架构问题 |
 | **P3 (Low)** | 7 | 改进建议 |
-| **总计** | 23 | |
+| **总计** | 21 | |
+
+> 📝 **修订说明**: 
+> - 移除 J4 (CSV转义) - 代码已正确实现 RFC 4180 标准
+> - 修正 D6 描述 - 已有数量限制，补充文件大小限制
+> - 新增 C3 - Default impl 的 expect() 问题
 
 ### 1.2 修复原则
 
@@ -45,7 +51,7 @@
 
 ```
 Phase 1: Core 模块 (基础层)
-  └─ history.rs: panic 防护 + 敏感数据处理
+  └─ history.rs: panic 防护 + 敏感数据处理 + Default impl
   └─ logger.rs: 初始化防护
   └─ config.rs: 语言检测改进
 
@@ -53,7 +59,6 @@ Phase 2: JSON Extractor 模块 (关键工具)
   └─ DoS 漏洞修复 (文件大小限制)
   └─ 栈溢出防护 (JSON 深度限制)
   └─ 健壮路径解析
-  └─ 完整 CSV 转义
   └─ Path 模块 TODO 处理
 
 Phase 3: UML Styler 模块 (功能完整性)
@@ -80,35 +85,52 @@ Phase 5: WASM 模块 (API 一致性)
 
 | ID | 严重性 | 文件 | 问题描述 |
 |----|--------|------|----------|
-| C1 | P1 | history.rs:12 | `SystemTime::now().duration_since(UNIX_EPOCH).unwrap()` 可能 panic |
+| C1 | P3 | history.rs:12 | `SystemTime::now().duration_since(UNIX_EPOCH).unwrap()` 极低概率 panic |
 | C2 | P2 | history.rs:23-24 | 历史记录存储明文敏感数据 |
-| C3 | P2 | logger.rs:12,17 | `init()` 多次调用会 panic |
-| C4 | P3 | config.rs:65 | 硬编码默认语言 "zh-CN" |
+| C3 | P2 | history.rs:113-117 | Default impl 使用 expect() 可能 panic |
+| C4 | P2 | logger.rs:12,17 | `init()` 多次调用会 panic |
+| C5 | P3 | config.rs:65 | 硬编码默认语言 "zh-CN" |
 
 ### 3.2 修复设计
 
-#### C1: 时间戳 panic 防护
+#### C1: 时间戳 panic 防护 (P3)
 
-**现状**: `unwrap()` 在系统时间异常时会 panic
+**现状**: `unwrap()` 在系统时间异常时会 panic，但系统时间回拨到 1970 年前的概率极低
 
 **解决方案**:
 ```rust
-// 修改前
+// 更优雅的写法
 let timestamp = SystemTime::now()
     .duration_since(UNIX_EPOCH)
-    .unwrap()
-    .as_millis();
-
-// 修改后
-let timestamp = SystemTime::now()
-    .duration_since(UNIX_EPOCH)
-    .unwrap_or_default()
-    .as_millis();
+    .map(|d| d.as_millis())
+    .unwrap_or(0);
 ```
 
-**理由**: 即使时间计算失败，返回 0 也比 panic 安全
+**理由**: 使用 `map()` + `unwrap_or()` 比 `unwrap_or_default()` 更语义化
 
-#### C2: 敏感数据保护
+---
+
+#### C2: Default impl panic 防护
+
+**现状**: `history.rs:113-117` 的 `Default` impl 使用 `expect("Failed to create storage")`，初始化失败时会 panic
+
+**解决方案**:
+```rust
+// storage.rs
+impl Default for HistoryStorage {
+    fn default() -> Self {
+        // 使用内存存储作为 fallback，不 panic
+        Self {
+            dir: PathBuf::from(".shard-den-history"),
+            use_memory: true,
+        }
+    }
+}
+```
+
+---
+
+#### C3: 敏感数据保护 (P2)
 
 **现状**: HistoryEntry 存储明文 input/output，无敏感数据标记
 
@@ -143,7 +165,11 @@ impl HistoryEntry {
 }
 ```
 
-#### C3: Logger 初始化防护
+> ⚠️ **注意**: Base64 不是加密，仅为基础混淆。如需真正安全保护，应使用加密库。
+
+---
+
+#### C4: Logger 初始化防护 (P2)
 
 **现状**: `init()` 多次调用会导致 panic
 
@@ -162,7 +188,9 @@ pub fn init() {
 }
 ```
 
-#### C4: 语言检测
+---
+
+#### C5: 语言检测 (P3)
 
 **现状**: 硬编码默认语言 "zh-CN"
 
@@ -183,13 +211,14 @@ pub fn default_language() -> String {
 
 ### 4.1 问题清单
 
+> ✅ **修正说明**: J4 (CSV转义) 已移除 - `format.rs` 的 `escape_csv_value()` 已正确实现 RFC 4180 标准
+
 | ID | 严重性 | 文件 | 问题描述 |
 |----|--------|------|----------|
 | J1 | **P0** | cli/main.rs:61 | 文件读取无大小限制 - DoS 漏洞 |
 | J2 | **P1** | lib.rs:41,62 | JSON 解析无深度限制 - 栈溢出风险 |
 | J3 | P2 | lib.rs:39 | 路径解析不健壮，简单逗号分割 |
-| J4 | P2 | format.rs:62-71 | CSV 转义不完整 |
-| J5 | P2 | path.rs:26-37 | TODO 未实现 |
+| J4 | P2 | path.rs:26-37 | TODO 未实现 |
 
 ### 4.2 修复设计
 
@@ -222,6 +251,8 @@ fn read_file_safe(path: &Path) -> Result<String, JsonExtractorError> {
         .map_err(|e| JsonExtractorError::IoError(e))
 }
 ```
+
+---
 
 #### J2: JSON 深度限制
 
@@ -265,6 +296,8 @@ pub fn parse_json(input: &str) -> Result<Value, JsonExtractorError> {
 }
 ```
 
+---
+
 #### J3: 健壮路径解析
 
 **现状**: 简单逗号分割，未处理转义或引号内逗号
@@ -302,23 +335,9 @@ pub fn parse_paths(input: &str) -> Vec<String> {
 }
 ```
 
-#### J4: 完整 CSV 转义
+---
 
-**现状**: 未处理字段中的逗号、引号、换行符
-
-**解决方案**:
-```rust
-fn escape_csv_field(field: &str) -> String {
-    // RFC 4180 标准转义
-    if field.contains(',') || field.contains('"') || field.contains('\n') || field.contains('\r') {
-        format!("\"{}\"", field.replace('"', "\"\""))
-    } else {
-        field.to_string()
-    }
-}
-```
-
-#### J5: Path 模块 TODO
+#### J4: Path 模块 TODO
 
 **解决方案**:
 ```rust
@@ -434,6 +453,8 @@ impl MermaidEngine {
 }
 ```
 
+---
+
 #### U3: Cargo.toml 修复
 
 ```toml
@@ -444,6 +465,8 @@ shard-den-uml-styler = { path = ".." }
 clap = { version = "4.0", features = ["derive"] }
 anyhow = "1.0"
 ```
+
+---
 
 #### U4: SRP 重构
 
@@ -492,7 +515,9 @@ pub use transformer::ThemeTransformer;
 | D3 | **P1** | storage.rs:115 | Default impl 中 expect() |
 | D4 | P2 | commands.rs | 错误信息泄露 |
 | D5 | P2 | tauri.conf.json | shell 权限过宽 |
-| D6 | P2 | storage.rs | 无历史大小限制 |
+| D6 | P2 | storage.rs | 无历史文件大小限制 |
+
+> 📝 **修正说明**: D6 原描述"无历史大小限制"不准确 - 已有 1000 条数量限制，补充文件大小限制
 
 ### 6.2 修复设计
 
@@ -505,6 +530,8 @@ pub use transformer::ThemeTransformer;
   }
 }
 ```
+
+---
 
 #### D2: 错误处理改进
 
@@ -533,6 +560,8 @@ fn initialize_app(app: &tauri::AppHandle) -> Result<(), Box<dyn std::error::Erro
 }
 ```
 
+---
+
 #### D3: 存储初始化
 
 ```rust
@@ -559,6 +588,8 @@ impl HistoryStorage {
 }
 ```
 
+---
+
 #### D4: 错误消息处理
 
 ```rust
@@ -581,6 +612,8 @@ pub fn add_history(
 }
 ```
 
+---
+
 #### D5: Shell 权限限制
 
 ```json
@@ -599,6 +632,8 @@ pub fn add_history(
 }
 ```
 
+---
+
 #### D6: 历史大小限制
 
 ```rust
@@ -610,7 +645,7 @@ impl HistoryStorage {
         let mut entries = self.load()?;
         entries.push(entry);
         
-        // 限制条目数量
+        // 限制条目数量（已有）
         if entries.len() > MAX_HISTORY_ENTRIES {
             entries = entries.into_iter()
                 .rev()
@@ -621,7 +656,7 @@ impl HistoryStorage {
                 .collect();
         }
         
-        // 限制文件大小
+        // 限制文件大小（新增）
         let json = serde_json::to_string(&entries)?;
         if json.len() as u64 > MAX_HISTORY_FILE_SIZE {
             // 移除最旧的条目直到符合大小限制
@@ -703,13 +738,6 @@ mod tests {
         let result = parse_json(&deep_json);
         assert!(matches!(result, Err(JsonExtractorError::JsonTooDeep)));
     }
-    
-    #[test]
-    fn test_csv_escaping() {
-        assert_eq!(escape_csv_field("hello"), "hello");
-        assert_eq!(escape_csv_field("hello,world"), "\"hello,world\"");
-        assert_eq!(escape_csv_field("hello\"world"), "\"hello\"\"world\"");
-    }
 }
 ```
 
@@ -734,23 +762,27 @@ fn test_cli_file_processing() {
 
 ## 9. 实施计划
 
-### Phase 1: Core 模块 (预计 2 小时)
+### Phase 1: Core 模块 (预计 2.5 小时)
+
+> ✅ **修正说明**: 新增 Default impl 修复任务
 
 | 任务 | 文件 | 验收标准 |
 |------|------|----------|
-| 时间戳 panic 防护 | history.rs | `unwrap_or_default()` 使用正确，测试通过 |
+| 时间戳 panic 防护 | history.rs | `map()` + `unwrap_or(0)` 使用正确，测试通过 |
 | 敏感数据标记 | history.rs | HistoryEntry 新增 is_sensitive 字段，数据编码正确 |
+| Default impl 修复 | history.rs | 使用内存存储 fallback，不 panic |
 | Logger 初始化防护 | logger.rs | 多次调用 init() 不 panic |
 | 语言检测 | config.rs | 从环境变量读取语言 |
 
-### Phase 2: JSON Extractor 模块 (预计 3 小时)
+### Phase 2: JSON Extractor 模块 (预计 2.5 小时)
+
+> ✅ **修正说明**: 移除 CSV 转义任务 (代码已正确实现)
 
 | 任务 | 文件 | 验收标准 |
 |------|------|----------|
 | 文件大小限制 | cli/main.rs, error.rs | >10MB 文件被拒绝，返回 FileTooLarge 错误 |
 | JSON 深度限制 | lib.rs | >128 层嵌套被拒绝 |
 | 健壮路径解析 | lib.rs | 支持引号内逗号、转义字符 |
-| CSV 转义 | format.rs | RFC 4180 标准转义 |
 | Path 模块标记 | path.rs | API 标记为 deprecated 或隐藏 |
 
 ### Phase 3: UML Styler 模块 (预计 4 小时)
@@ -800,6 +832,7 @@ fn test_cli_file_processing() {
 
 ---
 
-**文档版本**: 1.0  
+**文档版本**: 1.1  
+**修订日期**: 2026-03-01  
 **下次审查**: 实施完成后  
 **责任人**: [待指定]
