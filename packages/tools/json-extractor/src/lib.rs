@@ -45,6 +45,37 @@ fn check_json_depth(value: &serde_json::Value, depth: usize) -> Result<(), Strin
     Ok(())
 }
 
+/// Parse paths string, handling quoted strings and escape characters
+pub fn parse_paths(input: &str) -> Vec<String> {
+    let mut paths = Vec::new();
+    let mut current = String::new();
+    let mut in_quotes = false;
+    let mut escape_next = false;
+
+    for ch in input.chars() {
+        match (ch, escape_next, in_quotes) {
+            ('\\', false, _) => escape_next = true,
+            ('"', false, _) => in_quotes = !in_quotes,
+            (',', false, false) => {
+                if !current.is_empty() {
+                    paths.push(current.trim().to_string());
+                    current.clear();
+                }
+            }
+            _ => {
+                current.push(ch);
+                escape_next = false;
+            }
+        }
+    }
+
+    if !current.is_empty() {
+        paths.push(current.trim().to_string());
+    }
+
+    paths
+}
+
 /// Pure Rust JSON Extractor (for CLI)
 #[allow(dead_code)]
 pub struct JsonExtractorCore {
@@ -63,7 +94,7 @@ impl JsonExtractorCore {
     }
 
     pub fn extract(&self, json: &str, paths: &str) -> shard_den_core::Result<String> {
-        let paths_vec: Vec<String> = paths.split(',').map(|s| s.trim().to_string()).collect();
+        let paths_vec = parse_paths(paths);
 
         let value: serde_json::Value = serde_json::from_str(json)?;
         check_json_depth(&value, 0).map_err(ShardDenError::invalid_input)?;
@@ -85,7 +116,7 @@ impl JsonExtractorCore {
     pub fn extract_with_format(
         &self, json: &str, paths: &str, format: OutputFormat,
     ) -> shard_den_core::Result<String> {
-        let paths_vec: Vec<String> = paths.split(',').map(|s| s.trim().to_string()).collect();
+        let paths_vec = parse_paths(paths);
 
         let value: serde_json::Value = serde_json::from_str(json)?;
         check_json_depth(&value, 0).map_err(ShardDenError::invalid_input)?;
@@ -144,7 +175,7 @@ impl JsonExtractor {
 
     /// Extract fields from JSON
     pub fn extract(&self, json: &str, paths: &str) -> Result<String, JsValue> {
-        let paths_vec: Vec<String> = paths.split(',').map(|s| s.trim().to_string()).collect();
+        let paths_vec = parse_paths(paths);
 
         let value: serde_json::Value =
             serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -179,7 +210,7 @@ impl JsonExtractor {
     pub fn extract_with_format(
         &self, json: &str, paths: &str, format: &str,
     ) -> Result<String, JsValue> {
-        let paths_vec: Vec<String> = paths.split(',').map(|s| s.trim().to_string()).collect();
+        let paths_vec = parse_paths(paths);
 
         let value: serde_json::Value =
             serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -382,5 +413,43 @@ mod tests {
 
         let result = extractor.extract(&json, "$.a");
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_paths_basic() {
+        let paths = parse_paths("$.name,$.value");
+        assert_eq!(paths, vec!["$.name", "$.value"]);
+    }
+
+    #[test]
+    fn test_parse_paths_with_quoted_comma() {
+        // Test quoted string with comma inside
+        let paths = parse_paths("\"a,b\",c");
+        assert_eq!(paths, vec!["a,b", "c"]);
+    }
+
+    #[test]
+    fn test_parse_paths_with_spaces() {
+        let paths = parse_paths("  $.name  ,  $.value  ");
+        assert_eq!(paths, vec!["$.name", "$.value"]);
+    }
+
+    #[test]
+    fn test_parse_paths_empty() {
+        let paths = parse_paths("");
+        assert!(paths.is_empty());
+    }
+
+    #[test]
+    fn test_parse_paths_single() {
+        let paths = parse_paths("$.name");
+        assert_eq!(paths, vec!["$.name"]);
+    }
+
+    #[test]
+    fn test_parse_paths_with_escape() {
+        // Test escape character
+        let paths = parse_paths("a\\,b,c");
+        assert_eq!(paths, vec!["a,b", "c"]);
     }
 }
