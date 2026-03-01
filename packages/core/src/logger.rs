@@ -1,20 +1,33 @@
 //! Logging utilities
 
+use std::sync::Once;
+
 use tracing_subscriber::{fmt, EnvFilter};
 
 /// Initialize the logging system
+///
+/// Uses `Once` to ensure safe multiple calls - prevents panic from
+/// tracing subscriber's `.init()` which can only be called once per process.
+static LOGGER_INIT: Once = Once::new();
+
 pub fn init_logger() {
-    fmt()
-        .with_env_filter(EnvFilter::from_default_env())
-        .with_target(true)
-        .with_thread_ids(true)
-        .with_thread_names(true)
-        .init();
+    LOGGER_INIT.call_once(|| {
+        fmt()
+            .with_env_filter(EnvFilter::from_default_env())
+            .with_target(true)
+            .with_thread_ids(true)
+            .with_thread_names(true)
+            .init();
+    });
 }
 
 /// Initialize logger with custom filter
+///
+/// Uses `Once` to ensure safe multiple calls.
 pub fn init_logger_with_filter(filter: &str) {
+    LOGGER_INIT.call_once(|| {
     fmt().with_env_filter(EnvFilter::new(filter)).init();
+    });
 }
 
 #[cfg(test)]
