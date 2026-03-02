@@ -1,13 +1,19 @@
-'use client';
-
 import { useState, useEffect, useCallback } from 'react';
 import Editor from './components/Editor';
 import Preview from './components/Preview';
 import ThemeSelector from './components/ThemeSelector';
+import ThemeTuner from './components/ThemeTuner';
 import ExportPanel from './components/ExportPanel';
 import TemplateLibrary from './components/TemplateLibrary';
 import { Header } from '@/components/Header';
 
+interface ThemeTuning {
+  primaryColor?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  lineWidth?: number;
+  backgroundColor?: string;
+}
 export default function UMLStylerPage() {
   const [code, setCode] = useState<string>('flowchart TD\n    A[Start] --> B[End]');
   const [theme, setTheme] = useState<string>('default');
@@ -15,6 +21,11 @@ export default function UMLStylerPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cursorPosition, setCursorPosition] = useState({ line: 1, col: 1 });
+  const [tuning, setTuning] = useState<ThemeTuning>({});
+
+  const handleTuningChange = useCallback((newTuning: ThemeTuning) => {
+    setTuning(newTuning);
+  }, []);
 
   useEffect(() => {
     import('mermaid').then((mermaid) => {
@@ -91,12 +102,18 @@ export default function UMLStylerPage() {
               </div>
             </div>
 
-            {/* Right: Preview (60%) */}
+            {/* Middle: Theme Tuner (sidebar) */}
+            <div className="w-64 shrink-0 border-r border-[var(--border)] bg-[var(--bg)] overflow-y-auto p-4">
+              <ThemeTuner tuning={tuning} onTuningChange={handleTuningChange} />
+            </div>
+
+            {/* Right: Preview */}
             <div className="flex-1 min-w-[500px] flex flex-col bg-[var(--surface)]">
               <Preview 
                 code={code} 
                 theme={theme}
                 engine={engine}
+                tuning={tuning}
                 onError={handleError}
                 onThemeChange={handleThemeChange}
                 onShare={handleShare}

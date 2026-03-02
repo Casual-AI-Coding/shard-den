@@ -5,10 +5,19 @@ import mermaid from 'mermaid';
 import ThemeSelector from './ThemeSelector';
 import ExportPanel from './ExportPanel';
 
+interface ThemeTuning {
+  primaryColor?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  lineWidth?: number;
+  backgroundColor?: string;
+}
+
 interface PreviewProps {
   code: string;
   theme: string;
   engine: 'mermaid' | 'plantuml';
+  tuning?: ThemeTuning;
   onError?: (error: string | null) => void;
   onThemeChange?: (theme: string) => void;
   onShare?: () => void;
@@ -22,7 +31,23 @@ const MERMAID_THEMES: Record<string, string> = {
   'neutral': 'neutral',
 };
 
-export default function Preview({ code, theme, engine, onError, onThemeChange, onShare }: PreviewProps) {
+export default function Preview({ code, theme, engine, tuning, onError, onThemeChange, onShare }: PreviewProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [svg, setSvg] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+  const [isRendering, setIsRendering] = useState(false);
+  const [zoom, setZoom] = useState(100);
+  const [scale, setScale] = useState<1 | 2 | 3 | 4>(2);
+  const renderCountRef = useRef(0);
+
+  // Apply theme tuning to SVG
+  const tuningStyles: React.CSSProperties = tuning ? {
+    fontFamily: tuning.fontFamily,
+    fontSize: tuning.fontSize ? `${tuning.fontSize}px` : undefined,
+    backgroundColor: tuning.backgroundColor,
+    '--tuning-primary': tuning.primaryColor,
+    '--tuning-line-width': tuning.lineWidth ? `${tuning.lineWidth}px` : undefined,
+  } as React.CSSProperties : {};
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -171,6 +196,27 @@ export default function Preview({ code, theme, engine, onError, onThemeChange, o
         )}
 
         {/* SVG Container */}
+        {!error && svg && (
+          <div 
+            className="mermaid-preview p-4 flex items-center justify-center min-h-full"
+            style={{ 
+              transform: `scale(${zoom / 100})`, 
+              transformOrigin: 'center center',
+              backgroundColor: tuning?.backgroundColor,
+              fontFamily: tuning?.fontFamily,
+              fontSize: tuning?.fontSize ? `${tuning.fontSize}px` : undefined,
+            }}
+          >
+            <div 
+              dangerouslySetInnerHTML={{ __html: svg }}
+              className="transition-transform duration-200"
+              style={{
+                fontFamily: tuning?.fontFamily,
+                fontSize: tuning?.fontSize ? `${tuning.fontSize}px` : undefined,
+              }}
+            />
+          </div>
+        )}
         {!error && svg && (
           <div 
             className="mermaid-preview p-4 flex items-center justify-center min-h-full"
