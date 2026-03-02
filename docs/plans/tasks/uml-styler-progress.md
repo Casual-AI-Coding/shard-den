@@ -4,8 +4,8 @@
 > **关联设计:** [2026-02-28-uml-styler-implementation.md](../2026-02-28-uml-styler-implementation.md)
 > **状态:** ✅ Phase 1 完成
 > **最后更新:** 2026-02-28
-> **当前任务:** Phase 2 待开始
-> **当前任务:** 2.3 PlantUML 自动补全
+> **当前任务:** 2.6 全局微调面板
+> **当前任务:** 2.5 自定义主题扩展
 
 ---
 
@@ -14,7 +14,7 @@
 | Phase | 描述 | 状态 | 进度 |
 |-------|------|------|------|
 | Phase 1 | 核心框架 + Mermaid 引擎 | ✅ 完成 | 14/14 |
-| Phase 2 | PlantUML 引擎 + 扩展主题 + URL 分享 | 🔄 进行中 | 2/11 |
+| Phase 2 | PlantUML 引擎 + 扩展主题 + URL 分享 | 🔄 进行中 | 5/11 |
 | Phase 3 | Desktop 存储增强 | 🔒 待开始 | 0/6 |
 | Phase 4 | D2/Graphviz 等新引擎 | 🔒 待开始 | 0/0 |
 
@@ -59,9 +59,9 @@
 |---|------|------|------|------|--------|
 | 2.1 | PlantUML Engine | 实现 PlantUmlEngine (返回 ServerURL) | ✅ 完成 | feat(uml-styler): 实现 PlantUML Engine | ✅ 通过 |
 | 2.2 | PlantUML 语法高亮 | Monaco Editor PlantUML 语法支持 | ✅ 完成 | feat(uml-styler): 添加 PlantUML 语法高亮支持 | ✅ 通过 |
-| 2.3 | PlantUML 自动补全 | 关键字和语法片段补全 | 🔒 待开始 | - | - |
-| 2.4 | PlantUML 官方主题 | Cerulean, Sketchy, Toy, Vibrant | 🔒 待开始 | - | - |
-| 2.5 | 自定义主题扩展 | 5-10 个自定义主题 | 🔒 待开始 | - | - |
+| 2.3 | PlantUML 自动补全 | 关键字和语法片段补全 | ✅ 完成 | feat(uml-styler): 添加 PlantUML 自动补全支持 | ✅ 通过 |
+| 2.4 | PlantUML 官方主题 | Cerulean, Sketchy, Toy, Vibrant | ✅ 完成 | feat(uml-styler): 添加 PlantUML 官方主题支持 | ✅ 通过 |
+| 2.5 | 自定义主题扩展 | 5-10 个自定义主题 | ✅ 完成 | feat(uml-styler): 添加自定义共享主题 | ✅ 通过 |
 | 2.6 | 全局微调面板 | 主色、字体、线条粗细调整 | 🔒 待开始 | - | - |
 | 2.7 | URL 分享 | LZ-String 编码，生成分享链接 | 🔒 待开始 | - | - |
 | 2.8 | 分享链接解析 | 从 URL 恢复编辑器状态 | 🔒 待开始 | - | - |

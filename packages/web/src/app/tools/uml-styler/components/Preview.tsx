@@ -46,16 +46,10 @@ export default function Preview({ code, theme, engine, tuning, onError, onThemeC
     fontSize: tuning.fontSize ? `${tuning.fontSize}px` : undefined,
     backgroundColor: tuning.backgroundColor,
     '--tuning-primary': tuning.primaryColor,
-    '--tuning-line-width': tuning.lineWidth ? `${tuning.lineWidth}px` : undefined,
   } as React.CSSProperties : {};
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [svg, setSvg] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
-  const [isRendering, setIsRendering] = useState(false);
-  const [zoom, setZoom] = useState(100);
-  const [scale, setScale] = useState<1 | 2 | 3 | 4>(2);
-  const renderCountRef = useRef(0);
 
+  // Render diagram
+  // Render diagram
   const renderDiagram = useCallback(async () => {
     if (!code.trim()) {
       setSvg('');
@@ -214,17 +208,6 @@ export default function Preview({ code, theme, engine, tuning, onError, onThemeC
                 fontFamily: tuning?.fontFamily,
                 fontSize: tuning?.fontSize ? `${tuning.fontSize}px` : undefined,
               }}
-            />
-          </div>
-        )}
-        {!error && svg && (
-          <div 
-            className="mermaid-preview p-4 flex items-center justify-center min-h-full"
-            style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'center center' }}
-          >
-            <div 
-              dangerouslySetInnerHTML={{ __html: svg }}
-              className="transition-transform duration-200"
             />
           </div>
         )}
