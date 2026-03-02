@@ -1,8 +1,13 @@
 'use client';
 
-import type { ThemeTuning } from './types';
 import { useState, useEffect, useCallback } from 'react';
-
+import Editor from './components/Editor';
+import Preview from './components/Preview';
+import ThemeSelector from './components/ThemeSelector';
+import ExportPanel from './components/ExportPanel';
+import TemplateLibrary from './components/TemplateLibrary';
+import { Header } from '@/components/Header';
+import type { ThemeTuning } from './types';
 
 export default function UMLStylerPage() {
   const [code, setCode] = useState<string>('flowchart TD\n    A[Start] --> B[End]');
@@ -12,29 +17,6 @@ export default function UMLStylerPage() {
   const [error, setError] = useState<string | null>(null);
   const [cursorPosition, setCursorPosition] = useState({ line: 1, col: 1 });
   const [tuning, setTuning] = useState<ThemeTuning>({});
-
-  const handleTuningChange = useCallback((newTuning: ThemeTuning) => {
-    setTuning(newTuning);
-  }, []);
-
-  useEffect(() => {
-    // 解析分享链接
-    const state = parseShareUrl();
-    if (state) {
-      setCode(state.code);
-      setEngine(state.engine);
-      setTheme(state.theme);
-      if (state.tuning) {
-        setTuning({
-          primaryColor: state.tuning.primaryColor,
-          fontFamily: state.tuning.fontFamily,
-          fontSize: state.tuning.fontSize,
-          lineWidth: state.tuning.lineWidth,
-          backgroundColor: state.tuning.backgroundColor,
-        });
-      }
-    }
-  }, []); // 只在组件挂载时执行一次
 
   useEffect(() => {
     import('mermaid').then((mermaid) => {
@@ -67,12 +49,19 @@ export default function UMLStylerPage() {
     setError(err);
   }, []);
 
-  const getState = useCallback(() => ({
-    code,
-    engine,
-    theme,
-    tuning,
-  }), [code, engine, theme, tuning]);
+  const handleTuningChange = useCallback((newTuning: ThemeTuning) => {
+    setTuning(newTuning);
+  }, []);
+
+  const handleShare = useCallback(() => {
+    const encoded = btoa(encodeURIComponent(code));
+    const url = `${window.location.origin}${window.location.pathname}?code=${encoded}`;
+    navigator.clipboard.writeText(url).then(() => {
+      alert('分享链接已复制到剪贴板！');
+    }).catch(() => {
+      alert('复制失败');
+    });
+  }, [code]);
 
   return (
     <>
@@ -101,30 +90,24 @@ export default function UMLStylerPage() {
               />
               {/* Editor Toolbar */}
               <div className="h-12 px-4 bg-[var(--bg)] border-t border-[var(--border)] flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-3">
-                  <TemplateLibrary onSelect={setCode} />
-                  <ShareButton getState={getState} />
-                </div>
+                <TemplateLibrary onSelect={setCode} />
                 <div className="text-xs text-[var(--text-secondary)]">
                   Ln {cursorPosition.line}, Col {cursorPosition.col}
                 </div>
               </div>
             </div>
 
-            {/* Middle: Theme Tuner (sidebar) */}
-            <div className="w-64 shrink-0 border-r border-[var(--border)] bg-[var(--bg)] overflow-y-auto p-4">
-              <ThemeTuner tuning={tuning} onTuningChange={handleTuningChange} />
-            </div>
-
-            {/* Right: Preview */}
+            {/* Right: Preview (60%) */}
             <div className="flex-1 min-w-[500px] flex flex-col bg-[var(--surface)]">
               <Preview 
                 code={code} 
                 theme={theme}
                 engine={engine}
                 tuning={tuning}
+                onTuningChange={handleTuningChange}
                 onError={handleError}
                 onThemeChange={handleThemeChange}
+                onShare={handleShare}
               />
             </div>
           </div>

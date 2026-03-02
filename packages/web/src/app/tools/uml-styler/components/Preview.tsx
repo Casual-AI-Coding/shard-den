@@ -3,21 +3,16 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mermaid from 'mermaid';
 import ThemeSelector from './ThemeSelector';
+import ThemeTuner from './ThemeTuner';
 import ExportPanel from './ExportPanel';
-
-interface ThemeTuning {
-  primaryColor?: string;
-  fontFamily?: string;
-  fontSize?: number;
-  lineWidth?: number;
-  backgroundColor?: string;
-}
+import type { ThemeTuning } from '../types';
 
 interface PreviewProps {
   code: string;
   theme: string;
   engine: 'mermaid' | 'plantuml';
   tuning?: ThemeTuning;
+  onTuningChange?: (tuning: ThemeTuning) => void;
   onError?: (error: string | null) => void;
   onThemeChange?: (theme: string) => void;
   onShare?: () => void;
@@ -31,25 +26,16 @@ const MERMAID_THEMES: Record<string, string> = {
   'neutral': 'neutral',
 };
 
-export default function Preview({ code, theme, engine, tuning, onError, onThemeChange, onShare }: PreviewProps) {
+export default function Preview({ code, theme, engine, tuning, onTuningChange, onError, onThemeChange, onShare }: PreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [isRendering, setIsRendering] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [scale, setScale] = useState<1 | 2 | 3 | 4>(2);
+  const [showTuner, setShowTuner] = useState(false);
   const renderCountRef = useRef(0);
 
-  // Apply theme tuning to SVG
-  const tuningStyles: React.CSSProperties = tuning ? {
-    fontFamily: tuning.fontFamily,
-    fontSize: tuning.fontSize ? `${tuning.fontSize}px` : undefined,
-    backgroundColor: tuning.backgroundColor,
-    '--tuning-primary': tuning.primaryColor,
-  } as React.CSSProperties : {};
-
-  // Render diagram
-  // Render diagram
   const renderDiagram = useCallback(async () => {
     if (!code.trim()) {
       setSvg('');
@@ -121,9 +107,41 @@ export default function Preview({ code, theme, engine, tuning, onError, onThemeC
           )}
         </div>
         <div className="flex items-center gap-3">
-          {/* Theme selector */}
-          <ThemeSelector theme={theme} engine={engine} onThemeChange={onThemeChange || (() => {})} />
+{/* Theme selector */}
+          <ThemeSelector theme={theme} onThemeChange={onThemeChange || (() => {})} engine={engine} />
           
+          {/* Theme tuner popup */}
+          <div className="relative">
+            <button
+              onClick={() => setShowTuner(!showTuner)}
+              className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded transition-colors ${
+                showTuner 
+                  ? 'bg-blue-500/20 text-blue-400' 
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)]'
+              }`}
+              title="微调"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+              <span>微调</span>
+            </button>
+            {showTuner && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setShowTuner(false)}
+                />
+                <div className="absolute right-0 top-full mt-1 w-64 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg z-50 p-4">
+                  <ThemeTuner 
+                    tuning={tuning || {}} 
+                    onTuningChange={onTuningChange || (() => {})} 
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Zoom controls */}
           <div className="flex items-center gap-1 border-l border-[var(--border)] pl-3">
             <button
@@ -193,21 +211,11 @@ export default function Preview({ code, theme, engine, tuning, onError, onThemeC
         {!error && svg && (
           <div 
             className="mermaid-preview p-4 flex items-center justify-center min-h-full"
-            style={{ 
-              transform: `scale(${zoom / 100})`, 
-              transformOrigin: 'center center',
-              backgroundColor: tuning?.backgroundColor,
-              fontFamily: tuning?.fontFamily,
-              fontSize: tuning?.fontSize ? `${tuning.fontSize}px` : undefined,
-            }}
+            style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'center center' }}
           >
             <div 
               dangerouslySetInnerHTML={{ __html: svg }}
               className="transition-transform duration-200"
-              style={{
-                fontFamily: tuning?.fontFamily,
-                fontSize: tuning?.fontSize ? `${tuning.fontSize}px` : undefined,
-              }}
             />
           </div>
         )}
