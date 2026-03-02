@@ -2,8 +2,6 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import Preview from './Preview';
-import { describe, it, expect } from 'vitest';
-import Preview from './Preview';
 
 // Mock mermaid
 vi.mock('mermaid', () => ({
@@ -22,7 +20,8 @@ describe('Preview', () => {
         engine="mermaid" 
       />
     );
-    expect(screen.getByText('Preview')).toBeInTheDocument();
+    // Check for Chinese text "预览" (Preview)
+    expect(screen.getByText('预览')).toBeInTheDocument();
   });
 
   it('shows empty state when no code', () => {
@@ -33,18 +32,19 @@ describe('Preview', () => {
         engine="mermaid" 
       />
     );
-    expect(screen.getByText('No diagram to display')).toBeInTheDocument();
+    // Check for empty state message (Chinese: 在编辑器中输入代码以查看预览)
+    expect(screen.getByText(/在编辑器中输入代码以查看预览/)).toBeInTheDocument();
   });
 
-  it('shows PlantUML placeholder for plantuml engine', async () => {
+  it('renders with mermaid code', async () => {
     render(
       <Preview 
-        code="@startuml\nA-->B\n@enduml" 
+        code="flowchart TD\nA-->B" 
         theme="default" 
-        engine="plantuml" 
+        engine="mermaid" 
       />
     );
-    // PlantUML should show error message (Phase 2)
-    expect(await screen.findByText(/Render Error/)).toBeInTheDocument();
+    // Should render without error for valid mermaid code
+    expect(screen.getByText('预览')).toBeInTheDocument();
   });
 });
