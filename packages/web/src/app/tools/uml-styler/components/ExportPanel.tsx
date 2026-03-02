@@ -187,7 +187,7 @@ export default function ExportPanel({ code, theme, engine, scale = 2 }: ExportPa
             className="fixed inset-0 z-40" 
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-full mt-1 w-40 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg z-50">
+          <div className="absolute right-0 bottom-full mb-1 w-40 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg z-50">
             <div className="p-1">
               <button
                 onClick={() => handleExport('png')}

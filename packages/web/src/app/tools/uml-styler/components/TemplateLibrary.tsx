@@ -198,7 +198,7 @@ export default function TemplateLibrary({ onSelect }: TemplateLibraryProps) {
             className="fixed inset-0 z-40" 
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute left-0 top-full mt-1 w-80 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg z-50">
+          <div className="absolute left-0 bottom-full mb-1 w-80 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg z-50">
             {/* Category tabs */}
             <div className="flex flex-wrap gap-1 p-2 border-b border-[var(--border)]">
               {CATEGORIES.map((cat) => (

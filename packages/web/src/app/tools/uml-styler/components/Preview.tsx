@@ -132,7 +132,7 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
                   className="fixed inset-0 z-40" 
                   onClick={() => setShowTuner(false)}
                 />
-                <div className="absolute right-0 top-full mt-1 w-64 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg z-50 p-4">
+                <div className="absolute right-0 bottom-full mb-1 w-64 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg z-50 p-4">
                   <ThemeTuner 
                     tuning={tuning || {}} 
                     onTuningChange={onTuningChange || (() => {})} 
