@@ -1,21 +1,6 @@
+import type { ThemeTuning } from './types';
 import { useState, useEffect, useCallback } from 'react';
-import Editor from './components/Editor';
-import Preview from './components/Preview';
-import ThemeSelector from './components/ThemeSelector';
-import ThemeTuner from './components/ThemeTuner';
-import ExportPanel from './components/ExportPanel';
-import TemplateLibrary from './components/TemplateLibrary';
-import ShareButton from './components/ShareButton';
-import { Header } from '@/components/Header';
-import { parseShareUrl } from './lib/share/urlEncoder';
 
-interface ThemeTuning {
-  primaryColor?: string;
-  fontFamily?: string;
-  fontSize?: number;
-  lineWidth?: number;
-  backgroundColor?: string;
-}
 
 export default function UMLStylerPage() {
   const [code, setCode] = useState<string>('flowchart TD\n    A[Start] --> B[End]');

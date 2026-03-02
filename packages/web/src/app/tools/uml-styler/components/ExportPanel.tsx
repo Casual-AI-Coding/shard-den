@@ -1,5 +1,9 @@
 'use client';
 
+// 默认导出尺寸（当 SVG bbox 获取失败时的后备值）
+const DEFAULT_EXPORT_WIDTH = 800;
+const DEFAULT_EXPORT_HEIGHT = 600;
+
 /**
  * 将 SVG 转换为 PNG Data URL
  */
@@ -123,8 +127,8 @@ export default function ExportPanel({ code, theme, engine, scale = 2 }: ExportPa
         document.body.removeChild(link);
       } else if (format === 'pdf') {
         const bbox = svgElement.getBBox();
-        const width = bbox.width + bbox.x || 800;
-        const height = bbox.height + bbox.y || 600;
+        const width = bbox.width + bbox.x || DEFAULT_EXPORT_WIDTH;
+        const height = bbox.height + bbox.y || DEFAULT_EXPORT_HEIGHT;
         
         const pngDataUrl = await svgToPngDataUrl(svgElement, scale);
         const pngBase64 = pngDataUrl.split(',')[1];

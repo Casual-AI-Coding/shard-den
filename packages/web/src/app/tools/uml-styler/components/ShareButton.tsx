@@ -1,20 +1,14 @@
 'use client';
 
+import type { ThemeTuning } from '@/app/tools/uml-styler/types';
 import React, { useState } from 'react';
 
 interface ShareState {
   code: string;
   engine: 'mermaid' | 'plantuml';
   theme: string;
-  tuning?: {
-    primaryColor?: string;
-    fontFamily?: string;
-    fontSize?: number;
-    lineWidth?: number;
-    backgroundColor?: string;
-  };
+  tuning?: ThemeTuning;
 }
-
 interface ShareButtonProps {
   getState: () => ShareState;
 }

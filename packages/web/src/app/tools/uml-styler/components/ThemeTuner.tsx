@@ -1,14 +1,8 @@
 'use client';
 
-import React from 'react';
+import type { ThemeTuning } from '../types';
+import React, { useMemo, useCallback } from 'react';
 
-interface ThemeTuning {
-  primaryColor?: string;
-  fontFamily?: string;
-  fontSize?: number;
-  lineWidth?: number;
-  backgroundColor?: string;
-}
 
 interface ThemeTunerProps {
   tuning: ThemeTuning;
@@ -34,11 +28,17 @@ const DEFAULT_TUNING: ThemeTuning = {
 };
 
 export default function ThemeTuner({ tuning, onTuningChange }: ThemeTunerProps) {
-  const currentTuning = { ...DEFAULT_TUNING, ...tuning };
+  const currentTuning = useMemo(
+    () => ({ ...DEFAULT_TUNING, ...tuning }),
+    [tuning]
+  );
 
-  const handleChange = (key: keyof ThemeTuning, value: string | number) => {
-    onTuningChange({ ...tuning, [key]: value });
-  };
+  const handleChange = useCallback(
+    (key: keyof ThemeTuning, value: string | number) => {
+      onTuningChange({ ...tuning, [key]: value });
+    },
+    [tuning, onTuningChange]
+  );
 
   const handleReset = () => {
     onTuningChange({});

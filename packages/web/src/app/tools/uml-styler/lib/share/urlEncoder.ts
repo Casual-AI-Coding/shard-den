@@ -1,24 +1,23 @@
 import LZString from 'lz-string';
+import type { ThemeTuning } from '@/app/tools/uml-styler/types';
 
 export interface ShareState {
   code: string;
   engine: 'mermaid' | 'plantuml';
   theme: string;
-  tuning?: {
-    primaryColor?: string;
-    fontFamily?: string;
-    fontSize?: number;
-    lineWidth?: number;
-    backgroundColor?: string;
-  };
+  tuning?: ThemeTuning;
 }
-
 /**
  * 编码状态到 URL 安全字符串
  */
 export function encodeState(state: ShareState): string {
-  const json = JSON.stringify(state);
-  return LZString.compressToEncodedURIComponent(json);
+  try {
+    const json = JSON.stringify(state);
+    return LZString.compressToEncodedURIComponent(json);
+  } catch (err) {
+    console.error('Failed to encode state:', err);
+    return '';
+  }
 }
 
 /**
