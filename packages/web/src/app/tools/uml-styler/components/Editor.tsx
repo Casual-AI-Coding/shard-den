@@ -204,10 +204,6 @@ export default function CodeEditor({
     // Register PlantUML completion provider
     monaco.languages.registerCompletionItemProvider('plantuml', {
       provideCompletionItems: (model, position) => {
-    monaco.languages.registerCompletionItemProvider('plantuml', {
-      provideCompletionItems: (model: any, position: any) => {
-    monaco.languages.registerCompletionItemProvider('plantuml', {
-      provideCompletionItems: (model, position) => {
         const word = model.getWordUntilPosition(position);
         const range = {
           startLineNumber: position.lineNumber,
@@ -218,13 +214,13 @@ export default function CodeEditor({
 
         return {
           suggestions: PLANTUML_COMPLETIONS.map((item) => ({
-          suggestions: PLANTUML_COMPLETIONS.map((item: any) => ({
             ...item,
             range,
           })),
         };
       },
     });
+
 
     // Set editor options
     editor.updateOptions({
