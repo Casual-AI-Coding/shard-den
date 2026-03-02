@@ -105,6 +105,25 @@
 
 ---
 
+
+---
+
+## 代码审查问题 (v0.3.1 → HEAD)
+
+### 待修复问题
+
+| # | 优先级 | 文件 | 问题描述 | 状态 |
+|---|--------|------|----------|------|
+| 1 | P1 | ExportPanel.tsx:206-207 | Error handling 暴露内部错误详情 | 🔲 待修复 |
+| 2 | P1 | ExportPanel.tsx:148 | 静默失败无用户反馈 | 🔲 待修复 |
+| 3 | P1 | 测试文件删除 | 测试覆盖减少 | 🔲 待修复 |
+| 4 | P2 | ExportPanel.tsx:54-203 | PNG/PDF 导出代码重复 | 🔲 待修复 |
+| 5 | P2 | Editor.tsx | 静态配置应放在组件外 | 🔲 待修复 |
+| 6 | P2 | ThemeTuner.tsx:37 | useMemo 优化 | 🔲 待修复 |
+| 7 | P2 | 类型重复定义 | ThemeTuning 接口多处重复 | 🔲 待修复 |
+| 8 | P2 | urlEncoder.ts | 缺少 JSON.stringify 错误处理 | 🔲 待修复 |
+| 9 | P3 | ExportPanel.tsx:122-123 | 魔法数字 800/600 | 🔲 待修复 |
+| 10 | P3 | ThemeTuner.tsx:40 | useCallback 优化 | 🔲 待修复 |
 ## 相关文档
 
 - [设计文档](../2026-02-28-uml-styler-implementation.md)

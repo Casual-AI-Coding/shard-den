@@ -145,7 +145,10 @@ export default function ExportPanel({ code, theme, engine, scale = 2 }: ExportPa
         canvas.height = scaledHeight;
         const ctx = canvas.getContext('2d');
         
-        if (!ctx) return;
+        if (!ctx) {
+          alert('导出失败：无法创建画布上下文');
+          return;
+        }
         
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, scaledWidth, scaledHeight);
@@ -204,7 +207,7 @@ export default function ExportPanel({ code, theme, engine, scale = 2 }: ExportPa
       }
     } catch (err) {
       console.error('Export error:', err);
-      alert(`Export failed: ${err}`);
+      alert('导出失败，请重试或联系支持');
     }
   };
 
