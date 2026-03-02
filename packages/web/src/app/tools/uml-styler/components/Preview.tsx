@@ -103,7 +103,7 @@ export default function Preview({ code, theme, engine, onError, onThemeChange, o
         </div>
         <div className="flex items-center gap-3">
           {/* Theme selector */}
-          <ThemeSelector theme={theme} onThemeChange={onThemeChange || (() => {})} />
+          <ThemeSelector theme={theme} engine={engine} onThemeChange={onThemeChange || (() => {})} />
           
           {/* Zoom controls */}
           <div className="flex items-center gap-1 border-l border-[var(--border)] pl-3">
