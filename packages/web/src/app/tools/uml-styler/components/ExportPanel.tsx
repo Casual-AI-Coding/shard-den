@@ -169,9 +169,7 @@ export default function ExportPanel({ code, theme, engine, scale = 2 }: ExportPa
             const pdfWidth = width;
             const pdfHeight = height;
             const page = pdfDoc.addPage([pdfWidth, pdfHeight]);
-            const pdfDoc = await PDFDocument.create();
-            const page = pdfDoc.addPage([width * 72 / 96, height * 72 / 96]);
-            
+
             const pngImage = await pdfDoc.embedPng(pngBytes);
             
             page.drawImage(pngImage, {
@@ -179,11 +177,6 @@ export default function ExportPanel({ code, theme, engine, scale = 2 }: ExportPa
               y: 0,
               width: pdfWidth,
               height: pdfHeight,
-            });
-              x: 0,
-              y: 0,
-              width: width,
-              height: height,
             });
             
             const pdfBytes = await pdfDoc.save();
