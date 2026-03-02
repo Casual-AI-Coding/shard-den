@@ -1,3 +1,5 @@
+'use client';
+
 import type { ThemeTuning } from './types';
 import { useState, useEffect, useCallback } from 'react';
 
