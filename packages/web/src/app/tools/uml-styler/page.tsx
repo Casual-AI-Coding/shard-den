@@ -5,6 +5,7 @@ import ThemeSelector from './components/ThemeSelector';
 import ThemeTuner from './components/ThemeTuner';
 import ExportPanel from './components/ExportPanel';
 import TemplateLibrary from './components/TemplateLibrary';
+import ShareButton from './components/ShareButton';
 import { Header } from '@/components/Header';
 
 interface ThemeTuning {
@@ -58,15 +59,12 @@ export default function UMLStylerPage() {
     setError(err);
   }, []);
 
-  const handleShare = useCallback(() => {
-    const encoded = btoa(encodeURIComponent(code));
-    const url = `${window.location.origin}${window.location.pathname}?code=${encoded}`;
-    navigator.clipboard.writeText(url).then(() => {
-      alert('分享链接已复制到剪贴板！');
-    }).catch(() => {
-      alert('复制失败');
-    });
-  }, [code]);
+  const getState = useCallback(() => ({
+    code,
+    engine,
+    theme,
+    tuning,
+  }), [code, engine, theme, tuning]);
 
   return (
     <>
@@ -95,7 +93,10 @@ export default function UMLStylerPage() {
               />
               {/* Editor Toolbar */}
               <div className="h-12 px-4 bg-[var(--bg)] border-t border-[var(--border)] flex items-center justify-between shrink-0">
-                <TemplateLibrary onSelect={setCode} />
+                <div className="flex items-center gap-3">
+                  <TemplateLibrary onSelect={setCode} />
+                  <ShareButton getState={getState} />
+                </div>
                 <div className="text-xs text-[var(--text-secondary)]">
                   Ln {cursorPosition.line}, Col {cursorPosition.col}
                 </div>
@@ -116,7 +117,6 @@ export default function UMLStylerPage() {
                 tuning={tuning}
                 onError={handleError}
                 onThemeChange={handleThemeChange}
-                onShare={handleShare}
               />
             </div>
           </div>
