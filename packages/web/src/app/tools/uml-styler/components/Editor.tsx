@@ -70,7 +70,7 @@ const MERMAID_TOKEN_PROVIDER = {
 const PLANTUML_LANGUAGE_CONFIG = {
   comments: {
     lineComment: "'",
-    blockComment: ['/', '/'],
+    blockComment: ['/*', '*/'],
   },
   brackets: [
     ['{', '}'],
@@ -125,7 +125,6 @@ const PLANTUML_TOKEN_PROVIDER = {
     root: [
       [/'[^\n]*$/, 'comment'],
       [/\/\*/, 'comment', '@comment'],
-      [/'/, 'string', '@string'],
       [/[{}()\[\]]/, '@brackets'],
       [/[a-zA-Z_]\w*/, {
         cases: {
