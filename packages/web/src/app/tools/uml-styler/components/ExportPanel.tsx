@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { PDFDocument } from 'pdf-lib';
 
 interface ExportPanelProps {
   code: string;
@@ -116,7 +117,88 @@ export default function ExportPanel({ code, theme, engine, scale = 2 }: ExportPa
           img.src = url;
         });
       } else if (format === 'pdf') {
-        alert('PDF export will be available in Phase 2');
+        const clonedSvg = svgElement.cloneNode(true) as SVGSVGElement;
+        const bbox = svgElement.getBBox();
+        const width = bbox.width + bbox.x || 800;
+        const height = bbox.height + bbox.y || 600;
+        
+        const scaledWidth = width * scale;
+        const scaledHeight = height * scale;
+        
+        clonedSvg.setAttribute('width', String(width));
+        clonedSvg.setAttribute('height', String(height));
+        clonedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        
+        // Add white background
+        const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        background.setAttribute('width', '100%');
+        background.setAttribute('height', '100%');
+        background.setAttribute('fill', 'white');
+        clonedSvg.insertBefore(background, clonedSvg.firstChild);
+        
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(clonedSvg);
+        
+        // Render SVG to canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = scaledWidth;
+        canvas.height = scaledHeight;
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) return;
+        
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, scaledWidth, scaledHeight);
+        
+        const img = new Image();
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        
+        await new Promise<void>((resolve, reject) => {
+          img.onload = async () => {
+            ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+            URL.revokeObjectURL(url);
+            
+            // Convert canvas to PNG for embedding in PDF
+            const pngDataUrl = canvas.toDataURL('image/png');
+            const pngBase64 = pngDataUrl.split(',')[1];
+            const pngBytes = Uint8Array.from(atob(pngBase64), c => c.charCodeAt(0));
+            
+            // Create PDF
+            const pdfDoc = await PDFDocument.create();
+            const page = pdfDoc.addPage([width * 72 / 96, height * 72 / 96]);
+            
+            const pngImage = await pdfDoc.embedPng(pngBytes);
+            
+            page.drawImage(pngImage, {
+              x: 0,
+              y: 0,
+              width: width,
+              height: height,
+            });
+            
+            const pdfBytes = await pdfDoc.save();
+            const pdfBlob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            
+            const link = document.createElement('a');
+            link.href = pdfUrl;
+            link.download = `diagram-${Date.now()}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(pdfUrl);
+            
+            resolve();
+          };
+          
+          img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('Failed to load SVG'));
+          };
+          
+          img.src = url;
+        });
       }
     } catch (err) {
       console.error('Export error:', err);
