@@ -66,6 +66,97 @@ const MERMAID_TOKEN_PROVIDER = {
   },
 };
 
+// PlantUML syntax highlight config
+const PLANTUML_LANGUAGE_CONFIG = {
+  comments: {
+    lineComment: "'",
+    blockComment: ['/', '/'],
+  },
+  brackets: [
+    ['{', '}'],
+    ['[', ']'],
+    ['(', ')'],
+  ],
+  autoClosingPairs: [
+    { open: '{', close: '}' },
+    { open: '[', close: ']' },
+    { open: '(', close: ')' },
+    { open: '"', close: '"' },
+  ],
+  surroundingPairs: [
+    { open: '{', close: '}' },
+    { open: '[', close: ']' },
+    { open: '(', close: ')' },
+    { open: '"', close: '"' },
+  ],
+};
+
+const PLANTUML_TOKEN_PROVIDER = {
+  defaultToken: '',
+  tokenPostfix: '.plantuml',
+
+  keywords: [
+    '@startuml', '@enduml', 'actor', 'participant',
+    'class', 'interface', 'abstract', 'enum', 'annotation', 'component', 'node',
+    'folder', 'file', 'package', 'frame', 'rectangle', 'cloud', 'database',
+    'stack', 'queue', 'storage', 'artifact', 'boundary', 'control', 'entity',
+    'agent', 'collections', 'usecase', 'object', 'card',
+    'note', 'title', 'skinparam', '!theme', '!include', '!definelong', '!define',
+    '!unquoted', 'as', 'extends', 'implements', 'interface', 'abstract',
+    'if', 'else', 'elseif', 'endif', 'while', 'endwhile', 'repeat', 'again',
+    'fork', 'endfork', 'merge', 'split', 'endsplit', 'partition', 'endpartition',
+    'state', 'entry', 'exit', 'end', 'choice', 'join', 'junction',
+    'start', 'stop', 'kill', 'detach', 'return', 'wait', 'read', 'write',
+    'activate', 'deactivate', 'destroy', 'create', 'new', 'order', 'hide', 'show',
+    'left', 'right', 'up', 'down', 'also', 'endlink', 'over', 'of', 'is',
+    'on', 'off', 'strict', 'lazy', 'gray', 'white', 'hidden', 'plain',
+    'stereotype', 'top', 'bottom', 'header', 'footer',
+    'legend', 'endlegend', 'caption', 'center', 'rotate', 'ref',
+  ],
+
+  operators: [
+    '->', '-->', '<-', '<--', '->>', '<<-', '<->', '<-->', '->x', 'x->',
+    '--', '==', '::', '..', '//', '==>', '<==', '..>', '<..', '/>', '<\\',
+  ],
+
+  symbols: /[=><!~?:&|+\-*\/\^%]+/,
+
+  tokenizer: {
+    root: [
+      [/'[^\n]*$/, 'comment'],
+      [/\/\*/, 'comment', '@comment'],
+      [/'/, 'string', '@string'],
+      [/[{}()\[\]]/, '@brackets'],
+      [/[a-zA-Z_]\w*/, {
+        cases: {
+          '@keywords': 'keyword',
+          '@default': 'identifier',
+        },
+      }],
+      [/[<][>-]/, 'type.identifier'],
+      [/`[^`]*`/, 'string'],
+      [/\d+/, 'number'],
+      [/[;,.]/, 'delimiter'],
+      [/[=><!~?:&|+\-*\/\^%]+/, {
+        cases: {
+          '@operators': 'operator',
+          '@default': '',
+        },
+      }],
+    ],
+    comment: [
+      [/[^\/*]+/, 'comment'],
+      [/\*\//, 'comment', '@pop'],
+      [/[\/*]/, 'comment'],
+    ],
+    string: [
+      [/[^'\\]+/, 'string'],
+      [/\\./, 'string.escape'],
+      [/'/, 'string', '@pop'],
+    ],
+  },
+};
+
 export default function CodeEditor({ 
   code, 
   onChange, 
@@ -83,6 +174,13 @@ export default function CodeEditor({
       monaco.languages.register({ id: 'mermaid' });
       monaco.languages.setLanguageConfiguration('mermaid', MERMAID_LANGUAGE_CONFIG as any);
       monaco.languages.setMonarchTokensProvider('mermaid', MERMAID_TOKEN_PROVIDER as any);
+    }
+
+    // Register PlantUML language
+    if (!monaco.languages.getLanguages().some((lang: { id: string }) => lang.id === 'plantuml')) {
+      monaco.languages.register({ id: 'plantuml' });
+      monaco.languages.setLanguageConfiguration('plantuml', PLANTUML_LANGUAGE_CONFIG as any);
+      monaco.languages.setMonarchTokensProvider('plantuml', PLANTUML_TOKEN_PROVIDER as any);
     }
 
     // Set editor options
@@ -130,7 +228,7 @@ export default function CodeEditor({
           className="px-3 py-1.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
         >
           <option value="mermaid">Mermaid</option>
-          <option value="plantuml" disabled>PlantUML (Coming Soon)</option>
+          <option value="plantuml">PlantUML</option>
         </select>
 
         {/* Format Button */}
@@ -156,7 +254,7 @@ export default function CodeEditor({
       <div className="flex-1 min-h-0">
         <Editor
           height="100%"
-          language={engine === 'mermaid' ? 'mermaid' : 'markdown'}
+          language={engine === 'plantuml' ? 'plantuml' : 'mermaid'}
           value={code}
           onChange={handleChange}
           onMount={handleEditorMount}

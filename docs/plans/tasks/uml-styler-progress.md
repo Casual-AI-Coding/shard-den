@@ -5,7 +5,7 @@
 > **状态:** ✅ Phase 1 完成
 > **最后更新:** 2026-02-28
 > **当前任务:** Phase 2 待开始
-> **当前任务:** 1.14 测试覆盖
+> **当前任务:** 2.2 PlantUML 语法高亮
 
 ---
 
@@ -14,7 +14,7 @@
 | Phase | 描述 | 状态 | 进度 |
 |-------|------|------|------|
 | Phase 1 | 核心框架 + Mermaid 引擎 | ✅ 完成 | 14/14 |
-| Phase 2 | PlantUML 引擎 + 扩展主题 + URL 分享 | 🔒 待开始 | 0/11 |
+| Phase 2 | PlantUML 引擎 + 扩展主题 + URL 分享 | 🔄 进行中 | 1/11 |
 | Phase 3 | Desktop 存储增强 | 🔒 待开始 | 0/6 |
 | Phase 4 | D2/Graphviz 等新引擎 | 🔒 待开始 | 0/0 |
 
@@ -57,7 +57,7 @@
 
 | # | 任务 | 描述 | 状态 | 提交 | Review |
 |---|------|------|------|------|--------|
-| 2.1 | PlantUML Engine | 实现 PlantUmlEngine (返回 ServerURL) | 🔒 待开始 | - | - |
+| 2.1 | PlantUML Engine | 实现 PlantUmlEngine (返回 ServerURL) | ✅ 完成 | feat(uml-styler): 实现 PlantUML Engine | ✅ 通过 |
 | 2.2 | PlantUML 语法高亮 | Monaco Editor PlantUML 语法支持 | 🔒 待开始 | - | - |
 | 2.3 | PlantUML 自动补全 | 关键字和语法片段补全 | 🔒 待开始 | - | - |
 | 2.4 | PlantUML 官方主题 | Cerulean, Sketchy, Toy, Vibrant | 🔒 待开始 | - | - |
