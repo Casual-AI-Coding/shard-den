@@ -164,13 +164,22 @@ export default function ExportPanel({ code, theme, engine, scale = 2 }: ExportPa
             const pngBase64 = pngDataUrl.split(',')[1];
             const pngBytes = Uint8Array.from(atob(pngBase64), c => c.charCodeAt(0));
             
-            // Create PDF
+            // Create PDF with proper dimensions (convert pixels to points: 1 point = 1/72 inch, assuming 96 DPI screen)
+            const pdfDoc = await PDFDocument.create();
+            const pdfWidth = width;
+            const pdfHeight = height;
+            const page = pdfDoc.addPage([pdfWidth, pdfHeight]);
             const pdfDoc = await PDFDocument.create();
             const page = pdfDoc.addPage([width * 72 / 96, height * 72 / 96]);
             
             const pngImage = await pdfDoc.embedPng(pngBytes);
             
             page.drawImage(pngImage, {
+              x: 0,
+              y: 0,
+              width: pdfWidth,
+              height: pdfHeight,
+            });
               x: 0,
               y: 0,
               width: width,
