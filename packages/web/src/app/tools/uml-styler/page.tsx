@@ -7,6 +7,7 @@ import ExportPanel from './components/ExportPanel';
 import TemplateLibrary from './components/TemplateLibrary';
 import ShareButton from './components/ShareButton';
 import { Header } from '@/components/Header';
+import { parseShareUrl } from './lib/share/urlEncoder';
 
 interface ThemeTuning {
   primaryColor?: string;
@@ -15,6 +16,7 @@ interface ThemeTuning {
   lineWidth?: number;
   backgroundColor?: string;
 }
+
 export default function UMLStylerPage() {
   const [code, setCode] = useState<string>('flowchart TD\n    A[Start] --> B[End]');
   const [theme, setTheme] = useState<string>('default');
@@ -27,6 +29,25 @@ export default function UMLStylerPage() {
   const handleTuningChange = useCallback((newTuning: ThemeTuning) => {
     setTuning(newTuning);
   }, []);
+
+  useEffect(() => {
+    // 解析分享链接
+    const state = parseShareUrl();
+    if (state) {
+      setCode(state.code);
+      setEngine(state.engine);
+      setTheme(state.theme);
+      if (state.tuning) {
+        setTuning({
+          primaryColor: state.tuning.primaryColor,
+          fontFamily: state.tuning.fontFamily,
+          fontSize: state.tuning.fontSize,
+          lineWidth: state.tuning.lineWidth,
+          backgroundColor: state.tuning.backgroundColor,
+        });
+      }
+    }
+  }, []); // 只在组件挂载时执行一次
 
   useEffect(() => {
     import('mermaid').then((mermaid) => {
