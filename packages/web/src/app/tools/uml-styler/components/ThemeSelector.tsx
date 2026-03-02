@@ -24,10 +24,21 @@ const PLANTUML_THEMES = [
   { id: 'vibrant', name: 'Vibrant', preview: '#1A1A1A' },
 ];
 
+// 共享主题（适用于两个引擎）
+const SHARED_THEMES = [
+  { id: 'shared/default', name: 'Default', preview: '#3B82F6', category: 'shared' },
+  { id: 'shared/dark', name: 'Dark', preview: '#1F2937', category: 'shared' },
+  { id: 'shared/business', name: 'Business Blue', preview: '#0066CC', category: 'shared' },
+  { id: 'shared/sketchy', name: 'Sketchy', preview: '#9CA3AF', category: 'shared' },
+  { id: 'shared/minimal', name: 'Minimal', preview: '#64748B', category: 'shared' },
+  { id: 'shared/colorful', name: 'Colorful', preview: '#8B5CF6', category: 'shared' },
+];
+
 export default function ThemeSelector({ theme, onThemeChange, engine }: ThemeSelectorProps) {
-  // 根据引擎选择主题列表
-  const themes = engine === 'plantuml' ? PLANTUML_THEMES : MERMAID_THEMES;
-  
+  // 合并共享主题和引擎特定主题
+  const engineThemes = engine === 'plantuml' ? PLANTUML_THEMES : MERMAID_THEMES;
+  const themes = [...SHARED_THEMES, ...engineThemes];
+
   // 如果切换引擎后当前主题不在列表中，重置为第一个主题
   React.useEffect(() => {
     if (!themes.find(t => t.id === theme)) {
@@ -43,7 +54,7 @@ export default function ThemeSelector({ theme, onThemeChange, engine }: ThemeSel
         className="flex items-center gap-2 px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] rounded transition-colors"
       >
         <span 
-          className="w-3 h border border-3 rounded-full-slate-300"
+          className="w-3 h-3 rounded-full border border-slate-300"
           style={{ backgroundColor: currentTheme.preview }}
         />
         <span>{currentTheme.name}</span>
