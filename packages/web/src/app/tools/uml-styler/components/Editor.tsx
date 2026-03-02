@@ -203,6 +203,8 @@ export default function CodeEditor({
 
     // Register PlantUML completion provider
     monaco.languages.registerCompletionItemProvider('plantuml', {
+      provideCompletionItems: (model, position) => {
+    monaco.languages.registerCompletionItemProvider('plantuml', {
       provideCompletionItems: (model: any, position: any) => {
     monaco.languages.registerCompletionItemProvider('plantuml', {
       provideCompletionItems: (model, position) => {
@@ -215,6 +217,7 @@ export default function CodeEditor({
         };
 
         return {
+          suggestions: PLANTUML_COMPLETIONS.map((item) => ({
           suggestions: PLANTUML_COMPLETIONS.map((item: any) => ({
             ...item,
             range,
