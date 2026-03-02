@@ -156,6 +156,25 @@ const PLANTUML_TOKEN_PROVIDER = {
   },
 };
 
+// PlantUML Completion Provider
+const PLANTUML_COMPLETIONS = [
+  { label: '@startuml', kind: 14, insertText: '@startuml\\n$0\\n@enduml', insertTextRules: 4, documentation: 'Start a PlantUML diagram' },
+  { label: 'actor', kind: 14, insertText: 'actor ${1:Name} as ${2:alias}', insertTextRules: 4, documentation: 'Define an actor' },
+  { label: 'participant', kind: 14, insertText: 'participant ${1:Name} as ${2:alias}', insertTextRules: 4, documentation: 'Define a participant' },
+  { label: 'class', kind: 14, insertText: 'class ${1:ClassName} {\\n\\t${2:attributes}\\n}', insertTextRules: 4, documentation: 'Define a class' },
+  { label: 'interface', kind: 14, insertText: 'interface ${1:InterfaceName} {\\n\\t${2:methods}\\n}', insertTextRules: 4, documentation: 'Define an interface' },
+  { label: 'package', kind: 14, insertText: 'package ${1:PackageName} {\\n\\t${2:contents}\\n}', insertTextRules: 4, documentation: 'Define a package' },
+  { label: 'note', kind: 14, insertText: 'note ${1:left|right|over} of ${2:element}\\n\\t${3:content}\\nend note', insertTextRules: 4, documentation: 'Add a note' },
+  { label: 'title', kind: 14, insertText: 'title ${1:Diagram Title}', insertTextRules: 4, documentation: 'Set diagram title' },
+  { label: 'skinparam', kind: 14, insertText: 'skinparam ${1:parameter} ${2:value}', insertTextRules: 4, documentation: 'Set skin parameter' },
+  { label: '!theme', kind: 14, insertText: '!theme ${1:theme-name}', insertTextRules: 4, documentation: 'Apply a theme' },
+  { label: 'sequence-arrow', kind: 27, insertText: '${1:A} -> ${2:B} : ${3:message}', insertTextRules: 4, documentation: 'Sequence arrow' },
+  { label: 'class-inheritance', kind: 27, insertText: '${1:Child} --|> ${2:Parent}', insertTextRules: 4, documentation: 'Class inheritance' },
+  { label: 'class-composition', kind: 27, insertText: '${1:A} *-- ${2:B}', insertTextRules: 4, documentation: 'Class composition' },
+  { label: 'if-endif', kind: 27, insertText: 'if ${1:condition} then\\n\\t${2:action}\\nendif', insertTextRules: 4, documentation: 'If statement' },
+  { label: 'while-endwhile', kind: 27, insertText: 'while ${1:condition}\\n\\t${2:action}\\nendwhile', insertTextRules: 4, documentation: 'While loop' },
+];
+
 export default function CodeEditor({ 
   code, 
   onChange, 
@@ -181,6 +200,28 @@ export default function CodeEditor({
       monaco.languages.setLanguageConfiguration('plantuml', PLANTUML_LANGUAGE_CONFIG as any);
       monaco.languages.setMonarchTokensProvider('plantuml', PLANTUML_TOKEN_PROVIDER as any);
     }
+
+    // Register PlantUML completion provider
+    monaco.languages.registerCompletionItemProvider('plantuml', {
+      provideCompletionItems: (model: any, position: any) => {
+    monaco.languages.registerCompletionItemProvider('plantuml', {
+      provideCompletionItems: (model, position) => {
+        const word = model.getWordUntilPosition(position);
+        const range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: word.startColumn,
+          endColumn: word.endColumn,
+        };
+
+        return {
+          suggestions: PLANTUML_COMPLETIONS.map((item: any) => ({
+            ...item,
+            range,
+          })),
+        };
+      },
+    });
 
     // Set editor options
     editor.updateOptions({
