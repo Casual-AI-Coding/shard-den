@@ -102,7 +102,7 @@ const PLANTUML_TOKEN_PROVIDER = {
     'stack', 'queue', 'storage', 'artifact', 'boundary', 'control', 'entity',
     'agent', 'collections', 'usecase', 'object', 'card',
     'note', 'title', 'skinparam', '!theme', '!include', '!definelong', '!define',
-    '!unquoted', 'as', 'extends', 'implements', 'interface', 'abstract',
+    '!unquoted', 'as', 'extends', 'implements',
     'if', 'else', 'elseif', 'endif', 'while', 'endwhile', 'repeat', 'again',
     'fork', 'endfork', 'merge', 'split', 'endsplit', 'partition', 'endpartition',
     'state', 'entry', 'exit', 'end', 'choice', 'join', 'junction',
