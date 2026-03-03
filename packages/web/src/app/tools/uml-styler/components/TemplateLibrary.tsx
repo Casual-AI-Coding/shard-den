@@ -160,6 +160,96 @@ const TEMPLATES: Template[] = [
   },
 ];
 
+// 虚拟滚动配置 (Section 4.3 设计文档)
+const VIRTUAL_SCROLL_CONFIG = {
+  itemHeight: 150,
+  visibleCount: 6,
+  bufferCount: 3,
+};
+
+// 生成更多模板数据用于测试虚拟滚动
+function generateExtendedTemplates(): Template[] {
+  const categories = ['流程图', '时序图', '类图', '状态图', 'ER图', '其他'];
+  const templates: Template[] = [];
+  
+  // 保留原有模板
+  templates.push(...TEMPLATES);
+  
+  // 生成额外模板
+  for (let i = 0; i < 50; i++) {
+    const category = categories[i % categories.length];
+    templates.push({
+      id: `template-${i}`,
+      name: `${category}模板 ${i + 1}`,
+      category,
+      code: `flowchart TD
+    A[节点 ${i + 1}] --> B[节点 ${i + 2}]
+    B --> C[节点 ${i + 3}]`,
+    });
+  }
+  
+  return templates;
+}
+
+const EXTENDED_TEMPLATES = generateExtendedTemplates();
+
+// 虚拟滚动 Hook (Section 4.3 设计文档)
+function useVirtualScroll<T>(
+  items: T[],
+  config: typeof VIRTUAL_SCROLL_CONFIG
+) {
+  const { itemHeight, bufferCount } = config;
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [scrollTop, setScrollTop] = React.useState(0);
+  const [containerHeight, setContainerHeight] = React.useState(
+    config.visibleCount * config.itemHeight
+  );
+
+  // 计算总高度
+  const totalHeight = items.length * itemHeight;
+
+  // 计算可见范围
+  const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - bufferCount);
+  const endIndex = Math.min(
+    items.length,
+    Math.ceil((scrollTop + containerHeight) / itemHeight) + bufferCount
+  );
+
+  // 获取可见项
+  const visibleItems = items.slice(startIndex, endIndex);
+
+  // 处理滚动
+  const handleScroll = React.useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop(e.currentTarget.scrollTop);
+  }, []);
+
+  // 监听容器高度变化
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerHeight(entry.contentRect.height);
+      }
+    });
+
+    resizeObserver.observe(container);
+    setContainerHeight(container.clientHeight);
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  return {
+    containerRef,
+    handleScroll,
+    totalHeight,
+    startIndex,
+    visibleItems,
+    itemHeight,
+  };
+}
+
 const CATEGORIES = ['全部', '流程图', '时序图', '类图', '状态图', 'ER图', '其他'];
 
 export default function TemplateLibrary({ onSelect }: TemplateLibraryProps) {
@@ -167,8 +257,18 @@ export default function TemplateLibrary({ onSelect }: TemplateLibraryProps) {
   const [selectedCategory, setSelectedCategory] = useState('全部');
 
   const filteredTemplates = selectedCategory === '全部' 
-    ? TEMPLATES 
-    : TEMPLATES.filter(t => t.category === selectedCategory);
+    ? EXTENDED_TEMPLATES 
+    : EXTENDED_TEMPLATES.filter(t => t.category === selectedCategory);
+
+  // 使用虚拟滚动
+  const {
+    containerRef,
+    handleScroll,
+    totalHeight,
+    startIndex,
+    visibleItems,
+    itemHeight,
+  } = useVirtualScroll(filteredTemplates, VIRTUAL_SCROLL_CONFIG);
 
   const handleSelect = (code: string) => {
     onSelect(code);
@@ -216,18 +316,38 @@ export default function TemplateLibrary({ onSelect }: TemplateLibraryProps) {
               ))}
             </div>
 
-            {/* Template list */}
-            <div className="max-h-64 overflow-y-auto p-2">
-              {filteredTemplates.map((template) => (
-                <button
-                  key={template.id}
-                  onClick={() => handleSelect(template.code)}
-                  className="w-full text-left px-3 py-2 hover:bg-[var(--surface-hover)] rounded transition-colors"
-                >
-                  <div className="text-sm text-[var(--text)]">{template.name}</div>
-                  <div className="text-xs text-[var(--text-secondary)]">{template.category}</div>
-                </button>
-              ))}
+            {/* Template list - 虚拟滚动 (Section 4.3) */}
+            <div 
+              ref={containerRef}
+              onScroll={handleScroll}
+              className="overflow-y-auto p-2"
+              style={{ 
+                position: 'relative', 
+                height: `${VIRTUAL_SCROLL_CONFIG.visibleCount * VIRTUAL_SCROLL_CONFIG.itemHeight}px` 
+              }}
+            >
+              <div style={{ height: `${totalHeight}px`, position: 'relative' }}>
+                {visibleItems.map((template, index) => (
+                  <button
+                    key={template.id}
+                    onClick={() => handleSelect(template.code)}
+                    className="w-full text-left px-3 py-2 hover:bg-[var(--surface-hover)] rounded transition-colors"
+                    style={{
+                      position: 'absolute',
+                      top: `${(startIndex + index) * itemHeight}px`,
+                      left: 0,
+                      right: 0,
+                      height: `${itemHeight}px`,
+                    }}
+                  >
+                    <div className="text-sm text-[var(--text)] font-medium">{template.name}</div>
+                    <div className="text-xs text-[var(--text-secondary)] mt-1">{template.category}</div>
+                    <div className="text-xs text-[var(--text-secondary)] mt-1 font-mono truncate">
+                      {template.code.split('\n')[0]}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </>

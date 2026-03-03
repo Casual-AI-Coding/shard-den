@@ -2,10 +2,27 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mermaid from 'mermaid';
+import { analyzeComplexity } from '../lib/workers/complexity';
 import ThemeSelector from './ThemeSelector';
 import ThemeTuner from './ThemeTuner';
 import ExportPanel from './ExportPanel';
 import type { ThemeTuning } from '../types';
+
+// Worker message types
+interface WorkerRequest {
+  type: 'render';
+  id: string;
+  code: string;
+  theme: string;
+}
+
+interface WorkerResponse {
+  type: 'success' | 'error' | 'timeout';
+  id: string;
+  svg?: string;
+  error?: string;
+  simplified?: boolean;
+}
 
 interface PreviewProps {
   code: string;
@@ -34,32 +51,128 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
   const [zoom, setZoom] = useState(100);
   const [scale, setScale] = useState<1 | 2 | 3 | 4>(2);
   const [showTuner, setShowTuner] = useState(false);
+  const [complexity, setComplexity] = useState<{ nodeCount: number; isComplex: boolean } | null>(null);
+  const [isSimplified, setIsSimplified] = useState(false);
+  const [renderMethod, setRenderMethod] = useState<'main' | 'worker'>('main');
+
   const renderCountRef = useRef(0);
+  const workerRef = useRef<Worker | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Render on main thread (for simple diagrams)
+  const renderOnMainThread = async (diagramCode: string) => {
+    const mermaidTheme = MERMAID_THEMES[theme] || 'default';
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: mermaidTheme as any,
+      securityLevel: 'loose',
+    });
+
+    const id = `mermaid-${Date.now()}-${++renderCountRef.current}`;
+    const { svg: renderedSvg } = await mermaid.render(id, diagramCode);
+    setSvg(renderedSvg);
+  };
+
+  // Render with Web Worker (for complex diagrams)
+  const renderWithWorker = async (diagramCode: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      // Create worker using public path
+      const worker = new Worker('/workers/mermaid.worker.js');
+      workerRef.current = worker;
+
+      const renderId = `mermaid-${Date.now()}-${++renderCountRef.current}`;
+      const requestId = `${renderId}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // Set timeout for 5 seconds
+      timeoutRef.current = setTimeout(() => {
+        worker.terminate();
+        workerRef.current = null;
+        
+        // Show simplified version
+        setIsSimplified(true);
+        setError('图表较大，渲染时间较长，已显示简化版');
+        onError?.('图表较大，已简化显示');
+        
+        // Try to render on main thread
+        renderOnMainThread(diagramCode).then(resolve).catch(reject);
+      }, 5000);
+
+      worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+        worker.terminate();
+        workerRef.current = null;
+
+        if (event.data.type === 'success') {
+          setSvg(event.data.svg || '');
+          resolve();
+        } else {
+          reject(new Error(event.data.error));
+        }
+      };
+
+      worker.onerror = (err) => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+        worker.terminate();
+        workerRef.current = null;
+        reject(err);
+      };
+
+      const request: WorkerRequest = {
+        type: 'render',
+        id: requestId,
+        code: diagramCode,
+        theme,
+      };
+
+      worker.postMessage(request);
+    });
+  };
 
   const renderDiagram = useCallback(async () => {
     if (!code.trim()) {
       setSvg('');
       setError(null);
       onError?.(null);
+      setComplexity(null);
+      setIsSimplified(false);
       return;
     }
+
+    // Analyze complexity
+    const complexityResult = analyzeComplexity(code);
+    setComplexity({ nodeCount: complexityResult.nodeCount, isComplex: complexityResult.isComplex });
+    setIsSimplified(false);
+    setRenderMethod(complexityResult.isComplex ? 'worker' : 'main');
 
     setIsRendering(true);
     setError(null);
     onError?.(null);
 
+    // Cleanup previous worker and timeout
+    if (workerRef.current) {
+      workerRef.current.terminate();
+      workerRef.current = null;
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
     try {
       if (engine === 'mermaid') {
-        const mermaidTheme = MERMAID_THEMES[theme] || 'default';
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: mermaidTheme as any,
-          securityLevel: 'loose',
-        });
-
-        const id = `mermaid-${Date.now()}-${++renderCountRef.current}`;
-        const { svg: renderedSvg } = await mermaid.render(id, code);
-        setSvg(renderedSvg);
+        // Use Web Worker for complex diagrams
+        if (complexityResult.isComplex) {
+          await renderWithWorker(code);
+        } else {
+          // Use main thread for simple diagrams
+          await renderOnMainThread(code);
+        }
       } else {
         const errMsg = 'PlantUML rendering will be implemented in Phase 2';
         setError(errMsg);
@@ -84,6 +197,18 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
     return () => clearTimeout(timer);
   }, [renderDiagram]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (workerRef.current) {
+        workerRef.current.terminate();
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleZoomIn = () => setZoom(z => Math.min(z + 25, 300));
   const handleZoomOut = () => setZoom(z => Math.max(z - 25, 25));
   const handleZoomFit = () => setZoom(100);
@@ -103,11 +228,15 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium text-[var(--text)]">预览</span>
           {isRendering && (
-            <span className="text-xs text-blue-400 animate-pulse">渲染中...</span>
+            <span className="text-xs text-blue-400 animate-pulse">
+              {renderMethod === 'worker' ? '大图渲染中...' : '渲染中...'}
+            </span>
+          )}
+          {isSimplified && (
+            <span className="text-xs text-amber-500">简化版</span>
           )}
         </div>
         <div className="flex items-center gap-3">
-{/* Theme selector */}
           <ThemeSelector theme={theme} onThemeChange={onThemeChange || (() => {})} engine={engine} />
           
           {/* Theme tuner popup */}
