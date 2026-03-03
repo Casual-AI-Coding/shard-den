@@ -641,16 +641,7 @@ mod wasm_tests {
         assert!(result.is_err() || result.unwrap().is_empty());
     }
 }
-    #[test]
-    fn test_extract_with_format_scalar_value() {
-        // Test extract_with_format with scalar value (not array)
-        let extractor = JsonExtractorCore::new();
-        let json = r#"{"name": "test"}"#;
-        let result = extractor.extract_with_format(json, "$.name", OutputFormat::Text);
-    }
-}
-    }
-}
+
 #[cfg(test)]
 mod core_tests {
     use super::*;
@@ -663,10 +654,8 @@ mod core_tests {
         let result = extractor.extract_with_format(json, "$.name", OutputFormat::Text);
         assert!(result.is_ok());
     }
-}
-}
-}
-}
+
+    #[test]
     fn test_extract_with_format_scalar_value() {
         // Test extract_with_format with scalar value (not array)
         let extractor = JsonExtractorCore::new();

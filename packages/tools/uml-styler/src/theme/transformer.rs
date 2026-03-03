@@ -365,7 +365,7 @@ mod tests {
         assert!(!result.contains("primary-color"));
     }
 
-      
+    #[test]  
     fn test_theme_transformer_from() {
         let theme = Theme::default();
         let transformer: ThemeTransformer = theme.into();
