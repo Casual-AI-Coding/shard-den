@@ -22,9 +22,6 @@ export default defineConfig({
         '**/*.config.*',
         'public/',
         'e2e/',
-        '**/layout.tsx',
-        '**/layout.test.tsx',
-        '**/uml-styler/page.test.tsx',
       ],
       thresholds: {
         lines: 85,
