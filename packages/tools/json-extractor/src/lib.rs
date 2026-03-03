@@ -489,4 +489,189 @@ mod tests {
         let result = extractor.extract_with_format(json, "$.name", OutputFormat::Text);
         assert!(result.is_ok());
     }
+
+    // Tests for check_json_depth function
+    #[test]
+    fn test_check_json_depth_valid() {
+        let json = serde_json::json!({
+            "level1": {
+                "level2": {
+                    "level3": "value"
+                }
+            }
+        });
+        let result = check_json_depth(&json, 0);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_check_json_depth_array() {
+        let json = serde_json::json!({
+            "items": [{"a": 1}, {"a": 2}]
+        });
+        let result = check_json_depth(&json, 0);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_check_json_depth_exceeds_limit() {
+        // Create deeply nested JSON that exceeds limit
+        let mut json = serde_json::json!({"a": 1});
+        for _ in 0..130 {
+            json = serde_json::json!({"a": json});
+        }
+        let result = check_json_depth(&json, 0);
+        assert!(result.is_err());
+    }
+
+    // Tests for parse_paths edge cases
+    #[test]
+    fn test_parse_paths_only_spaces() {
+        let paths = parse_paths("   ");
+        assert!(paths.is_empty());
+    }
+
+    #[test]
+    fn test_parse_paths_trailing_comma() {
+        let paths = parse_paths("a,b,");
+        assert_eq!(paths, vec!["a", "b"]);
+    }
+
+    #[test]
+    fn test_parse_paths_multiple_commas() {
+        let paths = parse_paths("a,,b");
+        assert_eq!(paths, vec!["a", "", "b"]);
+    }
+}
+
+// Tests for WASM JsonExtractor (only compiled with wasm feature)
+#[cfg(feature = "wasm")]
+#[cfg(test)]
+mod wasm_tests {
+    use super::*;
+
+    #[test]
+    fn test_wasm_extractor_new() {
+        let extractor = JsonExtractor::new();
+        // Just verify it can be created
+        assert!(!extractor.name().is_empty());
+    }
+
+    #[test]
+    fn test_wasm_extractor_default() {
+        let extractor = JsonExtractor::default();
+        assert!(!extractor.name().is_empty());
+    }
+
+    #[test]
+    fn test_wasm_extractor_name() {
+        let extractor = JsonExtractor::new();
+        assert_eq!(extractor.name(), "json-extractor");
+    }
+
+    #[test]
+    fn test_wasm_extractor_description() {
+        let extractor = JsonExtractor::new();
+        assert!(!extractor.description().is_empty());
+    }
+
+    #[test]
+    fn test_wasm_extract_basic() {
+        let extractor = JsonExtractor::new();
+        let json = r#"{"name": "test"}"#;
+        let result = extractor.extract(json, "$.name");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_wasm_extract_with_format() {
+        let extractor = JsonExtractor::new();
+        let json = r#"{"items": [{"id": 1}]}"#;
+        let result = extractor.extract_with_format(json, "$.items[*].id", "json");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_wasm_extract_with_format_csv() {
+        let extractor = JsonExtractor::new();
+        let json = r#"{"items": [{"name": "a"}, {"name": "b"}]}"#;
+        let result = extractor.extract_with_format(json, "$.items[*].name", "csv");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_wasm_extract_with_format_text() {
+        let extractor = JsonExtractor::new();
+        let json = r#"{"value": 42}"#;
+        let result = extractor.extract_with_format(json, "$.value", "text");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_wasm_extract_with_format_yaml() {
+        let extractor = JsonExtractor::new();
+        let json = r#"{"name": "test"}"#;
+        let result = extractor.extract_with_format(json, "$.name", "yaml");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_wasm_detect_paths() {
+        let extractor = JsonExtractor::new();
+        let json = r#"{"name": "test", "data": {"id": 1}}"#;
+        let result = extractor.detect_paths(json);
+        assert!(result.is_ok());
+        let paths: Vec<String> = serde_json::from_str(&result.unwrap()).unwrap();
+        assert!(!paths.is_empty());
+    }
+
+    #[test]
+    fn test_wasm_extract_invalid_json() {
+        let extractor = JsonExtractor::new();
+        let result = extractor.extract("not json", "$.name");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_wasm_extract_invalid_path() {
+        let extractor = JsonExtractor::new();
+        let json = r#"{"name": "test"}"#;
+        let result = extractor.extract(json, "$.invalid[path");
+        // Invalid JSONPath may return error or empty
+        assert!(result.is_err() || result.unwrap().is_empty());
+    }
+}
+    #[test]
+    fn test_extract_with_format_scalar_value() {
+        // Test extract_with_format with scalar value (not array)
+        let extractor = JsonExtractorCore::new();
+        let json = r#"{"name": "test"}"#;
+        let result = extractor.extract_with_format(json, "$.name", OutputFormat::Text);
+    }
+}
+    }
+}
+#[cfg(test)]
+mod core_tests {
+    use super::*;
+
+    #[test]
+    fn test_extract_with_format_scalar_value() {
+        // Test extract_with_format with scalar value (not array)
+        let extractor = JsonExtractorCore::new();
+        let json = r#"{"name": "test"}"#;
+        let result = extractor.extract_with_format(json, "$.name", OutputFormat::Text);
+        assert!(result.is_ok());
+    }
+}
+}
+}
+}
+    fn test_extract_with_format_scalar_value() {
+        // Test extract_with_format with scalar value (not array)
+        let extractor = JsonExtractorCore::new();
+        let json = r#"{"name": "test"}"#;
+        let result = extractor.extract_with_format(json, "$.name", OutputFormat::Text);
+        assert!(result.is_ok());
+    }
 }

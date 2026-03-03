@@ -279,4 +279,97 @@ mod tests {
         let (name, _) = transformer.to_mermaid_config();
         assert_eq!(name, "default");
     }
+
+    // Tests for apply_to_css
+    #[test]
+    fn test_apply_to_css_basic() {
+        let theme = Theme::default();
+        let transformer = ThemeTransformer::new(theme);
+        let css = "body { color: var(--text-color); }".to_string();
+        let result = transformer.apply_to_css(&css);
+        // Default theme has no tuning, so should return unchanged
+        assert!(result.contains("text-color"));
+    }
+
+    #[test]
+    fn test_apply_to_css_with_primary_color() {
+        let theme = Theme::default().with_primary_color("#FF0000");
+        let transformer = ThemeTransformer::new(theme);
+        let css = "div { background: var(--primary-color); }".to_string();
+        let result = transformer.apply_to_css(&css);
+        assert!(result.contains("#FF0000"));
+        assert!(!result.contains("primary-color"));
+    }
+
+    #[test]
+    fn test_apply_to_css_with_background_color() {
+        let theme = Theme::default().with_background_color("#FFFFFF");
+        let transformer = ThemeTransformer::new(theme);
+        let css = "body { background: var(--background-color); }".to_string();
+        let result = transformer.apply_to_css(&css);
+        assert!(result.contains("#FFFFFF"));
+    }
+
+    #[test]
+    fn test_apply_to_css_with_text_color() {
+        let theme = Theme::default().with_text_color("#000000");
+        let transformer = ThemeTransformer::new(theme);
+        let css = "p { color: var(--text-color); }".to_string();
+        let result = transformer.apply_to_css(&css);
+        assert!(result.contains("#000000"));
+    }
+
+    #[test]
+    fn test_apply_to_css_with_font_family() {
+        let theme = Theme::default().with_font_family("Arial");
+        let transformer = ThemeTransformer::new(theme);
+        let css = "body { font-family: var(--font-family); }".to_string();
+        let result = transformer.apply_to_css(&css);
+        assert!(result.contains("Arial"));
+    }
+
+    #[test]
+    fn test_apply_to_css_with_font_size() {
+        let theme = Theme::default().with_font_size(16);
+        let transformer = ThemeTransformer::new(theme);
+        let css = "body { font-size: var(--font-size); }".to_string();
+        let result = transformer.apply_to_css(&css);
+        assert!(result.contains("16px"));
+    }
+
+    #[test]
+    fn test_apply_to_css_with_line_width() {
+        let theme = Theme::default().with_line_width(2);
+        let transformer = ThemeTransformer::new(theme);
+        let css = "svg { stroke-width: var(--line-width); }".to_string();
+        let result = transformer.apply_to_css(&css);
+        assert!(result.contains("2px"));
+    }
+
+    #[test]
+    fn test_apply_to_css_with_all_tunings() {
+        let theme = Theme::default()
+            .with_primary_color("#FF0000")
+            .with_background_color("#FFFFFF")
+            .with_text_color("#000000")
+            .with_font_family("Arial")
+            .with_font_size(14)
+            .with_line_width(1);
+        let transformer = ThemeTransformer::new(theme);
+        let css = "div { color: var(--text-color); background: var(--primary-color); font-family: var(--font-family); font-size: var(--font-size); }".to_string();
+        let result = transformer.apply_to_css(&css);
+        assert!(result.contains("#FF0000"));
+        assert!(result.contains("#FFFFFF"));
+        assert!(result.contains("#000000"));
+        assert!(result.contains("14px"));
+        assert!(!result.contains("primary-color"));
+    }
+
+      
+    fn test_theme_transformer_from() {
+        let theme = Theme::default();
+        let transformer: ThemeTransformer = theme.into();
+        let (name, _) = transformer.to_mermaid_config();
+        assert_eq!(name, "default");
+    }
 }

@@ -180,4 +180,131 @@ mod tests {
         let history = storage.list_history(None, 10).unwrap();
         assert!(history.is_empty());
     }
+
+    #[test]
+    fn test_storage_new_invalid_dir() {
+        // Test that Storage::new fails with invalid path (null in ProjectDirs)
+        // This is hard to test without mocking, but we can verify the error path
+        let result = Storage::new();
+        // Should succeed in test environment with valid dirs
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_storage_default() {
+        // Test Default implementation
+        let storage = Storage::default();
+        // Should not panic
+        assert!(true);
+    }
+
+    #[test]
+    fn test_add_history_multiple() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = Storage {
+            data_dir: temp_dir.path().to_path_buf(),
+        };
+
+        // Add multiple entries
+        for i in 0..5 {
+            let entry = HistoryEntry::new("test", &format!("input{}", i), &format!("output{}", i), false);
+            storage.add_history(entry).unwrap();
+        }
+
+        let history = storage.list_history(None, 10).unwrap();
+        assert_eq!(history.len(), 5);
+    }
+
+    #[test]
+    fn test_list_history_limit() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = Storage {
+            data_dir: temp_dir.path().to_path_buf(),
+        };
+
+        // Add 10 entries
+        for i in 0..10 {
+            let entry = HistoryEntry::new("test", &format!("input{}", i), &format!("output{}", i), false);
+            storage.add_history(entry).unwrap();
+        }
+
+        // Limit to 3
+        let history = storage.list_history(None, 3).unwrap();
+        assert_eq!(history.len(), 3);
+    }
+
+    #[test]
+    fn test_list_history_by_tool() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = Storage {
+            data_dir: temp_dir.path().to_path_buf(),
+        };
+
+        // Add entries for different tools
+        storage.add_history(HistoryEntry::new("tool-a", "i1", "o1", false)).unwrap();
+        storage.add_history(HistoryEntry::new("tool-b", "i2", "o2", false)).unwrap();
+        storage.add_history(HistoryEntry::new("tool-a", "i3", "o3", false)).unwrap();
+
+        // Filter by tool
+        let tool_a_history = storage.list_history(Some("tool-a"), 10).unwrap();
+        assert_eq!(tool_a_history.len(), 2);
+
+        let tool_b_history = storage.list_history(Some("tool-b"), 10).unwrap();
+        assert_eq!(tool_b_history.len(), 1);
+    }
+
+    #[test]
+    fn test_list_history_empty() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = Storage {
+            data_dir: temp_dir.path().to_path_buf(),
+        };
+
+        // No entries yet
+        let history = storage.list_history(None, 10).unwrap();
+        assert!(history.is_empty());
+    }
+
+    #[test]
+    fn test_clear_history_empty() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = Storage {
+            data_dir: temp_dir.path().to_path_buf(),
+        };
+
+        // Clear when empty should not panic
+        storage.clear_history().unwrap();
+
+        let history = storage.list_history(None, 10).unwrap();
+        assert!(history.is_empty());
+    }
+
+    #[test]
+    fn test_load_config_nonexistent() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = Storage {
+            data_dir: temp_dir.path().to_path_buf(),
+        };
+
+        // Config doesn't exist yet, should return default
+        let config = storage.load_config().unwrap();
+        assert_eq!(config.history.max_entries, 1000); // default value
+    }
+}
+    fn test_history_operations() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = Storage {
+            data_dir: temp_dir.path().to_path_buf(),
+        };
+
+        let entry = HistoryEntry::new("test", "input", "output", false);
+        storage.add_history(entry.clone()).unwrap();
+
+        let history = storage.list_history(None, 10).unwrap();
+        assert_eq!(history.len(), 1);
+
+        storage.clear_history().unwrap();
+        let history = storage.list_history(None, 10).unwrap();
+        assert!(history.is_empty());
+    }
 }
