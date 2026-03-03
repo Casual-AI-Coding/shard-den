@@ -48,6 +48,9 @@ yarn-error.log*
 
 # Test
 coverage/
+playwright-report/
+test-results/
+coverage/
 
 # Temporary
 *.tmp
