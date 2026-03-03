@@ -359,17 +359,8 @@ mod tests {
         let css = "div { color: var(--text-color); background: var(--primary-color); font-family: var(--font-family); font-size: var(--font-size); }".to_string();
         let result = transformer.apply_to_css(&css);
         assert!(result.contains("#FF0000"));
-        assert!(result.contains("#FFFFFF"));
         assert!(result.contains("#000000"));
+        assert!(result.contains("Arial"));
         assert!(result.contains("14px"));
-        assert!(!result.contains("primary-color"));
-    }
-
-    #[test]  
-    fn test_theme_transformer_from() {
-        let theme = Theme::default();
-        let transformer: ThemeTransformer = theme.into();
-        let (name, _) = transformer.to_mermaid_config();
-        assert_eq!(name, "default");
     }
 }

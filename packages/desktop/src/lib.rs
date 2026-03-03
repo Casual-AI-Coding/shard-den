@@ -32,3 +32,10 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+#[cfg(test)]
+mod tests {
+    // Note: The run() function uses Tauri runtime and cannot be unit tested.
+    // Integration tests with Tauri would be needed for full coverage.
+    // The commands module has its own tests.
+}

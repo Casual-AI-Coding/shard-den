@@ -116,195 +116,98 @@ impl Storage {
         std::fs::write(path, json)?;
         Ok(())
     }
-}
 
-impl Default for Storage {
-    fn default() -> Self {
-        Self::new().expect("Failed to create storage")
+    /// Create storage with custom data directory (for testing only)
+    #[cfg(test)]
+    pub fn with_data_dir(data_dir: PathBuf) -> Self {
+        std::fs::create_dir_all(&data_dir).expect("Failed to create data dir");
+        Self { data_dir }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::TempDir;
 
-    // Simple temp dir for tests
-    struct TempDir(PathBuf);
-
-    impl TempDir {
-        fn new() -> std::io::Result<Self> {
-            let path = std::env::temp_dir().join(format!("shard-den-test-{}", std::process::id()));
-            std::fs::create_dir_all(&path)?;
-            Ok(Self(path))
-        }
-
-        fn path(&self) -> &PathBuf {
-            &self.0
-        }
-    }
-
-    impl Drop for TempDir {
-        fn drop(&mut self) {
-            let _ = std::fs::remove_dir_all(&self.0);
-        }
+    fn create_storage() -> (Storage, TempDir) {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let storage = Storage::with_data_dir(temp_dir.path().to_path_buf());
+        (storage, temp_dir)
     }
 
     #[test]
-    fn test_config_roundtrip() {
-        let temp_dir = TempDir::new().unwrap();
-        let storage = Storage {
-            data_dir: temp_dir.path().to_path_buf(),
-        };
-
+    fn test_save_and_load_config() {
+        let (storage, _temp_dir) = create_storage();
         let config = Config::default();
         storage.save_config(&config).unwrap();
-
         let loaded = storage.load_config().unwrap();
-        assert_eq!(loaded.history.max_entries, config.history.max_entries);
+        assert_eq!(config.history.max_entries, loaded.history.max_entries);
     }
 
     #[test]
-    fn test_history_operations() {
-        let temp_dir = TempDir::new().unwrap();
-        let storage = Storage {
-            data_dir: temp_dir.path().to_path_buf(),
-        };
+    fn test_load_config_default() {
+        let (storage, _temp_dir) = create_storage();
+        // Don't save anything, should return default
+        let config = storage.load_config().unwrap();
+        assert_eq!(config.history.max_entries, 1000);
+    }
 
+    #[test]
+    fn test_add_history() {
+        let (storage, _temp_dir) = create_storage();
         let entry = HistoryEntry::new("test", "input", "output", false);
-        storage.add_history(entry.clone()).unwrap();
-
+        storage.add_history(entry).unwrap();
         let history = storage.list_history(None, 10).unwrap();
         assert_eq!(history.len(), 1);
-
-        storage.clear_history().unwrap();
-        let history = storage.list_history(None, 10).unwrap();
-        assert!(history.is_empty());
     }
 
     #[test]
-    fn test_storage_new_invalid_dir() {
-        // Test that Storage::new fails with invalid path (null in ProjectDirs)
-        // This is hard to test without mocking, but we can verify the error path
-        let result = Storage::new();
-        // Should succeed in test environment with valid dirs
-        assert!(result.is_ok());
-    }
+    fn test_list_history_with_filter() {
+        let (storage, _temp_dir) = create_storage();
+        storage.add_history(HistoryEntry::new("tool-a", "i1", "o1", false)).unwrap();
+        storage.add_history(HistoryEntry::new("tool-b", "i2", "o2", false)).unwrap();
+        storage.add_history(HistoryEntry::new("tool-a", "i3", "o3", false)).unwrap();
 
-    #[test]
-    fn test_storage_default() {
-        // Test Default implementation
-        let storage = Storage::default();
-        // Should not panic
-        assert!(true);
-    }
+        let tool_a = storage.list_history(Some("tool-a"), 10).unwrap();
+        assert_eq!(tool_a.len(), 2);
 
-    #[test]
-    fn test_add_history_multiple() {
-        let temp_dir = TempDir::new().unwrap();
-        let storage = Storage {
-            data_dir: temp_dir.path().to_path_buf(),
-        };
-
-        // Add multiple entries
-        for i in 0..5 {
-            let entry = HistoryEntry::new("test", &format!("input{}", i), &format!("output{}", i), false);
-            storage.add_history(entry).unwrap();
-        }
-
-        let history = storage.list_history(None, 10).unwrap();
-        assert_eq!(history.len(), 5);
+        let tool_b = storage.list_history(Some("tool-b"), 10).unwrap();
+        assert_eq!(tool_b.len(), 1);
     }
 
     #[test]
     fn test_list_history_limit() {
-        let temp_dir = TempDir::new().unwrap();
-        let storage = Storage {
-            data_dir: temp_dir.path().to_path_buf(),
-        };
-
-        // Add 10 entries
+        let (storage, _temp_dir) = create_storage();
         for i in 0..10 {
-            let entry = HistoryEntry::new("test", &format!("input{}", i), &format!("output{}", i), false);
-            storage.add_history(entry).unwrap();
+            storage.add_history(HistoryEntry::new("test", &format!("i{}", i), &format!("o{}", i), false)).unwrap();
         }
-
-        // Limit to 3
         let history = storage.list_history(None, 3).unwrap();
         assert_eq!(history.len(), 3);
     }
 
     #[test]
-    fn test_list_history_by_tool() {
-        let temp_dir = TempDir::new().unwrap();
-        let storage = Storage {
-            data_dir: temp_dir.path().to_path_buf(),
-        };
-
-        // Add entries for different tools
-        storage.add_history(HistoryEntry::new("tool-a", "i1", "o1", false)).unwrap();
-        storage.add_history(HistoryEntry::new("tool-b", "i2", "o2", false)).unwrap();
-        storage.add_history(HistoryEntry::new("tool-a", "i3", "o3", false)).unwrap();
-
-        // Filter by tool
-        let tool_a_history = storage.list_history(Some("tool-a"), 10).unwrap();
-        assert_eq!(tool_a_history.len(), 2);
-
-        let tool_b_history = storage.list_history(Some("tool-b"), 10).unwrap();
-        assert_eq!(tool_b_history.len(), 1);
-    }
-
-    #[test]
-    fn test_list_history_empty() {
-        let temp_dir = TempDir::new().unwrap();
-        let storage = Storage {
-            data_dir: temp_dir.path().to_path_buf(),
-        };
-
-        // No entries yet
+    fn test_clear_history() {
+        let (storage, _temp_dir) = create_storage();
+        storage.add_history(HistoryEntry::new("test", "input", "output", false)).unwrap();
+        storage.clear_history().unwrap();
         let history = storage.list_history(None, 10).unwrap();
         assert!(history.is_empty());
     }
 
     #[test]
     fn test_clear_history_empty() {
-        let temp_dir = TempDir::new().unwrap();
-        let storage = Storage {
-            data_dir: temp_dir.path().to_path_buf(),
-        };
-
+        let (storage, _temp_dir) = create_storage();
         // Clear when empty should not panic
         storage.clear_history().unwrap();
-
         let history = storage.list_history(None, 10).unwrap();
         assert!(history.is_empty());
     }
 
     #[test]
-    fn test_load_config_nonexistent() {
-        let temp_dir = TempDir::new().unwrap();
-        let storage = Storage {
-            data_dir: temp_dir.path().to_path_buf(),
-        };
-
-        // Config doesn't exist yet, should return default
-        let config = storage.load_config().unwrap();
-        assert_eq!(config.history.max_entries, 1000); // default value
+    fn test_storage_new() {
+        let result = Storage::new();
+        assert!(result.is_ok());
     }
-}
-    fn test_history_operations() {
-        let temp_dir = TempDir::new().unwrap();
-        let storage = Storage {
-            data_dir: temp_dir.path().to_path_buf(),
-        };
 
-        let entry = HistoryEntry::new("test", "input", "output", false);
-        storage.add_history(entry.clone()).unwrap();
-
-        let history = storage.list_history(None, 10).unwrap();
-        assert_eq!(history.len(), 1);
-
-        storage.clear_history().unwrap();
-        let history = storage.list_history(None, 10).unwrap();
-        assert!(history.is_empty());
     }
-}
