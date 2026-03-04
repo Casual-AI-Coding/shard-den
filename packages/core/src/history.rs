@@ -366,37 +366,37 @@ mod tests {
         assert_eq!(deserialized.output, entry.output);
         assert_eq!(deserialized.metadata, entry.metadata);
     }
-}
 
-#[test]
-fn test_history_entry_obfuscate_basic() {
-    // Test obfuscate method directly
-    use base64::Engine;
-    let data = "test data";
-    let encoded = base64::engine::general_purpose::STANDARD.encode(data.as_bytes());
-    // Verify base64 encoding works
-    assert!(!encoded.is_empty());
-}
+    #[test]
+    fn test_history_entry_obfuscate_basic() {
+        // Test obfuscate method directly
+        use base64::Engine;
+        let data = "test data";
+        let encoded = base64::engine::general_purpose::STANDARD.encode(data.as_bytes());
+        // Verify base64 encoding works
+        assert!(!encoded.is_empty());
+    }
 
-#[test]
-fn test_history_entry_with_metadata_chaining() {
-    // Test that with_metadata returns self for chaining
-    let entry = HistoryEntry::new("tool", "input", "output", false)
-        .with_metadata("key1", "value1")
-        .with_metadata("key2", "value2");
-    assert_eq!(entry.metadata.len(), 2);
-}
+    #[test]
+    fn test_history_entry_with_metadata_chaining() {
+        // Test that with_metadata returns self for chaining
+        let entry = HistoryEntry::new("tool", "input", "output", false)
+            .with_metadata("key1", "value1")
+            .with_metadata("key2", "value2");
+        assert_eq!(entry.metadata.len(), 2);
+    }
 
-#[test]
-fn test_history_entry_empty_metadata() {
-    // Test entry created without metadata
-    let entry = HistoryEntry::new("tool", "input", "output", false);
-    assert!(entry.metadata.is_empty());
-}
+    #[test]
+    fn test_history_entry_empty_metadata() {
+        // Test entry created without metadata
+        let entry = HistoryEntry::new("tool", "input", "output", false);
+        assert!(entry.metadata.is_empty());
+    }
 
-#[test]
-fn test_history_entry_tool_with_special_chars() {
-    // Test tool name with special characters
-    let entry = HistoryEntry::new("json-extractor-v2", "{}", "result", false);
-    assert_eq!(entry.tool, "json-extractor-v2");
+    #[test]
+    fn test_history_entry_tool_with_special_chars() {
+        // Test tool name with special characters
+        let entry = HistoryEntry::new("json-extractor-v2", "{}", "result", false);
+        assert_eq!(entry.tool, "json-extractor-v2");
+    }
 }

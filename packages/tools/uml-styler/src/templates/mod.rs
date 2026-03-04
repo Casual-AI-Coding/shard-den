@@ -151,36 +151,36 @@ mod tests {
         assert_eq!(flowchart.name, "Flowchart");
         assert!(flowchart.code.contains("flowchart"));
     }
-}
 
-#[test]
-fn test_template_new() {
-    // Test Template::new constructor
-    use crate::engine::DiagramType;
-    let template = Template::new(
-        "test/id",
-        "Test Name",
-        "test code",
-        "test description",
-        DiagramType::Sequence,
-    );
-    assert_eq!(template.id, "test/id");
-    assert_eq!(template.name, "Test Name");
-    assert_eq!(template.code, "test code");
-    assert_eq!(template.description, "test description");
-    assert_eq!(template.diagram_type, DiagramType::Sequence);
-}
+    #[test]
+    fn test_template_new() {
+        // Test Template::new constructor
+        use crate::engine::DiagramType;
+        let template = Template::new(
+            "test/id",
+            "Test Name",
+            "test code",
+            "test description",
+            DiagramType::Sequence,
+        );
+        assert_eq!(template.id, "test/id");
+        assert_eq!(template.name, "Test Name");
+        assert_eq!(template.code, "test code");
+        assert_eq!(template.description, "test description");
+        assert_eq!(template.diagram_type, DiagramType::Sequence);
+    }
 
-#[test]
-fn test_template_with_string_fields() {
-    // Test Template::new with String type fields
-    use crate::engine::DiagramType;
-    let template = Template::new(
-        "custom/template".to_string(),
-        "Custom Template".to_string(),
-        "code".to_string(),
-        "description".to_string(),
-        DiagramType::Flowchart,
-    );
-    assert_eq!(template.id, "custom/template");
+    #[test]
+    fn test_template_with_string_fields() {
+        // Test Template::new with String type fields
+        use crate::engine::DiagramType;
+        let template = Template::new(
+            "custom/template".to_string(),
+            "Custom Template".to_string(),
+            "code".to_string(),
+            "description".to_string(),
+            DiagramType::Flowchart,
+        );
+        assert_eq!(template.id, "custom/template");
+    }
 }
