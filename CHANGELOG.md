@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-03-05
+
+### Added
+- **PlantUML Engine** - 新增服务器端 PlantUML 渲染引擎
+- **PlantUML 语法高亮** - Monaco Editor 支持 PlantUML 语法高亮
+- **PlantUML 自动补全** - 代码自动补全支持
+- **PlantUML 官方主题** - 支持 Cerulean, Sketchy, Toy, Vibrant 等主题
+- **PDF 导出** - UML 图表 PDF 导出功能
+- **URL 分享** - 支持主题参数编码的 URL 分享功能
+- **全局微调面板** - ThemeTuner 弹出框
+- **Playwright E2E 测试** - 添加 Playwright 依赖和配置
+
+### Changed
+- **Logo 图标** - 更新为新的 ShardDen Logo
+- **测试覆盖率** - 提升至 85.66%
+
+### Fixed
+- **Next.js Page 导出** - 修复 `findJsonPath` 导出类型错误
+- **TypeScript 类型** - 修复 `Editor.tsx` 隐式 any 类型错误
+- **测试模块结构** - 修复 cargo fmt 导致的测试模块问题
+- **重复代码** - 删除 `Preview.tsx`, `ExportPanel.tsx` 中的重复代码
+- **补全提供者** - 修复 Monaco 补全提供者重复注册问题
+
+---
+
+## [0.3.1] - 2026-03-02
+
 ## [0.3.1] - 2026-03-02
 
 ### Security
@@ -283,7 +310,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CLI = Core**: Native Rust, no WASM overhead
 - **Shared Core**: Same Rust code compiled for all targets
 
-[Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.3.1...HEAD
+## [Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.3.2...HEAD
+## [0.3.2]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.2
+## [0.3.1]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.1
 [0.3.1]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.1
 [0.3.0]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.0
 [0.3.0]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.0
