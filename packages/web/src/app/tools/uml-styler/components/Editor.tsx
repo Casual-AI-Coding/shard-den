@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useCallback } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
-import type { editor } from 'monaco-editor';
+import type { editor, Position } from 'monaco-editor';
 
 interface EditorProps {
   code: string;
@@ -203,7 +203,7 @@ export default function CodeEditor({
 
     // Register PlantUML completion provider
     monaco.languages.registerCompletionItemProvider('plantuml', {
-      provideCompletionItems: (model, position) => {
+      provideCompletionItems: (model: editor.ITextModel, position: Position) => {
         const word = model.getWordUntilPosition(position);
         const range = {
           startLineNumber: position.lineNumber,
