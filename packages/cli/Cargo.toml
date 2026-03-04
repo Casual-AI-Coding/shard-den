@@ -24,7 +24,6 @@ tracing-subscriber.workspace = true
 # Tools
 shard-den-json-extractor = { version = "0.3.2", path = "../tools/json-extractor", optional = true }
 shard-den-uml-styler = { version = "0.3.2", path = "../tools/uml-styler", optional = true }
-shard-den-uml-styler = { version = "0.3.1", path = "../tools/uml-styler", optional = true }
 
 [features]
 default = ["json"]

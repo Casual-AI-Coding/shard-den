@@ -34,8 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.1] - 2026-03-02
 
-## [0.3.1] - 2026-03-02
-
 ### Security
 
 这是一次大规模安全加固工作，按模块分 5 个 Phase 实施：
@@ -93,6 +91,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Performance
 - Rust 核心代码: +2,286 行
 - Web 前端代码: +1,800 行
+
+---
+
 ## [0.2.7] - 2026-02-28
 
 ### Added
@@ -121,6 +122,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Performance
 - Improved test coverage
 
+---
+
 ## [0.2.6] - 2026-02-25
 
 ### Added
@@ -128,6 +131,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Version reading from package.json (simplified approach)
+
+---
 
 ## [0.2.5] - 2026-02-25
 
@@ -141,6 +146,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Netlify publish directory (.next)
 - CHANGELOG format (missing version entries)
 - GitHub release notes for v0.2.3 and v0.2.4
+
+---
+
 ## [0.2.4] - 2026-02-24
 
 ### Added
@@ -155,6 +163,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Popup covering button issue when no paths detected
 - Component splitting for better maintainability
+
+---
 
 ## [0.2.3] - 2026-02-23
 
@@ -175,6 +185,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Web artifact reuse between build-web and build-desktop jobs
 - cargo-binstall for fast tauri-cli installation
 
+---
+
 ## [0.2.2] - 2026-02-23
 
 ### Added
@@ -191,10 +203,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated release flow documentation
 - CLI usage examples aligned with actual implementation
 
-## [0.2.2-1] - 2026-02-23
-
-### Fixed
-- CI release workflow fix
+---
 
 ## [0.2.1] - 2026-02-22
 
@@ -209,6 +218,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - CLI binary renamed from `shard-den-json` to `shard-den`
 - Release artifacts renamed accordingly
+
+---
 
 ## [0.2.0] - 2026-02-22
 
@@ -233,6 +244,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Popup positioning with scroll offset and auto-flip
 - getBoundingClientRect null error after async operation
 
+---
+
 ## [0.1.2] - 2026-02-15
 
 ### Added
@@ -243,6 +256,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - CI workflow system dependencies for Tauri builds
 - TypeScript errors in test files
+
+---
 
 ## [0.1.1] - 2026-02-15
 
@@ -311,8 +326,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Shared Core**: Same Rust code compiled for all targets
 
 ## [Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.3.2...HEAD
-## [0.3.2]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.2
-## [0.3.1]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.1
+[0.3.2]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.2
+[0.3.1]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.1
 [0.3.1]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.1
 [0.3.0]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.0
 [0.3.0]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.0
@@ -322,7 +337,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.2.4]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.4
 [0.2.3]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.3
 [0.2.2]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.2
-[0.2.2-1]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.2-1
 [0.2.1]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.1
 [0.2.0]: https://github.com/oGsLP/shard-den/releases/tag/v0.2.0
 [0.1.2]: https://github.com/oGsLP/shard-den/releases/tag/v0.1.2
