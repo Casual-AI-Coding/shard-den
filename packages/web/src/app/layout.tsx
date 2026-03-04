@@ -12,6 +12,15 @@ export const metadata: Metadata = {
   title: `ShardDen (砾穴) - Developer Toolkit`,
   description: 'A modular developer toolkit platform',
   icons: [
+    { url: '/favicon.ico', sizes: 'any' },
+    { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+    { url: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+    { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png', rel: 'apple-touch-icon' },
+  ],
+};
+  title: `ShardDen (砾穴) - Developer Toolkit`,
+  description: 'A modular developer toolkit platform',
+  icons: [
     { url: '/ShardDen Logo.png', sizes: 'any', type: 'image/png' },
   ],
 };
