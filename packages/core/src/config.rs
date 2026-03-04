@@ -115,7 +115,10 @@ mod tests {
     #[test]
     fn test_tool_config_default() {
         let tool_config = ToolConfig::default();
-        assert_eq!(tool_config.json_extractor.default_output_format, OutputFormat::Json);
+        assert_eq!(
+            tool_config.json_extractor.default_output_format,
+            OutputFormat::Json
+        );
         assert_eq!(tool_config.json_extractor.max_history, 100);
         assert!(tool_config.json_extractor.favorite_paths.is_empty());
     }
@@ -136,13 +139,21 @@ mod tests {
     fn test_output_format_serialization() {
         // Test serialization
         let json_str = serde_json::to_string(&OutputFormat::Json).unwrap();
-        assert!(json_str.contains("Json"), "Expected 'Json', got: {}", json_str);
-        
+        assert!(
+            json_str.contains("Json"),
+            "Expected 'Json', got: {}",
+            json_str
+        );
+
         let csv_str = serde_json::to_string(&OutputFormat::Csv).unwrap();
         assert!(csv_str.contains("Csv"), "Expected 'Csv', got: {}", csv_str);
-        
+
         let text_str = serde_json::to_string(&OutputFormat::Text).unwrap();
-        assert!(text_str.contains("Text"), "Expected 'Text', got: {}", text_str);
+        assert!(
+            text_str.contains("Text"),
+            "Expected 'Text', got: {}",
+            text_str
+        );
 
         // Test deserialization
         let format: OutputFormat = serde_json::from_str("\"Json\"").unwrap();
@@ -167,16 +178,28 @@ mod tests {
         let light_json = serde_json::to_string(&Theme::Light).unwrap();
         let dark_json = serde_json::to_string(&Theme::Dark).unwrap();
         let system_json = serde_json::to_string(&Theme::System).unwrap();
-        
-        assert!(light_json.contains("Light"), "Expected 'Light', got: {}", light_json);
-        assert!(dark_json.contains("Dark"), "Expected 'Dark', got: {}", dark_json);
-        assert!(system_json.contains("System"), "Expected 'System', got: {}", system_json);
-        
+
+        assert!(
+            light_json.contains("Light"),
+            "Expected 'Light', got: {}",
+            light_json
+        );
+        assert!(
+            dark_json.contains("Dark"),
+            "Expected 'Dark', got: {}",
+            dark_json
+        );
+        assert!(
+            system_json.contains("System"),
+            "Expected 'System', got: {}",
+            system_json
+        );
+
         // Test deserialization
         let light: Theme = serde_json::from_str("\"Light\"").unwrap();
         let dark: Theme = serde_json::from_str("\"Dark\"").unwrap();
         let system: Theme = serde_json::from_str("\"System\"").unwrap();
-        
+
         assert!(matches!(light, Theme::Light));
         assert!(matches!(dark, Theme::Dark));
         assert!(matches!(system, Theme::System));
@@ -216,7 +239,10 @@ mod tests {
             },
         };
 
-        assert_eq!(config.tools.json_extractor.default_output_format, OutputFormat::Text);
+        assert_eq!(
+            config.tools.json_extractor.default_output_format,
+            OutputFormat::Text
+        );
         assert_eq!(config.ui.theme, Theme::Dark);
         assert!(!config.history.enabled);
     }

@@ -26,7 +26,7 @@ pub fn init_logger() {
 /// Uses `Once` to ensure safe multiple calls.
 pub fn init_logger_with_filter(filter: &str) {
     LOGGER_INIT.call_once(|| {
-    fmt().with_env_filter(EnvFilter::new(filter)).init();
+        fmt().with_env_filter(EnvFilter::new(filter)).init();
     });
 }
 
@@ -56,7 +56,7 @@ mod tests {
         let filter1 = EnvFilter::new("info");
         let filter2 = EnvFilter::new("debug");
         let filter3 = EnvFilter::new("warn,shard_den=trace");
-        
+
         // Verify filter strings are valid
         assert!(!filter1.to_string().is_empty());
         assert!(!filter2.to_string().is_empty());

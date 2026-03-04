@@ -54,7 +54,7 @@ impl ShardDenError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_tool_error() {
         let err = ShardDenError::tool_error("json-extractor", "invalid path");
@@ -126,20 +126,16 @@ mod tests {
     }
 }
 
+#[test]
+fn test_tool_error_with_string() {
+    // Test tool_error with String type
+    let err = ShardDenError::tool_error("test-tool".to_string(), "test message".to_string());
+    assert!(matches!(err, ShardDenError::Tool { .. }));
+}
 
-    #[test]
-    fn test_tool_error_with_string() {
-        // Test tool_error with String type
-        let err = ShardDenError::tool_error(
-            "test-tool".to_string(),
-            "test message".to_string()
-        );
-        assert!(matches!(err, ShardDenError::Tool { .. }));
-    }
-
-    #[test]
-    fn test_invalid_input_with_string() {
-        // Test invalid_input with String type
-        let err = ShardDenError::invalid_input("error message".to_string());
-        assert!(matches!(err, ShardDenError::InvalidInput(_)));
-    }
+#[test]
+fn test_invalid_input_with_string() {
+    // Test invalid_input with String type
+    let err = ShardDenError::invalid_input("error message".to_string());
+    assert!(matches!(err, ShardDenError::InvalidInput(_)));
+}

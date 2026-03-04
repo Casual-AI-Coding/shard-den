@@ -129,8 +129,12 @@ mod tests {
     #[test]
     fn test_load_history_with_filter() {
         let (storage, _temp_dir) = create_storage();
-        storage.add_history(HistoryEntry::new("tool-a", "i1", "o1", false)).unwrap();
-        storage.add_history(HistoryEntry::new("tool-b", "i2", "o2", false)).unwrap();
+        storage
+            .add_history(HistoryEntry::new("tool-a", "i1", "o1", false))
+            .unwrap();
+        storage
+            .add_history(HistoryEntry::new("tool-b", "i2", "o2", false))
+            .unwrap();
         let tool_a = storage.list_history(Some("tool-a"), 10).unwrap();
         assert_eq!(tool_a.len(), 1);
     }
@@ -138,7 +142,9 @@ mod tests {
     #[test]
     fn test_clear_history() {
         let (storage, _temp_dir) = create_storage();
-        storage.add_history(HistoryEntry::new("test", "input", "output", false)).unwrap();
+        storage
+            .add_history(HistoryEntry::new("test", "input", "output", false))
+            .unwrap();
         storage.clear_history().unwrap();
         let history = storage.list_history(None, 10).unwrap();
         assert!(history.is_empty());
@@ -199,6 +205,3 @@ mod tests {
         assert!(result.is_err());
     }
 }
-
-
-

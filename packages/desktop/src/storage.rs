@@ -165,9 +165,15 @@ mod tests {
     #[test]
     fn test_list_history_with_filter() {
         let (storage, _temp_dir) = create_storage();
-        storage.add_history(HistoryEntry::new("tool-a", "i1", "o1", false)).unwrap();
-        storage.add_history(HistoryEntry::new("tool-b", "i2", "o2", false)).unwrap();
-        storage.add_history(HistoryEntry::new("tool-a", "i3", "o3", false)).unwrap();
+        storage
+            .add_history(HistoryEntry::new("tool-a", "i1", "o1", false))
+            .unwrap();
+        storage
+            .add_history(HistoryEntry::new("tool-b", "i2", "o2", false))
+            .unwrap();
+        storage
+            .add_history(HistoryEntry::new("tool-a", "i3", "o3", false))
+            .unwrap();
 
         let tool_a = storage.list_history(Some("tool-a"), 10).unwrap();
         assert_eq!(tool_a.len(), 2);
@@ -180,7 +186,14 @@ mod tests {
     fn test_list_history_limit() {
         let (storage, _temp_dir) = create_storage();
         for i in 0..10 {
-            storage.add_history(HistoryEntry::new("test", &format!("i{}", i), &format!("o{}", i), false)).unwrap();
+            storage
+                .add_history(HistoryEntry::new(
+                    "test",
+                    &format!("i{}", i),
+                    &format!("o{}", i),
+                    false,
+                ))
+                .unwrap();
         }
         let history = storage.list_history(None, 3).unwrap();
         assert_eq!(history.len(), 3);
@@ -189,7 +202,9 @@ mod tests {
     #[test]
     fn test_clear_history() {
         let (storage, _temp_dir) = create_storage();
-        storage.add_history(HistoryEntry::new("test", "input", "output", false)).unwrap();
+        storage
+            .add_history(HistoryEntry::new("test", "input", "output", false))
+            .unwrap();
         storage.clear_history().unwrap();
         let history = storage.list_history(None, 10).unwrap();
         assert!(history.is_empty());
@@ -209,5 +224,4 @@ mod tests {
         let result = Storage::new();
         assert!(result.is_ok());
     }
-
-    }
+}
