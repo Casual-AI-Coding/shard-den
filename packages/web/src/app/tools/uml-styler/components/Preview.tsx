@@ -58,7 +58,7 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
   const [isRendering, setIsRendering] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [localScale, setLocalScale] = useState<1 | 2 | 3 | 4>(2);
-  const effectiveScale = propScale || localScale;
+  const scale = propScale || localScale;
   const [showTuner, setShowTuner] = useState(false);
   const [complexity, setComplexity] = useState<{ nodeCount: number; isComplex: boolean } | null>(null);
   const [isSimplified, setIsSimplified] = useState(false);
@@ -184,16 +184,9 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
           await renderOnMainThread(code);
         }
       } else {
-        // PlantUML requires network connectivity
-        if (!isOnline) {
-          const errMsg = 'PlantUML 需要网络连接，请检查网络后重试';
-          setError(errMsg);
-          onError?.(errMsg);
-        } else {
-          const errMsg = 'PlantUML rendering will be implemented in Phase 2';
-          setError(errMsg);
-          onError?.(errMsg);
-        }
+        const errMsg = 'PlantUML rendering will be implemented in Phase 2';
+        setError(errMsg);
+        onError?.(errMsg);
       }
     } catch (err: any) {
       console.error('Mermaid render error:', err);
@@ -204,7 +197,7 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
     } finally {
       setIsRendering(false);
     }
-  }, [code, theme, engine, isOnline, onError]);
+  }, [code, theme, engine, onError]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -223,6 +216,8 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
       setSvg('');
     }
   }, [engine, isOnline, onError]);
+
+  // Cleanup on unmount
 
   // Cleanup on unmount
   useEffect(() => {
@@ -425,7 +420,7 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
           <div className="flex items-center gap-2">
             <span className="text-xs text-[var(--text-secondary)]">分辨率:</span>
             <select
-              value={effectiveScale}
+              value={scale}
               onChange={(e) => {
                 const newScale = Number(e.target.value) as 1 | 2 | 3 | 4;
                 if (onScaleChange) {
@@ -443,7 +438,7 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
             </select>
           </div>
           {/* Export */}
-          <ExportPanel code={code} theme={theme} engine={engine} scale={effectiveScale} />
+          <ExportPanel code={code} theme={theme} engine={engine} scale={scale} />
         </div>
       </div>
     </div>

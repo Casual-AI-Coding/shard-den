@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface UseNetworkReturn {
   isOnline: boolean;
@@ -21,6 +21,7 @@ export function useNetwork(): UseNetworkReturn {
   const [isOnline, setIsOnline] = useState(true);
   const [wasOffline, setWasOffline] = useState(false);
   const [isNetworkSupported, setIsNetworkSupported] = useState(true);
+  const timeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Check if navigator.onLine is available (not available in some SSR scenarios)
@@ -34,14 +35,24 @@ export function useNetwork(): UseNetworkReturn {
       // Mark that we were offline, to show recovery message
       setWasOffline(true);
       
+      // Clear any existing timeout before setting a new one
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      
       // Clear the recovery message after 5 seconds
-      setTimeout(() => {
+      timeoutRef.current = window.setTimeout(() => {
         setWasOffline(false);
       }, 5000);
     }, []);
 
     const handleOffline = useCallback(() => {
       setIsOnline(false);
+      // Clear any pending recovery timeout when going offline
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     }, []);
 
     // Add event listeners
@@ -51,6 +62,10 @@ export function useNetwork(): UseNetworkReturn {
     }
 
     return () => {
+      // Clean up timeout on unmount
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
       if (typeof window !== 'undefined') {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
