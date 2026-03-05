@@ -5,9 +5,6 @@ use crate::templates::Template;
 use crate::theme::Theme;
 use std::fmt::Debug;
 
-#[cfg(feature = "wasm")]
-
-
 /// 图表类型
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "wasm", derive(serde::Serialize, serde::Deserialize))]
@@ -25,6 +22,8 @@ pub enum DiagramType {
     Activity,
     /// D2 Diagram
     D2,
+    /// Graphviz/DOT Diagram
+    Graphviz,
 }
 
 /// 渲染提示 - 告诉前端如何渲染

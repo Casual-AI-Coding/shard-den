@@ -4,7 +4,7 @@ import { useNetwork } from '../hooks/useNetwork';
 import { WifiOff, Check } from 'lucide-react';
 
 interface OfflineIndicatorProps {
-  engine?: 'mermaid' | 'plantuml' | 'd2';
+  engine?: 'mermaid' | 'plantuml' | 'd2' | 'graphviz';
 }
 
 /**
@@ -42,6 +42,7 @@ export function OfflineIndicator({ engine = 'mermaid' }: OfflineIndicatorProps) 
 离线模式 - Mermaid 可用
 {engine === 'plantuml' && '，PlantUML 需要网络'}
 {engine === 'd2' && '，D2 需要网络'}
+{engine === 'graphviz' && '，Graphviz 需要网络'}
 </span>
     </div>
   );

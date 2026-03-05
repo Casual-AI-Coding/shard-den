@@ -9,7 +9,7 @@ import { ThemeTuning } from '../types';
 interface ThemeSelectorProps {
   theme: string;
   onThemeChange: (theme: string) => void;
-  engine: 'mermaid' | 'plantuml' | 'd2';
+  engine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz';
   customThemes?: UmlTheme[];
   onDeleteCustomTheme?: (id: string) => void;
 }
@@ -26,7 +26,16 @@ const MERMAID_THEMES = [
 const D2_THEMES = [
   { id: '100', name: 'Neutral', preview: '#F3F4F6' },
   { id: '200', name: 'Dark', preview: '#1F2937' },
-  { id: '300', name: 'Cool', preview: '#3B82F6' },
+  ];
+
+// Graphviz Themes (Layout engines)
+const GRAPHVIZ_THEMES = [
+  { id: 'graphviz/default', name: 'Dot (Default)', preview: '#3B82F6' },
+  { id: 'graphviz/dot', name: 'Dot', preview: '#3B82F6' },
+  { id: 'graphviz/neato', name: 'Neato', preview: '#10B981' },
+  { id: 'graphviz/twopi', name: 'Twopi', preview: '#F59E0B' },
+  { id: 'graphviz/fdp', name: 'Fdp', preview: '#8B5CF6' },
+  { id: 'graphviz/sfdp', name: 'Sfdp', preview: '#EF4444' },
 ];
 
 // PlantUML 官方主题
@@ -50,8 +59,7 @@ const EMPTY_THEMES: UmlTheme[] = [];
 
 export default function ThemeSelector({ theme, onThemeChange, engine, customThemes = EMPTY_THEMES, onDeleteCustomTheme }: ThemeSelectorProps) {
   // 合并共享主题和引擎特定主题
-  const engineThemes = engine === 'plantuml' ? PLANTUML_THEMES 
-    : engine === 'd2' ? D2_THEMES
+    : engine === 'graphviz' ? GRAPHVIZ_THEMES
     : MERMAID_THEMES;
   const themes = [...SHARED_THEMES, ...engineThemes];
 

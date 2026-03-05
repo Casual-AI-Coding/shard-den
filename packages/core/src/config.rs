@@ -71,8 +71,9 @@ impl Default for UmlStylerConfig {
 pub enum UmlEngine {
     #[default]
     Mermaid,
-    PlantUML,
     D2,
+    /// Graphviz/DOT Engine
+    Graphviz,
 }
 
 /// Export resolution presets

@@ -8,8 +8,8 @@ interface EditorProps {
   code: string;
   onChange: (code: string) => void;
   onCursorChange?: (line: number, col: number) => void;
-  engine: 'mermaid' | 'plantuml' | 'd2';
-  onEngineChange: (engine: 'mermaid' | 'plantuml' | 'd2') => void;
+  engine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz';
+  onEngineChange: (engine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz') => void;
 }
 
 // Mermaid syntax highlight config
@@ -155,6 +155,7 @@ const PLANTUML_TOKEN_PROVIDER = {
     ],
   },
 };
+
 // D2 syntax highlight config (Basic)
 const D2_LANGUAGE_CONFIG = {
   comments: {
@@ -219,6 +220,75 @@ const D2_TOKEN_PROVIDER = {
   },
 };
 
+// DOT (Graphviz) syntax highlight config
+const DOT_LANGUAGE_CONFIG = {
+  comments: {
+    lineComment: '//',
+    blockComment: ['/*', '*/'],
+  },
+  brackets: [
+    ['{', '}'],
+    ['[', ']'],
+    ['(', ')'],
+  ],
+  autoClosingPairs: [
+    { open: '{', close: '}' },
+    { open: '[', close: ']' },
+    { open: '(', close: ')' },
+    { open: '"', close: '"' },
+  ],
+  surroundingPairs: [
+    { open: '{', close: '}' },
+    { open: '[', close: ']' },
+    { open: '(', close: ')' },
+    { open: '"', close: '"' },
+  ],
+};
+
+const DOT_TOKEN_PROVIDER = {
+  defaultToken: '',
+  tokenPostfix: '.dot',
+
+  keywords: [
+    'digraph', 'graph', 'subgraph', 'node', 'edge',
+    'rankdir', 'rank', 'same', 'minlen', 'weight',
+    'shape', 'style', 'color', 'fillcolor', 'fontcolor',
+    'label', 'tooltip', 'URL', 'href',
+    'bend', 'curved', 'straight', 'line', 'ortho',
+    'ranktype', 'tight', 'cluster', 'compound',
+  ],
+
+  operators: [
+    '->', '--', '<-', '<->', '==', '..', '::',
+  ],
+
+  symbols: /[=><!~?:&|+\-*\/\^%]+/,
+
+  tokenizer: {
+    root: [
+      [/'[^\n]*$/, 'comment'],
+      [/\/\*/, 'comment', '@comment'],
+      [/[{}()\[\]]/, '@brackets'],
+      [/[a-zA-Z_]\w*/, {
+        cases: {
+          '@keywords': 'keyword',
+          '@default': 'identifier',
+        },
+      }],
+      [/[<][>-]/, 'type.identifier'],
+      [/`[^`]*`/, 'string'],
+      [/\d+/, 'number'],
+      [/[;,.]/, 'delimiter'],
+      [/->|--|<-|<->|==|\.\.|::/, 'operator'],
+    ],
+    comment: [
+      [/[^\/*]+/, 'comment'],
+      [/\*\//, 'comment', '@pop'],
+      [/[\/*]/, 'comment'],
+    ],
+  },
+};
+
 
 // PlantUML Completion Provider
 const PLANTUML_COMPLETIONS = [
@@ -238,6 +308,19 @@ const PLANTUML_COMPLETIONS = [
   { label: 'if-endif', kind: 27, insertText: 'if ${1:condition} then\\n\\t${2:action}\\nendif', insertTextRules: 4, documentation: 'If statement' },
   { label: 'while-endwhile', kind: 27, insertText: 'while ${1:condition}\\n\\t${2:action}\\nendwhile', insertTextRules: 4, documentation: 'While loop' },
 ];
+
+function getLanguageForEngine(engine: string): string {
+  switch (engine) {
+    case 'plantuml':
+      return 'plantuml';
+    case 'd2':
+      return 'd2';
+    case 'graphviz':
+      return 'dot';
+    default:
+      return 'mermaid';
+  }
+}
 
 export default function CodeEditor({ 
   code, 
@@ -264,6 +347,7 @@ export default function CodeEditor({
       monaco.languages.setLanguageConfiguration('plantuml', PLANTUML_LANGUAGE_CONFIG as any);
       monaco.languages.setMonarchTokensProvider('plantuml', PLANTUML_TOKEN_PROVIDER as any);
     }
+
     // Register D2 language
     if (!monaco.languages.getLanguages().some((lang: { id: string }) => lang.id === 'd2')) {
       monaco.languages.register({ id: 'd2' });
@@ -271,6 +355,12 @@ export default function CodeEditor({
       monaco.languages.setMonarchTokensProvider('d2', D2_TOKEN_PROVIDER as any);
     }
 
+    // Register DOT language
+    if (!monaco.languages.getLanguages().some((lang: { id: string }) => lang.id === 'dot')) {
+      monaco.languages.register({ id: 'dot' });
+      monaco.languages.setLanguageConfiguration('dot', DOT_LANGUAGE_CONFIG as any);
+      monaco.languages.setMonarchTokensProvider('dot', DOT_TOKEN_PROVIDER as any);
+    }
 
     // Register PlantUML completion provider
     monaco.languages.registerCompletionItemProvider('plantuml', {
@@ -291,7 +381,6 @@ export default function CodeEditor({
         };
       },
     });
-
 
     // Set editor options
     editor.updateOptions({
@@ -334,12 +423,13 @@ export default function CodeEditor({
         {/* Engine Selector */}
         <select
           value={engine}
-          onChange={(e) => onEngineChange(e.target.value as 'mermaid' | 'plantuml' | 'd2')}
+          onChange={(e) => onEngineChange(e.target.value as 'mermaid' | 'plantuml' | 'd2' | 'graphviz')}
           className="px-3 py-1.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
         >
           <option value="mermaid">Mermaid</option>
           <option value="plantuml">PlantUML</option>
           <option value="d2">D2</option>
+          <option value="graphviz">Graphviz</option>
         </select>
 
         {/* Format Button */}
@@ -365,7 +455,7 @@ export default function CodeEditor({
       <div className="flex-1 min-h-0">
         <Editor
           height="100%"
-          language={engine === 'plantuml' ? 'plantuml' : engine === 'd2' ? 'd2' : 'mermaid'}
+          language={getLanguageForEngine(engine)}
           value={code}
           onChange={handleChange}
           onMount={handleEditorMount}

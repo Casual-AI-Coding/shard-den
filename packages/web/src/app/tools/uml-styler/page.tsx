@@ -34,7 +34,7 @@ import { Save, Settings } from 'lucide-react';
 export default function UMLStylerPage() {
   const [code, setCode] = useState<string>('flowchart TD\n    A[Start] --> B[End]');
   const [theme, setTheme] = useState<string>('default');
-  const [engine, setEngine] = useState<'mermaid' | 'plantuml' | 'd2'>('mermaid');
+  const [engine, setEngine] = useState<'mermaid' | 'plantuml' | 'd2' | 'graphviz'>('mermaid');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cursorPosition, setCursorPosition] = useState({ line: 1, col: 1 });
@@ -77,7 +77,7 @@ export default function UMLStylerPage() {
       .then((cfg) => {
         setConfig(cfg);
         setTheme(cfg.default_theme);
-        setEngine(cfg.default_engine.toLowerCase() as 'mermaid' | 'plantuml' | 'd2');
+        setEngine(cfg.default_engine.toLowerCase() as 'mermaid' | 'plantuml' | 'd2' | 'graphviz');
       })
       .catch((err) => {
         console.error('Failed to load config:', err);
@@ -132,7 +132,7 @@ export default function UMLStylerPage() {
     }
   }, [customThemes, isDesktop]);
 
-  const handleEngineChange = useCallback((newEngine: 'mermaid' | 'plantuml' | 'd2') => {
+  const handleEngineChange = useCallback((newEngine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz') => {
     setEngine(newEngine);
     // Update config
     if (isDesktop) {
@@ -141,8 +141,9 @@ export default function UMLStylerPage() {
         default_engine: (
           newEngine === 'mermaid' ? 'Mermaid' : 
           newEngine === 'plantuml' ? 'PlantUML' : 
-          'D2'
-        ) as 'Mermaid' | 'PlantUML' | 'D2' 
+          newEngine === 'd2' ? 'D2' :
+          'Graphviz'
+        ) as 'Mermaid' | 'PlantUML' | 'D2' | 'Graphviz' 
       }));
     }
   }, [isDesktop]);
@@ -167,7 +168,7 @@ export default function UMLStylerPage() {
   const handleLoadHistory = useCallback((loadedCode: string, loadedEngine: string, loadedTheme: string) => {
     setError(null);
     setCode(loadedCode);
-    setEngine(loadedEngine as 'mermaid' | 'plantuml' | 'd2');
+    setEngine(loadedEngine as 'mermaid' | 'plantuml' | 'd2' | 'graphviz');
     setTheme(loadedTheme);
   }, []);
 
