@@ -54,8 +54,8 @@ pub fn load_history(
 
 /// Clear all history
 #[tauri::command]
-pub fn clear_history(state: State<'_, AppState>) -> Result<(), String> {
-    state.storage.clear_history().map_err(|e| e.to_string())
+pub fn clear_history(tool: Option<String>, state: State<'_, AppState>) -> Result<(), String> {
+    state.storage.clear_history(tool.as_deref()).map_err(|e| e.to_string())
 }
 
 /// Detect paths in JSON
@@ -214,9 +214,7 @@ mod tests {
         storage
             .add_history(HistoryEntry::new("test", "input", "output", false))
             .unwrap();
-        storage.clear_history().unwrap();
-        let history = storage.list_history(None, 10).unwrap();
-        assert!(history.is_empty());
+        storage.clear_history(None).unwrap();
     }
 
     #[test]

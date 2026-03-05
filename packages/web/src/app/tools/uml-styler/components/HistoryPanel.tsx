@@ -13,6 +13,14 @@ import {
 } from 'lucide-react';
 import { loadHistory, clearHistory, saveUmlHistory, type HistoryEntry, isTauri } from '@/lib/tauri';
 
+// Time formatting constants (in milliseconds)
+const MS_PER_MINUTE = 60_000;
+const MS_PER_HOUR = 3_600_000;
+const MS_PER_DAY = 86_400_000;
+
+// Snippet truncation constant
+const SNIPPET_MAX_LENGTH = 40;
+
 interface HistoryPanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -34,7 +42,8 @@ export default function HistoryPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' && isTauri());
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setIsDesktop(isTauri());
@@ -47,8 +56,10 @@ export default function HistoryPanel({
     try {
       const entries = await loadHistory('uml-styler', 50);
       setHistory(entries);
+      setError(null);
     } catch (err) {
       console.error('Failed to load history:', err);
+      setError(err instanceof Error ? err.message : '加载历史记录失败');
     } finally {
       setIsLoading(false);
     }
@@ -89,7 +100,7 @@ export default function HistoryPanel({
     
     setIsClearing(true);
     try {
-      await clearHistory();
+      await clearHistory('uml-styler');
       setHistory([]);
     } catch (err) {
       console.error('Failed to clear history:', err);
@@ -104,17 +115,17 @@ export default function HistoryPanel({
     const diff = now.getTime() - date.getTime();
     
     // Less than 1 minute
-    if (diff < 60000) {
+    if (diff < MS_PER_MINUTE) {
       return '刚刚';
     }
     // Less than 1 hour
-    if (diff < 3600000) {
-      const mins = Math.floor(diff / 60000);
+    if (diff < MS_PER_HOUR) {
+      const mins = Math.floor(diff / MS_PER_MINUTE);
       return `${mins} 分钟前`;
     }
     // Less than 1 day
-    if (diff < 86400000) {
-      const hours = Math.floor(diff / 3600000);
+    if (diff < MS_PER_DAY) {
+      const hours = Math.floor(diff / MS_PER_HOUR);
       return `${hours} 小时前`;
     }
     // More than 1 day
@@ -128,7 +139,9 @@ export default function HistoryPanel({
 
   const getCodeSnippet = (code: string) => {
     const firstLine = code.split('\n')[0];
-    return firstLine.length > 40 ? firstLine.slice(0, 40) + '...' : firstLine;
+    return firstLine.length > SNIPPET_MAX_LENGTH 
+      ? firstLine.slice(0, SNIPPET_MAX_LENGTH) + '...'
+      : firstLine;
   };
 
   if (!isOpen) return null;
@@ -163,7 +176,7 @@ export default function HistoryPanel({
             <button
               onClick={handleSave}
               disabled={isSaving || !currentCode.trim()}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
             >
               {isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -185,6 +198,16 @@ export default function HistoryPanel({
           ) : isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-5 h-5 animate-spin text-[var(--accent)]" />
+            </div>
+          ) : error ? (
+            <div className="p-4 text-center text-red-500 text-sm">
+              <p>{error}</p>
+              <button 
+                onClick={fetchHistory}
+                className="mt-2 text-blue-500 hover:underline text-xs"
+              >
+                重试
+              </button>
             </div>
           ) : history.length === 0 ? (
             <div className="p-4 text-center text-[var(--text-secondary)] text-sm">

@@ -113,16 +113,17 @@ export async function loadHistory(tool?: string, limit: number = 100): Promise<H
 }
 
 /**
- * Clear all history (Desktop only)
+ * Clear history entries (Desktop only)
+ * @param tool - Optional tool name to clear only history for that tool
  */
-export async function clearHistory(): Promise<void> {
+export async function clearHistory(tool?: string): Promise<void> {
   const invoke = await getInvoke();
   if (!invoke) {
     console.warn('clearHistory: Not in Tauri environment, skipping');
     return;
   }
   
-  return invoke('clear_history');
+  return invoke('clear_history', { tool: tool || null });
 }
 
 /**
@@ -174,6 +175,7 @@ export async function saveUmlHistory(
     metadata: { engine, theme },
   });
 }
+
 // ==================== UML Styler Types ====================
 
 export interface UmlTemplate {

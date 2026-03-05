@@ -169,9 +169,15 @@ impl Storage {
         Ok(filtered)
     }
 
-    /// Clear all history
-    pub fn clear_history(&self) -> shard_den_core::Result<()> {
-        self.save_history_entries(&[])
+/// Clear all history
+    pub fn clear_history(&self, tool: Option<&str>) -> shard_den_core::Result<()> {
+        if let Some(t) = tool {
+            let mut entries = self.load_history_entries()?;
+            entries.retain(|e| e.tool != t);
+            self.save_history_entries(&entries)
+        } else {
+            self.save_history_entries(&[])
+        }
     }
 
     fn load_history_entries(&self) -> shard_den_core::Result<Vec<HistoryEntry>> {
@@ -380,7 +386,7 @@ mod tests {
         storage
             .add_history(HistoryEntry::new("test", "input", "output", false))
             .unwrap();
-        storage.clear_history().unwrap();
+        storage.clear_history(None).unwrap();
         let history = storage.list_history(None, 10).unwrap();
         assert!(history.is_empty());
     }
@@ -389,7 +395,7 @@ mod tests {
     fn test_clear_history_empty() {
         let (storage, _temp_dir) = create_storage();
         // Clear when empty should not panic
-        storage.clear_history().unwrap();
+        storage.clear_history(None).unwrap();
         let history = storage.list_history(None, 10).unwrap();
         assert!(history.is_empty());
     }

@@ -66,6 +66,7 @@ export default function UMLStylerPage() {
   }, [code]);
 
   const handleLoadHistory = useCallback((loadedCode: string, loadedEngine: string, loadedTheme: string) => {
+    setError(null);
     setCode(loadedCode);
     setEngine(loadedEngine as 'mermaid' | 'plantuml');
     setTheme(loadedTheme);
