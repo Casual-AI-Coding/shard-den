@@ -4,6 +4,8 @@ import React from 'react';
 import { Trash2 } from 'lucide-react';
 import type { UmlTheme } from '@/lib/tauri';
 
+import { ThemeTuning } from '../types';
+
 interface ThemeSelectorProps {
   theme: string;
   onThemeChange: (theme: string) => void;
@@ -37,8 +39,9 @@ const SHARED_THEMES = [
   { id: 'shared/minimal', name: 'Minimal', preview: '#64748B', category: 'shared' },
   { id: 'shared/colorful', name: 'Colorful', preview: '#8B5CF6', category: 'shared' },
 ];
+const EMPTY_THEMES: UmlTheme[] = [];
 
-export default function ThemeSelector({ theme, onThemeChange, engine, customThemes = [], onDeleteCustomTheme }: ThemeSelectorProps) {
+export default function ThemeSelector({ theme, onThemeChange, engine, customThemes = EMPTY_THEMES, onDeleteCustomTheme }: ThemeSelectorProps) {
   // 合并共享主题和引擎特定主题
   const engineThemes = engine === 'plantuml' ? PLANTUML_THEMES : MERMAID_THEMES;
   const themes = [...SHARED_THEMES, ...engineThemes];
@@ -75,7 +78,7 @@ export default function ThemeSelector({ theme, onThemeChange, engine, customThem
             <div className="mb-2 pb-2 border-b border-[var(--border)]">
               <div className="text-xs text-[var(--text-secondary)] px-2 py-1 flex items-center justify-between">
                 <span>自定义主题</span>
-                <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">Custom</span>
+                <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">自定义</span>
               </div>
               {customThemes.map((t) => (
                 <div key={t.id} className="group/item relative flex items-center">
@@ -89,7 +92,7 @@ export default function ThemeSelector({ theme, onThemeChange, engine, customThem
                   >
                     <span 
                       className="w-3 h-3 rounded-full border border-slate-300"
-                      style={{ backgroundColor: (t.config as any)?.primaryColor || '#8B5CF6' }}
+                      style={{ backgroundColor: (t.config as ThemeTuning)?.primaryColor || '#8B5CF6' }}
                     />
                     <span className="truncate">{t.name}</span>
                   </button>

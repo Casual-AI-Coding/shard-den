@@ -94,7 +94,13 @@ export default function UMLStylerPage() {
 
   const handleThemeChange = useCallback((newTheme: string) => {
     setTheme(newTheme);
-  }, []);
+    
+    // Check if it's a custom theme and apply its tuning
+    const customTheme = customThemes.find(t => t.id === newTheme);
+    if (customTheme && customTheme.config) {
+      setTuning(customTheme.config as ThemeTuning);
+    }
+  }, [customThemes]);
 
   const handleEngineChange = useCallback((newEngine: 'mermaid' | 'plantuml') => {
     setEngine(newEngine);
@@ -186,6 +192,15 @@ export default function UMLStylerPage() {
   const handleDeleteCustomTheme = useCallback(async (id: string) => {
     try {
       await deleteUmlTheme(id);
+      setCustomThemes(prev => prev.filter(t => t.id !== id));
+      
+      // Reset to default theme if the deleted one was active
+      if (theme === id) {
+        setTheme('default');
+        // Also reset tuning to default or empty
+        setTuning({});
+      }
+      success('主题删除成功');
       setCustomThemes(prev => prev.filter(t => t.id !== id));
       if (theme === id) {
         setTheme('default');

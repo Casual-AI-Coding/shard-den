@@ -475,7 +475,6 @@ mod tests {
 
     // UML Theme tests
     #[test]
-    #[test]
     fn test_save_and_load_uml_theme() {
         let (storage, _temp_dir) = create_storage();
         let theme = UmlTheme::new(
@@ -491,7 +490,6 @@ mod tests {
         assert_eq!(themes[0].name, "Dark Theme");
     }
 
-    #[test]
     #[test]
     fn test_delete_uml_theme() {
         let (storage, _temp_dir) = create_storage();

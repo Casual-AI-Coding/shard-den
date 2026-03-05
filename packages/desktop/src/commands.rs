@@ -319,7 +319,6 @@ mod tests {
     }
 
     #[test]
-    #[test]
     fn test_delete_uml_theme() {
         let (storage, _temp_dir) = create_storage();
         let theme = UmlTheme::new(
