@@ -11,6 +11,7 @@ import { SaveThemeModal } from './components/SaveThemeModal';
 import { SaveTemplateModal } from './components/SaveTemplateModal';
 import { SettingsModal } from './components/SettingsModal';
 import { useToast, ToastContainer } from './components/Toast';
+import { OfflineIndicator } from './components/OfflineIndicator';
 import { Header } from '@/components/Header';
 import type { ThemeTuning } from './types';
 import { 
@@ -257,6 +258,7 @@ export default function UMLStylerPage() {
   return (
     <>
       <Header title="UML Styler" />
+      <OfflineIndicator engine={engine} />
       <main className="flex-1 flex overflow-hidden">
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center bg-[var(--bg)]">

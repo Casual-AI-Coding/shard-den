@@ -9,6 +9,7 @@ import ExportPanel from './ExportPanel';
 import type { ThemeTuning } from '../types';
 import { Save } from 'lucide-react';
 import type { UmlTheme } from '@/lib/tauri';
+import { useNetwork } from '../hooks/useNetwork';
 
 // Worker message types
 interface WorkerRequest {
@@ -57,11 +58,12 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
   const [isRendering, setIsRendering] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [localScale, setLocalScale] = useState<1 | 2 | 3 | 4>(2);
-  const scale = propScale || localScale;
+  const effectiveScale = propScale || localScale;
   const [showTuner, setShowTuner] = useState(false);
   const [complexity, setComplexity] = useState<{ nodeCount: number; isComplex: boolean } | null>(null);
   const [isSimplified, setIsSimplified] = useState(false);
   const [renderMethod, setRenderMethod] = useState<'main' | 'worker'>('main');
+  const { isOnline } = useNetwork();
 
   const renderCountRef = useRef(0);
   const workerRef = useRef<Worker | null>(null);
@@ -182,9 +184,16 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
           await renderOnMainThread(code);
         }
       } else {
-        const errMsg = 'PlantUML rendering will be implemented in Phase 2';
-        setError(errMsg);
-        onError?.(errMsg);
+        // PlantUML requires network connectivity
+        if (!isOnline) {
+          const errMsg = 'PlantUML 需要网络连接，请检查网络后重试';
+          setError(errMsg);
+          onError?.(errMsg);
+        } else {
+          const errMsg = 'PlantUML rendering will be implemented in Phase 2';
+          setError(errMsg);
+          onError?.(errMsg);
+        }
       }
     } catch (err: any) {
       console.error('Mermaid render error:', err);
@@ -195,7 +204,7 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
     } finally {
       setIsRendering(false);
     }
-  }, [code, theme, engine, onError]);
+  }, [code, theme, engine, isOnline, onError]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -204,6 +213,16 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
 
     return () => clearTimeout(timer);
   }, [renderDiagram]);
+
+  // Handle engine change when offline
+  useEffect(() => {
+    if (engine === 'plantuml' && !isOnline) {
+      const errMsg = 'PlantUML 需要网络连接，请检查网络后重试';
+      setError(errMsg);
+      onError?.(errMsg);
+      setSvg('');
+    }
+  }, [engine, isOnline, onError]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -406,7 +425,7 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
           <div className="flex items-center gap-2">
             <span className="text-xs text-[var(--text-secondary)]">分辨率:</span>
             <select
-              value={scale}
+              value={effectiveScale}
               onChange={(e) => {
                 const newScale = Number(e.target.value) as 1 | 2 | 3 | 4;
                 if (onScaleChange) {
@@ -424,7 +443,7 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
             </select>
           </div>
           {/* Export */}
-          <ExportPanel code={code} theme={theme} engine={engine} scale={scale} />
+          <ExportPanel code={code} theme={theme} engine={engine} scale={effectiveScale} />
         </div>
       </div>
     </div>

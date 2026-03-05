@@ -517,3 +517,138 @@ function useWasmInit() {
 | 10 | PlantUML 服务器超时 | 显示错误，提供重试按钮 |
 | 11 | Desktop 保存历史 | 历史记录持久化到本地 |
 | 12 | 移动端切换 Tab | 正确显示对应功能 |
+## 8. 离线支持流程
+
+### 8.1 离线状态检测
+
+```mermaid
+flowchart TD
+    A[应用启动] --> B[初始化网络状态]
+    B --> C{网络可用?}
+    C -->|是| D[设置状态: online]
+    C -->|否| E[设置状态: offline]
+    
+    D --> F[监听 online/offline 事件]
+    E --> F
+    
+    F --> G{网络状态变化}
+    G -->|变为 online| H[显示恢复提示]
+    G -->|变为 offline| I[显示离线提示]
+    I --> J[触发 UI 更新]
+```
+
+### 8.2 引擎离线支持
+
+```mermaid
+flowchart TD
+    A[用户选择引擎] --> B{引擎类型}
+    
+    B -->|Mermaid| C[直接本地渲染]
+    C --> D[无需网络]
+    
+    B -->|PlantUML| E{网络状态}
+    E -->|online| F[请求 PlantUML 服务器]
+    E -->|offline| G[显示离线错误]
+    F --> H{服务器响应}
+    H -->|成功| I[显示渲染结果]
+    H -->|失败| J[显示服务器错误]
+    G --> K[提示: 请联网后使用 PlantUML]
+```
+
+### 8.3 useNetwork Hook
+
+```typescript
+interface NetworkStatus {
+  isOnline: boolean;
+  wasOffline: boolean;  // 曾离线，用于显示恢复提示
+}
+
+// Hook 实现
+function useNetwork(): NetworkStatus {
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+  const [wasOffline, setWasOffline] = useState(false);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      setWasOffline(true);  // 标记曾离线
+      setTimeout(() => setWasOffline(false), 5000);  // 5秒后清除
+    };
+    
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return { isOnline, wasOffline };
+}
+```
+
+### 8.4 离线状态 UI
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  [Logo]  UML Styler                    [主题选择] [分享] [导出]  [主题切换] │
+│  ⚠️ 离线模式 - Mermaid 可用，PlantUML 需要网络                             │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌─────────────────────────────┐  ┌─────────────────────────────────────┐   │
+│  │                             │  │                                     │   │
+│  │       代码编辑器            │  │          预览区域                   │   │
+│  │                             │  │                                     │   │
+│  └─────────────────────────────┘  └─────────────────────────────────────┘   │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+**离线提示位置:** Header 下方，显示为黄色警告条
+
+**离线提示内容:**
+- 离线时: `⚠️ 离线模式 - Mermaid 可用，PlantUML 需要网络`
+- 恢复在线时 (5秒): `✅ 网络已恢复`
+
+### 8.5 Mermaid 离线验证
+
+| 场景 | 预期行为 |
+|------|---------|
+| 完全离线 (无网络) | Mermaid 正常渲染，无需网络 |
+| 首次加载 (有缓存) | Mermaid 从缓存加载，正常工作 |
+| 首次加载 (无缓存) | 需要网络加载 Mermaid 库，之后可离线使用 |
+| 离线后恢复网络 | 自动检测，无需刷新 |
+
+**关键点:**
+- Mermaid 是纯客户端库，一旦加载完成就不需要网络
+- 只需在首次加载时联网，之后可完全离线使用
+- PlantUML 需要连接到 PlantUML 服务器，无法离线工作
+
+---
+
+## 9. 测试关键路径
+
+| # | 测试场景 | 预期结果 |
+|---|----------|---------|
+| 1 | 页面首次加载 | WASM 初始化成功，显示编辑器 |
+| 2 | WASM 加载失败 | 显示错误提示和刷新按钮 |
+| 3 | 输入有效 Mermaid 代码 | 预览区显示渲染结果 |
+| 4 | 输入无效语法 | 编辑器显示错误波浪线，错误面板显示详情 |
+| 5 | 切换主题 | 图表立即应用新主题 |
+| 6 | 调整全局微调参数 | 图表实时更新 |
+| 7 | 导出 PNG 2x | 下载双倍分辨率 PNG |
+| 8 | 生成分享链接 | URL 更新，可复制分享 |
+| 9 | 打开分享链接 | 恢复完整编辑器状态 |
+| 10 | PlantUML 服务器超时 | 显示错误，提供重试按钮 |
+| 11 | Desktop 保存历史 | 历史记录持久化到本地 |
+| 12 | 移动端切换 Tab | 正确显示对应功能 |
+| 13 | 离线状态打开页面 | 显示离线提示，Mermaid 正常渲染 |
+| 14 | 离线选择 PlantUML 引擎 | 显示需要网络的错误提示 |
+| 15 | 从离线恢复网络 | 显示恢复提示，PlantUML 恢复正常 |
