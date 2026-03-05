@@ -156,6 +156,24 @@ export async function saveExtractionHistory(
   });
 }
 
+
+/**
+ * Save UML Styler to history (convenience function)
+ * Call this after successful rendering in Desktop mode
+ */
+export async function saveUmlHistory(
+  code: string,
+  engine: string,
+  theme: string,
+  output?: string
+): Promise<void> {
+  return saveHistory({
+    tool: 'uml-styler',
+    input: code,
+    output: output || '',
+    metadata: { engine, theme },
+  });
+}
 // ==================== UML Styler Types ====================
 
 export interface UmlTemplate {

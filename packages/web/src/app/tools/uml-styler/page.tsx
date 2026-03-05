@@ -6,6 +6,7 @@ import Preview from './components/Preview';
 import ThemeSelector from './components/ThemeSelector';
 import ExportPanel from './components/ExportPanel';
 import TemplateLibrary from './components/TemplateLibrary';
+import HistoryPanel from './components/HistoryPanel';
 import { Header } from '@/components/Header';
 import type { ThemeTuning } from './types';
 
@@ -17,6 +18,7 @@ export default function UMLStylerPage() {
   const [error, setError] = useState<string | null>(null);
   const [cursorPosition, setCursorPosition] = useState({ line: 1, col: 1 });
   const [tuning, setTuning] = useState<ThemeTuning>({});
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     import('mermaid').then((mermaid) => {
@@ -63,6 +65,12 @@ export default function UMLStylerPage() {
     });
   }, [code]);
 
+  const handleLoadHistory = useCallback((loadedCode: string, loadedEngine: string, loadedTheme: string) => {
+    setCode(loadedCode);
+    setEngine(loadedEngine as 'mermaid' | 'plantuml');
+    setTheme(loadedTheme);
+  }, []);
+
   return (
     <>
       <Header title="UML Styler" />
@@ -90,7 +98,19 @@ export default function UMLStylerPage() {
               />
               {/* Editor Toolbar */}
               <div className="h-12 px-4 bg-[var(--bg)] border-t border-[var(--border)] flex items-center justify-between shrink-0">
-                <TemplateLibrary onSelect={setCode} />
+                <div className="flex items-center gap-2">
+                  <TemplateLibrary onSelect={setCode} />
+                  <button
+                    onClick={() => setShowHistory(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] rounded transition-colors"
+                    title="历史记录"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>历史</span>
+                  </button>
+                </div>
                 <div className="text-xs text-[var(--text-secondary)]">
                   Ln {cursorPosition.line}, Col {cursorPosition.col}
                 </div>
@@ -113,6 +133,16 @@ export default function UMLStylerPage() {
           </div>
         )}
       </main>
+
+      {/* History Panel */}
+      <HistoryPanel
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+        onLoadEntry={handleLoadHistory}
+        currentCode={code}
+        currentEngine={engine}
+        currentTheme={theme}
+      />
     </>
   );
 }
