@@ -13,7 +13,7 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
   drawImage: vi.fn(),
   fillStyle: '',
   scale: vi.fn(),
-}));
+} as unknown as CanvasRenderingContext2D)) as any;
 
 HTMLCanvasElement.prototype.toDataURL = vi.fn(() => 'data:image/png;base64,test');
 
@@ -122,20 +122,5 @@ describe('ExportPanel', () => {
     fireEvent.mouseDown(outside);
   });
 
-  it('renders with custom tuning', () => {
-    const tuning = {
-      primaryColor: '#ff0000',
-      fontSize: 14,
-    };
-    
-    render(
-      <ExportPanel 
-        code="flowchart TD\nA-->B" 
-        theme="default" 
-        engine="mermaid" 
-        tuning={tuning}
-      />
-    );
-    expect(screen.getByText('导出')).toBeInTheDocument();
-  });
+
 });

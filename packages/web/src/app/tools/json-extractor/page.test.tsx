@@ -1,7 +1,8 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import JsonExtractorPage, { findJsonPath, findJsonPathByPosition } from './page';
+import JsonExtractorPage from './page';
+import { findJsonPath, findJsonPathByPosition } from './utils';
 
 // Mock components
 vi.mock('./components', () => ({

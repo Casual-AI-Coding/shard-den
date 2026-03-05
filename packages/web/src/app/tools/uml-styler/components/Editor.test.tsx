@@ -26,6 +26,7 @@ describe('Editor', () => {
         code="flowchart TD\nA-->B" 
         onChange={handleChange} 
         engine="mermaid" 
+        onEngineChange={vi.fn()}
       />
     );
     expect(screen.getByTestId('monaco-editor')).toBeInTheDocument();
@@ -38,6 +39,7 @@ describe('Editor', () => {
         code="flowchart TD\nA-->B" 
         onChange={handleChange} 
         engine="mermaid" 
+        onEngineChange={vi.fn()}
       />
     );
     const select = screen.getByRole('combobox') as HTMLSelectElement;
@@ -51,6 +53,7 @@ describe('Editor', () => {
         code="@startuml\nA-->B\n@enduml" 
         onChange={handleChange} 
         engine="plantuml" 
+        onEngineChange={vi.fn()}
       />
     );
     const select = screen.getByRole('combobox') as HTMLSelectElement;
@@ -64,6 +67,7 @@ describe('Editor', () => {
         code="flowchart TD\nA-->B" 
         onChange={handleChange} 
         engine="mermaid" 
+        onEngineChange={vi.fn()}
       />
     );
     
@@ -80,6 +84,7 @@ describe('Editor', () => {
         code="" 
         onChange={handleChange} 
         engine="mermaid" 
+        onEngineChange={vi.fn()}
       />
     );
     expect(screen.getByTestId('monaco-editor')).toBeInTheDocument();
@@ -114,6 +119,7 @@ describe('Editor', () => {
         onChange={handleChange} 
         engine="mermaid"
         onCursorChange={handleCursorChange}
+        onEngineChange={vi.fn()}
       />
     );
     
@@ -129,6 +135,7 @@ describe('Editor', () => {
         code={longCode} 
         onChange={handleChange} 
         engine="mermaid" 
+        onEngineChange={vi.fn()}
       />
     );
     

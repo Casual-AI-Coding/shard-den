@@ -10,6 +10,8 @@ describe('ThemeSelector', () => {
       <ThemeSelector 
         theme="default" 
         onThemeChange={handleThemeChange} 
+        engine="mermaid"
+
       />
     );
     // Component uses buttons, check for the theme button exists
@@ -23,6 +25,8 @@ describe('ThemeSelector', () => {
       <ThemeSelector 
         theme="default" 
         onThemeChange={handleThemeChange} 
+        engine="mermaid"
+
       />
     );
     // Check that there are buttons (theme selector uses button elements)
@@ -36,6 +40,8 @@ describe('ThemeSelector', () => {
       <ThemeSelector 
         theme="default" 
         onThemeChange={handleThemeChange} 
+        engine="mermaid"
+
       />
     );
     

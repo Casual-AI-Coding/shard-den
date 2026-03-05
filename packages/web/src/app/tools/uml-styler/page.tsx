@@ -7,6 +7,7 @@ import ThemeSelector from './components/ThemeSelector';
 import ExportPanel from './components/ExportPanel';
 import TemplateLibrary from './components/TemplateLibrary';
 import HistoryPanel from './components/HistoryPanel';
+import { SaveThemeModal } from './components/SaveThemeModal';
 import { SaveTemplateModal } from './components/SaveTemplateModal';
 import { useToast, ToastContainer } from './components/Toast';
 import { Header } from '@/components/Header';
@@ -16,7 +17,11 @@ import {
   loadUmlTemplates, 
   saveUmlTemplate, 
   deleteUmlTemplate,
-  type UmlTemplate 
+  loadUmlThemes,
+  saveUmlTheme,
+  deleteUmlTheme,
+  type UmlTemplate,
+  type UmlTheme
 } from '@/lib/tauri';
 import { Save } from 'lucide-react';
 
@@ -30,9 +35,11 @@ export default function UMLStylerPage() {
   const [tuning, setTuning] = useState<ThemeTuning>({});
   const [showHistory, setShowHistory] = useState(false);
   
-  // Custom templates state
+  // Custom templates and themes state
   const [customTemplates, setCustomTemplates] = useState<UmlTemplate[]>([]);
+  const [customThemes, setCustomThemes] = useState<UmlTheme[]>([]);
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [showSaveThemeModal, setShowSaveThemeModal] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
 
   const { toasts, dismissToast, success, error: toastError } = useToast();
@@ -52,18 +59,28 @@ export default function UMLStylerPage() {
     setIsDesktop(isTauri());
   }, []);
 
-  // Load custom templates on mount (Desktop only)
+  // Load custom templates and themes on mount (Desktop only)
   useEffect(() => {
     if (!isDesktop) return;
     
+    // Load templates
     loadUmlTemplates()
       .then((templates) => {
-        // Just set all templates without filtering is_custom since the Rust backend doesn't have it
         setCustomTemplates(templates);
       })
       .catch((err) => {
         console.error('Failed to load templates:', err);
         toastError('加载模板失败');
+      });
+
+    // Load themes
+    loadUmlThemes()
+      .then((themes) => {
+        setCustomThemes(themes);
+      })
+      .catch((err) => {
+        console.error('Failed to load themes:', err);
+        toastError('加载主题失败');
       });
   }, [isDesktop, toastError]);
 
@@ -142,6 +159,44 @@ export default function UMLStylerPage() {
     }
   }, [success, toastError]);
 
+  // Save as theme handler
+  const handleSaveAsTheme = useCallback(async (name: string, description: string) => {
+    const newTheme: UmlTheme = {
+      id: crypto.randomUUID(),
+      name,
+      description,
+      theme_type: 'custom',
+      config: (tuning || {}) as Record<string, unknown>,
+
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    
+    try {
+      await saveUmlTheme(newTheme);
+      setCustomThemes(prev => [...prev, newTheme]);
+      success('主题保存成功');
+    } catch (err) {
+      console.error('Failed to save theme:', err);
+      toastError('保存主题失败');
+    }
+  }, [tuning, success, toastError]);
+
+  // Delete custom theme handler
+  const handleDeleteCustomTheme = useCallback(async (id: string) => {
+    try {
+      await deleteUmlTheme(id);
+      setCustomThemes(prev => prev.filter(t => t.id !== id));
+      if (theme === id) {
+        setTheme('default');
+      }
+      success('主题删除成功');
+    } catch (err) {
+      console.error('Failed to delete theme:', err);
+      toastError('删除主题失败');
+    }
+  }, [theme, success, toastError]);
+
   return (
     <>
       <Header title="UML Styler" />
@@ -215,7 +270,9 @@ export default function UMLStylerPage() {
                 onTuningChange={handleTuningChange}
                 onError={handleError}
                 onThemeChange={handleThemeChange}
-                onShare={handleShare}
+                customThemes={customThemes}
+                onDeleteCustomTheme={handleDeleteCustomTheme}
+                onSaveTheme={() => setShowSaveThemeModal(true)}
               />
             </div>
           </div>
@@ -238,6 +295,15 @@ export default function UMLStylerPage() {
         onClose={() => setShowSaveTemplateModal(false)}
         onSave={handleSaveAsTemplate}
         currentCode={code}
+        currentEngine={engine}
+      />
+      
+      {/* Save Theme Modal */}
+      <SaveThemeModal
+        isOpen={showSaveThemeModal}
+        onClose={() => setShowSaveThemeModal(false)}
+        onSave={handleSaveAsTheme}
+        currentTuning={tuning}
         currentEngine={engine}
       />
       

@@ -191,6 +191,7 @@ export interface UmlTemplate {
 export interface UmlTheme {
   id: string;
   name: string;
+  description: string;
   theme_type: string;
   config: Record<string, unknown>;
   created_at: string;
@@ -338,12 +339,15 @@ export function createUmlTemplateInput(
  */
 export function createUmlThemeInput(
   name: string,
+  description: string,
   themeType: string,
   config: Record<string, unknown>
 ): Omit<UmlTheme, 'id' | 'created_at' | 'updated_at'> {
   return {
     name,
+    description,
     theme_type: themeType,
     config,
   };
 }
+

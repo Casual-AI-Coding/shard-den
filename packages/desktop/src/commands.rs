@@ -309,6 +309,7 @@ mod tests {
         let (storage, _temp_dir) = create_storage();
         let theme = UmlTheme::new(
             "Dark".to_string(),
+            "Description".to_string(),
             "shared".to_string(),
             serde_json::json!({"primary": "#000"}),
         );
@@ -318,10 +319,12 @@ mod tests {
     }
 
     #[test]
+    #[test]
     fn test_delete_uml_theme() {
         let (storage, _temp_dir) = create_storage();
         let theme = UmlTheme::new(
             "Test".to_string(),
+            "Description".to_string(),
             "shared".to_string(),
             serde_json::json!({}),
         );

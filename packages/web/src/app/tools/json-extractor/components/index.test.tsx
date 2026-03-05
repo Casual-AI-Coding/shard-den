@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { InputPanel } from './InputPanel';
 import { OutputPanel } from './OutputPanel';
@@ -110,7 +110,7 @@ describe('InputPanel', () => {
     
     // Mock getBoundingClientRect
     const mockRect = { left: 100, top: 100, bottom: 200, right: 200 };
-    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue(mockRect);
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue(mockRect as unknown as DOMRect);
     vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(800);
     
     fireEvent.click(button);

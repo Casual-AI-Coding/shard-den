@@ -43,6 +43,7 @@ impl UmlTemplate {
 pub struct UmlTheme {
     pub id: String,
     pub name: String,
+    pub description: String,
     pub theme_type: String,
     pub config: serde_json::Value,
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -50,11 +51,12 @@ pub struct UmlTheme {
 }
 
 impl UmlTheme {
-    pub fn new(name: String, theme_type: String, config: serde_json::Value) -> Self {
+    pub fn new(name: String, description: String, theme_type: String, config: serde_json::Value) -> Self {
         let now = chrono::Utc::now();
         Self {
             id: format!("thm-{}", uuid_simple()),
             name,
+            description,
             theme_type,
             config,
             created_at: now,
@@ -62,6 +64,7 @@ impl UmlTheme {
         }
     }
 }
+
 
 /// Generate a simple UUID-like ID
 fn uuid_simple() -> String {
@@ -472,10 +475,12 @@ mod tests {
 
     // UML Theme tests
     #[test]
+    #[test]
     fn test_save_and_load_uml_theme() {
         let (storage, _temp_dir) = create_storage();
         let theme = UmlTheme::new(
             "Dark Theme".to_string(),
+            "A dark theme".to_string(),
             "shared".to_string(),
             serde_json::json!({"primary": "#000000"}),
         );
@@ -487,10 +492,12 @@ mod tests {
     }
 
     #[test]
+    #[test]
     fn test_delete_uml_theme() {
         let (storage, _temp_dir) = create_storage();
         let theme = UmlTheme::new(
             "Test Theme".to_string(),
+            "A test theme".to_string(),
             "shared".to_string(),
             serde_json::json!({}),
         );

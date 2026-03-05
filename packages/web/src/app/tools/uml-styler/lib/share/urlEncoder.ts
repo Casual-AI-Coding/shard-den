@@ -1,6 +1,6 @@
 import type { ThemeTuning } from '../../types';
 
-interface ShareState {
+export interface ShareState {
   code: string;
   engine: 'mermaid' | 'plantuml';
   theme: string;

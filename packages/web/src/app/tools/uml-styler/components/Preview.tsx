@@ -7,6 +7,8 @@ import ThemeSelector from './ThemeSelector';
 import ThemeTuner from './ThemeTuner';
 import ExportPanel from './ExportPanel';
 import type { ThemeTuning } from '../types';
+import { Save } from 'lucide-react';
+import type { UmlTheme } from '@/lib/tauri';
 
 // Worker message types
 interface WorkerRequest {
@@ -33,6 +35,9 @@ interface PreviewProps {
   onError?: (error: string | null) => void;
   onThemeChange?: (theme: string) => void;
   onShare?: () => void;
+  customThemes?: UmlTheme[];
+  onDeleteCustomTheme?: (id: string) => void;
+  onSaveTheme?: () => void;
 }
 
 // Mermaid theme mapping
@@ -43,7 +48,7 @@ const MERMAID_THEMES: Record<string, string> = {
   'neutral': 'neutral',
 };
 
-export default function Preview({ code, theme, engine, tuning, onTuningChange, onError, onThemeChange, onShare }: PreviewProps) {
+export default function Preview({ code, theme, engine, tuning, onTuningChange, onError, onThemeChange, onShare, customThemes, onDeleteCustomTheme, onSaveTheme }: PreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -237,7 +242,13 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
           )}
         </div>
         <div className="flex items-center gap-3">
-          <ThemeSelector theme={theme} onThemeChange={onThemeChange || (() => {})} engine={engine} />
+          <ThemeSelector 
+            theme={theme} 
+            onThemeChange={onThemeChange || (() => {})} 
+            engine={engine}
+            customThemes={customThemes}
+            onDeleteCustomTheme={onDeleteCustomTheme}
+          />
           
           {/* Theme tuner popup */}
           <div className="relative">
@@ -266,6 +277,20 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
                     tuning={tuning || {}} 
                     onTuningChange={onTuningChange || (() => {})} 
                   />
+                  {onSaveTheme && (
+                    <div className="mt-3 pt-3 border-t border-[var(--border)]">
+                      <button
+                        onClick={() => {
+                          onSaveTheme();
+                          setShowTuner(false);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-sm bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors"
+                      >
+                        <Save className="w-4 h-4" />
+                        <span>保存为新主题</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </>
             )}

@@ -1,11 +1,15 @@
 'use client';
 
 import React from 'react';
+import { Trash2 } from 'lucide-react';
+import type { UmlTheme } from '@/lib/tauri';
 
 interface ThemeSelectorProps {
   theme: string;
   onThemeChange: (theme: string) => void;
   engine: 'mermaid' | 'plantuml';
+  customThemes?: UmlTheme[];
+  onDeleteCustomTheme?: (id: string) => void;
 }
 
 // Mermaid 主题
@@ -34,7 +38,7 @@ const SHARED_THEMES = [
   { id: 'shared/colorful', name: 'Colorful', preview: '#8B5CF6', category: 'shared' },
 ];
 
-export default function ThemeSelector({ theme, onThemeChange, engine }: ThemeSelectorProps) {
+export default function ThemeSelector({ theme, onThemeChange, engine, customThemes = [], onDeleteCustomTheme }: ThemeSelectorProps) {
   // 合并共享主题和引擎特定主题
   const engineThemes = engine === 'plantuml' ? PLANTUML_THEMES : MERMAID_THEMES;
   const themes = [...SHARED_THEMES, ...engineThemes];
@@ -64,9 +68,49 @@ export default function ThemeSelector({ theme, onThemeChange, engine }: ThemeSel
       </button>
 
       {/* Dropdown */}
-      <div className="absolute right-0 top-full mt-1 w-48 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+      <div className="absolute right-0 top-full mt-1 w-48 bg-[var(--surface)] border border-[var(--border)] rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 max-h-[300px] overflow-y-auto">
         <div className="p-2">
-          <div className="text-xs text-[var(--text-secondary)] px-2 py-1">主题</div>
+          {/* Custom Themes */}
+          {customThemes.length > 0 && (
+            <div className="mb-2 pb-2 border-b border-[var(--border)]">
+              <div className="text-xs text-[var(--text-secondary)] px-2 py-1 flex items-center justify-between">
+                <span>自定义主题</span>
+                <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">Custom</span>
+              </div>
+              {customThemes.map((t) => (
+                <div key={t.id} className="group/item relative flex items-center">
+                  <button
+                    onClick={() => onThemeChange(t.id)}
+                    className={`flex-1 flex items-center gap-2 px-2 py-1.5 text-sm rounded transition-colors ${
+                      theme === t.id 
+                        ? 'bg-purple-500/20 text-purple-400' 
+                        : 'text-[var(--text)] hover:bg-[var(--surface-hover)]'
+                    }`}
+                  >
+                    <span 
+                      className="w-3 h-3 rounded-full border border-slate-300"
+                      style={{ backgroundColor: (t.config as any)?.primaryColor || '#8B5CF6' }}
+                    />
+                    <span className="truncate">{t.name}</span>
+                  </button>
+                  {onDeleteCustomTheme && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteCustomTheme(t.id);
+                      }}
+                      className="absolute right-1 p-1 text-[var(--text-secondary)] hover:text-red-400 opacity-0 group-hover/item:opacity-100 transition-opacity"
+                      title="删除主题"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="text-xs text-[var(--text-secondary)] px-2 py-1">预设主题</div>
           {themes.map((t) => (
             <button
               key={t.id}

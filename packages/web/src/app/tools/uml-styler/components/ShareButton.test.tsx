@@ -10,11 +10,13 @@ vi.mock('../lib/share/urlEncoder', () => ({
 }));
 
 // Mock navigator.clipboard
-Object.assign(navigator, {
-  clipboard: {
+Object.defineProperty(navigator, 'clipboard', {
+  value: {
     writeText: vi.fn().mockResolvedValue(undefined),
   },
+  writable: true,
 });
+
 
 describe('ShareButton', () => {
   it('renders share button', () => {
@@ -66,9 +68,13 @@ describe('ShareButton', () => {
   it('shows error when clipboard fails', async () => {
     // Mock clipboard to throw error
     const originalClipboard = navigator.clipboard;
-    navigator.clipboard = {
-      writeText: vi.fn().mockRejectedValue(new Error('Clipboard error')),
-    } as any;
+    Object.defineProperty(navigator, 'clipboard', {
+      value: {
+        writeText: vi.fn().mockRejectedValue(new Error('Clipboard error')),
+      },
+      writable: true,
+    });
+
 
     const mockGetState = vi.fn(() => ({
       code: 'flowchart TD\nA-->B',
@@ -86,6 +92,10 @@ describe('ShareButton', () => {
     });
 
     // Restore clipboard
-    navigator.clipboard = originalClipboard;
+    Object.defineProperty(navigator, 'clipboard', {
+      value: originalClipboard,
+      writable: true,
+    });
+
   });
 });
