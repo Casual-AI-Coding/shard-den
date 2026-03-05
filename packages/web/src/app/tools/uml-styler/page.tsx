@@ -70,7 +70,7 @@ export default function UMLStylerPage() {
   useEffect(() => {
     if (!isDesktop) return;
     
-    // Load templates
+    // Load config
     // Load config
     loadUmlConfig()
       .then((cfg) => {
@@ -100,6 +100,14 @@ export default function UMLStylerPage() {
         toastError('加载主题失败');
       });
   }, [isDesktop, toastError]);
+    // Debounced config save
+    useEffect(() => {
+      if (!isDesktop) return;
+      const timer = setTimeout(() => {
+        saveUmlConfig(config).catch(console.error);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }, [config, isDesktop]);
 
   const handleCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
@@ -119,22 +127,17 @@ export default function UMLStylerPage() {
     }
     // Update config
     if (isDesktop) {
-      const newConfig = { ...config, default_theme: newTheme };
-      setConfig(newConfig);
-      saveUmlConfig(newConfig).catch(console.error);
+      setConfig(prev => ({ ...prev, default_theme: newTheme }));
     }
-  }, [customThemes, config, isDesktop]);
+  }, [customThemes, isDesktop]);
 
   const handleEngineChange = useCallback((newEngine: 'mermaid' | 'plantuml') => {
     setEngine(newEngine);
     // Update config
     if (isDesktop) {
-      const newConfig = { ...config, default_engine: (newEngine === 'mermaid' ? 'Mermaid' : 'PlantUML') as 'Mermaid' | 'PlantUML' };
-      setConfig(newConfig);
-      saveUmlConfig(newConfig).catch(console.error);
+      setConfig(prev => ({ ...prev, default_engine: (newEngine === 'mermaid' ? 'Mermaid' : 'PlantUML') as 'Mermaid' | 'PlantUML' }));
     }
-  }, [config, isDesktop]);
-
+  }, [isDesktop]);
   const handleError = useCallback((err: string | null) => {
     setError(err);
   }, []);
@@ -243,23 +246,14 @@ export default function UMLStylerPage() {
     if (newScale === 4) res = 'X4';
     
     if (isDesktop) {
-      const newConfig = { ...config, export_resolution: res };
-      setConfig(newConfig);
-      saveUmlConfig(newConfig).catch(console.error);
+      setConfig(prev => ({ ...prev, export_resolution: res }));
     }
-  }, [config, isDesktop]);
+  }, [isDesktop]);
 
   const handleConfigSave = useCallback((newConfig: UmlStylerConfig) => {
     setConfig(newConfig);
-    if (isDesktop) {
-      saveUmlConfig(newConfig).then(() => {
-        success('配置保存成功');
-      }).catch((err) => {
-        console.error('Failed to save config:', err);
-        toastError('保存配置失败');
-      });
-    }
-  }, [isDesktop, success, toastError]);
+    success('配置保存成功');
+  }, [success]);
   return (
     <>
       <Header title="UML Styler" />

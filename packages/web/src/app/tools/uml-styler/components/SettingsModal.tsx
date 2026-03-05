@@ -10,6 +10,8 @@ interface SettingsModalProps {
   config: UmlStylerConfig;
   onSave: (config: UmlStylerConfig) => void;
 }
+const MIN_AUTO_SAVE_INTERVAL = 5;
+const DEFAULT_INTERVAL = 30;
 
 export function SettingsModal({ isOpen, onClose, config, onSave }: SettingsModalProps) {
   const [localConfig, setLocalConfig] = useState<UmlStylerConfig>(config);
@@ -66,6 +68,7 @@ export function SettingsModal({ isOpen, onClose, config, onSave }: SettingsModal
               <option value="X2">2x</option>
               <option value="X3">3x</option>
               <option value="X4">4x</option>
+              <option value="Custom" disabled>Custom</option>
             </select>
           </div>
 
@@ -99,9 +102,13 @@ export function SettingsModal({ isOpen, onClose, config, onSave }: SettingsModal
                 min="5"
                 max="300"
                 value={localConfig.auto_save_interval_secs}
-                onChange={(e) => setLocalConfig(prev => ({ 
-                  ...prev, 
-                  auto_save_interval_secs: Math.max(5, parseInt(e.target.value) || 30) 
+                onBlur={(e) => setLocalConfig(prev => ({
+                  ...prev,
+                  auto_save_interval_secs: Math.max(MIN_AUTO_SAVE_INTERVAL, parseInt(e.target.value) || DEFAULT_INTERVAL)
+                }))}
+                onChange={(e) => setLocalConfig(prev => ({
+                  ...prev,
+                  auto_save_interval_secs: parseInt(e.target.value) || 0
                 }))}
                 className="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
               />
