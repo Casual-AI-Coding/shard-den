@@ -1,9 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Trash2, User } from 'lucide-react';
+import type { UmlTemplate } from '@/lib/tauri';
 
 interface TemplateLibraryProps {
   onSelect: (code: string) => void;
+  customTemplates?: UmlTemplate[];
+  onDeleteCustomTemplate?: (id: string) => void;
 }
 
 interface Template {
@@ -162,7 +166,7 @@ const TEMPLATES: Template[] = [
 
 // 虚拟滚动配置 (Section 4.3 设计文档)
 const VIRTUAL_SCROLL_CONFIG = {
-  itemHeight: 150,
+  itemHeight: 120,
   visibleCount: 6,
   bufferCount: 3,
 };
@@ -250,15 +254,43 @@ function useVirtualScroll<T>(
   };
 }
 
-const CATEGORIES = ['全部', '流程图', '时序图', '类图', '状态图', 'ER图', '其他'];
+// 合并内置模板和自定义模板
+function mergeTemplates(
+  builtInTemplates: Template[],
+  customTemplates?: UmlTemplate[]
+): Template[] {
+  const result: Template[] = [...builtInTemplates];
+  
+  if (customTemplates && customTemplates.length > 0) {
+    customTemplates.forEach((t) => {
+      result.push({
+        id: t.id,
+        name: t.name,
+        category: '自定义',
+        code: t.code,
+      });
+    });
+  }
+  
+  return result;
+}
 
-export default function TemplateLibrary({ onSelect }: TemplateLibraryProps) {
+const CATEGORIES = ['全部', '流程图', '时序图', '类图', '状态图', 'ER图', '其他', '自定义'];
+
+export default function TemplateLibrary({ 
+  onSelect, 
+  customTemplates = [],
+  onDeleteCustomTemplate 
+}: TemplateLibraryProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('全部');
 
+  // 合并所有模板
+  const allTemplates = mergeTemplates(EXTENDED_TEMPLATES, customTemplates);
+
   const filteredTemplates = selectedCategory === '全部' 
-    ? EXTENDED_TEMPLATES 
-    : EXTENDED_TEMPLATES.filter(t => t.category === selectedCategory);
+    ? allTemplates 
+    : allTemplates.filter(t => t.category === selectedCategory);
 
   // 使用虚拟滚动
   const {
@@ -273,6 +305,13 @@ export default function TemplateLibrary({ onSelect }: TemplateLibraryProps) {
   const handleSelect = (code: string) => {
     onSelect(code);
     setIsOpen(false);
+  };
+
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (onDeleteCustomTemplate && confirm('确定要删除这个自定义模板吗？')) {
+      onDeleteCustomTemplate(id);
+    }
   };
 
   return (
@@ -331,7 +370,7 @@ export default function TemplateLibrary({ onSelect }: TemplateLibraryProps) {
                   <button
                     key={template.id}
                     onClick={() => handleSelect(template.code)}
-                    className="w-full text-left px-3 py-2 hover:bg-[var(--surface-hover)] rounded transition-colors"
+                    className="w-full text-left px-3 py-2 hover:bg-[var(--surface-hover)] rounded transition-colors group"
                     style={{
                       position: 'absolute',
                       top: `${(startIndex + index) * itemHeight}px`,
@@ -340,10 +379,34 @@ export default function TemplateLibrary({ onSelect }: TemplateLibraryProps) {
                       height: `${itemHeight}px`,
                     }}
                   >
-                    <div className="text-sm text-[var(--text)] font-medium">{template.name}</div>
-                    <div className="text-xs text-[var(--text-secondary)] mt-1">{template.category}</div>
-                    <div className="text-xs text-[var(--text-secondary)] mt-1 font-mono truncate">
-                      {template.code.split('\n')[0]}
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm text-[var(--text)] font-medium flex items-center gap-1.5">
+                          {template.category === '自定义' && (
+                            <User className="w-3 h-3 text-purple-400 flex-shrink-0" />
+                          )}
+                          <span className="truncate">{template.name}</span>
+                        </div>
+                        <div className="text-xs text-[var(--text-secondary)] mt-1">
+                          {template.category}
+                          {template.category === '自定义' && customTemplates.find(t => t.id === template.id)?.description && (
+                            <> · {customTemplates.find(t => t.id === template.id)?.description}</>
+                          )}
+                        </div>
+                        <div className="text-xs text-[var(--text-secondary)] mt-1 font-mono truncate">
+                          {template.code.split('\n')[0]}
+                        </div>
+                      </div>
+                      {/* Delete button for custom templates */}
+                      {template.category === '自定义' && onDeleteCustomTemplate && (
+                        <button
+                          onClick={(e) => handleDelete(e, template.id)}
+                          className="p-1 text-[var(--text-secondary)] hover:text-red-400 hover:bg-red-500/10 rounded transition-colors opacity-0 group-hover:opacity-100"
+                          title="删除模板"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   </button>
                 ))}

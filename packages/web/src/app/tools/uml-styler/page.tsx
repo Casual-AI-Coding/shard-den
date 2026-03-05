@@ -7,8 +7,17 @@ import ThemeSelector from './components/ThemeSelector';
 import ExportPanel from './components/ExportPanel';
 import TemplateLibrary from './components/TemplateLibrary';
 import HistoryPanel from './components/HistoryPanel';
+import { SaveTemplateModal } from './components/SaveTemplateModal';
 import { Header } from '@/components/Header';
 import type { ThemeTuning } from './types';
+import { 
+  isTauri, 
+  loadUmlTemplates, 
+  saveUmlTemplate, 
+  deleteUmlTemplate,
+  type UmlTemplate 
+} from '@/lib/tauri';
+import { Save } from 'lucide-react';
 
 export default function UMLStylerPage() {
   const [code, setCode] = useState<string>('flowchart TD\n    A[Start] --> B[End]');
@@ -19,7 +28,13 @@ export default function UMLStylerPage() {
   const [cursorPosition, setCursorPosition] = useState({ line: 1, col: 1 });
   const [tuning, setTuning] = useState<ThemeTuning>({});
   const [showHistory, setShowHistory] = useState(false);
+  
+  // Custom templates state
+  const [customTemplates, setCustomTemplates] = useState<UmlTemplate[]>([]);
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
+  // Initialize Mermaid and check platform
   useEffect(() => {
     import('mermaid').then((mermaid) => {
       mermaid.default.initialize({ 
@@ -29,7 +44,23 @@ export default function UMLStylerPage() {
       });
       setIsLoading(false);
     });
+    
+    // Check if running in Tauri
+    setIsDesktop(isTauri());
   }, []);
+
+  // Load custom templates on mount (Desktop only)
+  useEffect(() => {
+    if (!isDesktop) return;
+    
+    loadUmlTemplates()
+      .then((templates) => {
+        // Filter custom templates (is_custom: true)
+        const custom = templates.filter(t => (t as unknown as { is_custom?: boolean }).is_custom !== false);
+        setCustomTemplates(custom);
+      })
+      .catch(console.error);
+  }, [isDesktop]);
 
   const handleCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
@@ -72,6 +103,38 @@ export default function UMLStylerPage() {
     setTheme(loadedTheme);
   }, []);
 
+  // Save as template handler
+  const handleSaveAsTemplate = useCallback(async (name: string, description: string) => {
+    const newTemplate: UmlTemplate = {
+      id: crypto.randomUUID(),
+      name,
+      description,
+      code,
+      engine,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    
+    try {
+      await saveUmlTemplate(newTemplate);
+      setCustomTemplates(prev => [...prev, newTemplate]);
+    } catch (err) {
+      console.error('Failed to save template:', err);
+      alert('保存模板失败');
+    }
+  }, [code, engine]);
+
+  // Delete custom template handler
+  const handleDeleteCustomTemplate = useCallback(async (id: string) => {
+    try {
+      await deleteUmlTemplate(id);
+      setCustomTemplates(prev => prev.filter(t => t.id !== id));
+    } catch (err) {
+      console.error('Failed to delete template:', err);
+      alert('删除模板失败');
+    }
+  }, []);
+
   return (
     <>
       <Header title="UML Styler" />
@@ -100,7 +163,11 @@ export default function UMLStylerPage() {
               {/* Editor Toolbar */}
               <div className="h-12 px-4 bg-[var(--bg)] border-t border-[var(--border)] flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
-                  <TemplateLibrary onSelect={setCode} />
+                  <TemplateLibrary 
+                    onSelect={setCode} 
+                    customTemplates={customTemplates}
+                    onDeleteCustomTemplate={handleDeleteCustomTemplate}
+                  />
                   <button
                     onClick={() => setShowHistory(true)}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] rounded transition-colors"
@@ -112,6 +179,19 @@ export default function UMLStylerPage() {
                     <span>历史</span>
                   </button>
                 </div>
+                
+                {/* Save as Template button - Desktop only */}
+                {isDesktop && (
+                  <button
+                    onClick={() => setShowSaveTemplateModal(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] rounded transition-colors"
+                    title="保存为模板"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>保存模板</span>
+                  </button>
+                )}
+                
                 <div className="text-xs text-[var(--text-secondary)]">
                   Ln {cursorPosition.line}, Col {cursorPosition.col}
                 </div>
@@ -143,6 +223,15 @@ export default function UMLStylerPage() {
         currentCode={code}
         currentEngine={engine}
         currentTheme={theme}
+      />
+
+      {/* Save Template Modal */}
+      <SaveTemplateModal
+        isOpen={showSaveTemplateModal}
+        onClose={() => setShowSaveTemplateModal(false)}
+        onSave={handleSaveAsTemplate}
+        currentCode={code}
+        currentEngine={engine}
       />
     </>
   );
