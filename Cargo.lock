@@ -3442,6 +3442,7 @@ dependencies = [
 name = "shard-den-uml-styler"
 version = "0.3.2"
 dependencies = [
+ "base64 0.21.7",
  "console_error_panic_hook",
  "flate2",
  "serde",
@@ -3473,6 +3474,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "shard-den-json-extractor",
+ "shard-den-uml-styler",
  "wasm-bindgen",
  "wasm-bindgen-test",
  "web-sys",

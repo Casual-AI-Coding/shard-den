@@ -8,8 +8,8 @@ interface EditorProps {
   code: string;
   onChange: (code: string) => void;
   onCursorChange?: (line: number, col: number) => void;
-  engine: 'mermaid' | 'plantuml';
-  onEngineChange: (engine: 'mermaid' | 'plantuml') => void;
+  engine: 'mermaid' | 'plantuml' | 'd2';
+  onEngineChange: (engine: 'mermaid' | 'plantuml' | 'd2') => void;
 }
 
 // Mermaid syntax highlight config
@@ -155,6 +155,70 @@ const PLANTUML_TOKEN_PROVIDER = {
     ],
   },
 };
+// D2 syntax highlight config (Basic)
+const D2_LANGUAGE_CONFIG = {
+  comments: {
+    lineComment: '#',
+  },
+  brackets: [
+    ['{', '}'],
+    ['[', ']'],
+    ['(', ')'],
+  ],
+  autoClosingPairs: [
+    { open: '{', close: '}' },
+    { open: '[', close: ']' },
+    { open: '(', close: ')' },
+    { open: '"', close: '"' },
+    { open: "'", close: "'" },
+  ],
+  surroundingPairs: [
+    { open: '{', close: '}' },
+    { open: '[', close: ']' },
+    { open: '(', close: ')' },
+    { open: '"', close: '"' },
+    { open: "'", close: "'" },
+  ],
+};
+
+const D2_TOKEN_PROVIDER = {
+  defaultToken: '',
+  tokenPostfix: '.d2',
+
+  keywords: [
+    'direction', 'shape', 'label', 'near', 'top', 'bottom', 'left', 'right',
+    'class', 'style', 'vars', 'classes', 'layers', 'scenarios', 'steps',
+  ],
+
+  operators: [
+    '->', '<-', '<->', '--', ':', ';', '.',
+  ],
+
+  symbols: /[=><!~?:&|+\-*\/\^%]+/,
+
+  tokenizer: {
+    root: [
+      [/#.*$/, 'comment'],
+      [/[{}()\[\]]/, '@brackets'],
+      [/[a-zA-Z_]\w*/, {
+        cases: {
+          '@keywords': 'keyword',
+          '@default': 'identifier',
+        },
+      }],
+      [/["']([^"']*)["']/, 'string'],
+      [/\d+/, 'number'],
+      [/[;,.]/, 'delimiter'],
+      [/[=><!~?:&|+\-*\/\^%]+/, {
+        cases: {
+          '@operators': 'operator',
+          '@default': '',
+        },
+      }],
+    ],
+  },
+};
+
 
 // PlantUML Completion Provider
 const PLANTUML_COMPLETIONS = [
@@ -200,6 +264,13 @@ export default function CodeEditor({
       monaco.languages.setLanguageConfiguration('plantuml', PLANTUML_LANGUAGE_CONFIG as any);
       monaco.languages.setMonarchTokensProvider('plantuml', PLANTUML_TOKEN_PROVIDER as any);
     }
+    // Register D2 language
+    if (!monaco.languages.getLanguages().some((lang: { id: string }) => lang.id === 'd2')) {
+      monaco.languages.register({ id: 'd2' });
+      monaco.languages.setLanguageConfiguration('d2', D2_LANGUAGE_CONFIG as any);
+      monaco.languages.setMonarchTokensProvider('d2', D2_TOKEN_PROVIDER as any);
+    }
+
 
     // Register PlantUML completion provider
     monaco.languages.registerCompletionItemProvider('plantuml', {
@@ -263,11 +334,12 @@ export default function CodeEditor({
         {/* Engine Selector */}
         <select
           value={engine}
-          onChange={(e) => onEngineChange(e.target.value as 'mermaid' | 'plantuml')}
+          onChange={(e) => onEngineChange(e.target.value as 'mermaid' | 'plantuml' | 'd2')}
           className="px-3 py-1.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
         >
-          <option value="mermaid">Mermaid</option>
+<option value="mermaid">Mermaid</option>
           <option value="plantuml">PlantUML</option>
+          <option value="d2">D2</option>
         </select>
 
         {/* Format Button */}
@@ -293,7 +365,7 @@ export default function CodeEditor({
       <div className="flex-1 min-h-0">
         <Editor
           height="100%"
-          language={engine === 'plantuml' ? 'plantuml' : 'mermaid'}
+          language={engine === 'plantuml' ? 'plantuml' : engine === 'd2' ? 'd2' : 'mermaid'}
           value={code}
           onChange={handleChange}
           onMount={handleEditorMount}

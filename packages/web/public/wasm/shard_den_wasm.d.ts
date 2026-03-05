@@ -28,9 +28,24 @@ export class JsonExtractor {
 }
 
 /**
+ * 获取版本号
+ */
+export function get_version(): string;
+
+/**
+ * 初始化 WASM
+ */
+export function init(): void;
+
+/**
  * Health check
  */
 export function ping(): string;
+
+/**
+ * 渲染图表
+ */
+export function render_diagram(engine_name: string, code: string, theme_id: string): any;
 
 /**
  * Initialize the WASM module
@@ -46,21 +61,23 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
-    readonly ping: () => [number, number];
+    readonly ping: (a: number) => void;
+    readonly version: (a: number) => void;
     readonly start: () => void;
-    readonly version: () => [number, number];
+    readonly get_version: (a: number) => void;
+    readonly render_diagram: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+    readonly init: () => void;
     readonly __wbg_jsonextractor_free: (a: number, b: number) => void;
-    readonly jsonextractor_description: (a: number) => [number, number];
-    readonly jsonextractor_detect_paths: (a: number, b: number, c: number) => [number, number, number, number];
-    readonly jsonextractor_extract: (a: number, b: number, c: number, d: number, e: number) => [number, number, number, number];
-    readonly jsonextractor_extract_with_format: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number, number];
-    readonly jsonextractor_name: (a: number) => [number, number];
+    readonly jsonextractor_description: (a: number, b: number) => void;
+    readonly jsonextractor_detect_paths: (a: number, b: number, c: number, d: number) => void;
+    readonly jsonextractor_extract: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly jsonextractor_extract_with_format: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+    readonly jsonextractor_name: (a: number, b: number) => void;
     readonly jsonextractor_new: () => number;
-    readonly __wbindgen_free: (a: number, b: number, c: number) => void;
-    readonly __wbindgen_malloc: (a: number, b: number) => number;
-    readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
-    readonly __wbindgen_externrefs: WebAssembly.Table;
-    readonly __externref_table_dealloc: (a: number) => void;
+    readonly __wbindgen_export: (a: number, b: number, c: number) => void;
+    readonly __wbindgen_export2: (a: number, b: number) => number;
+    readonly __wbindgen_export3: (a: number, b: number, c: number, d: number) => number;
+    readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
     readonly __wbindgen_start: () => void;
 }
 

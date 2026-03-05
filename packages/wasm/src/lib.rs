@@ -11,7 +11,11 @@ use wasm_bindgen::prelude::*;
 pub use utils::*;
 
 // Re-export tools
+// Re-export tools
 pub use shard_den_json_extractor::JsonExtractor;
+
+// Re-export UML Styler WASM functions
+pub use shard_den_uml_styler::render_diagram;
 
 /// Initialize the WASM module
 #[wasm_bindgen(start)]

@@ -10,6 +10,7 @@ import type { ThemeTuning } from '../types';
 import { Save } from 'lucide-react';
 import type { UmlTheme } from '@/lib/tauri';
 import { useNetwork } from '../hooks/useNetwork';
+import { UmlStyler } from '@/lib/core';
 
 // Worker message types
 interface WorkerRequest {
@@ -30,7 +31,7 @@ interface WorkerResponse {
 interface PreviewProps {
   code: string;
   theme: string;
-  engine: 'mermaid' | 'plantuml';
+  engine: 'mermaid' | 'plantuml' | 'd2';
   tuning?: ThemeTuning;
   onTuningChange?: (tuning: ThemeTuning) => void;
   onError?: (error: string | null) => void;
@@ -175,18 +176,30 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
     }
 
     try {
-      if (engine === 'mermaid') {
-        // Use Web Worker for complex diagrams
+      // Get render hint from WASM backend
+      const hint = await UmlStyler.render(engine, code, theme);
+
+      if (hint === 'FrontendJS') {
+        // Use existing Mermaid logic (Worker or Main Thread)
         if (complexityResult.isComplex) {
           await renderWithWorker(code);
         } else {
-          // Use main thread for simple diagrams
           await renderOnMainThread(code);
         }
+      } else if (typeof hint === 'object' && 'ServerURL' in hint) {
+        // Server-side rendering (D2, PlantUML)
+        const url = (hint as any).ServerURL;
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Server rendering failed: ${response.statusText}`);
+        }
+        const svgText = await response.text();
+        if (!svgText.includes('<svg')) {
+           throw new Error('Invalid SVG response from server');
+        }
+        setSvg(svgText);
       } else {
-        const errMsg = 'PlantUML rendering will be implemented in Phase 2';
-        setError(errMsg);
-        onError?.(errMsg);
+        throw new Error(`Unsupported render mode: ${JSON.stringify(hint)}`);
       }
     } catch (err: any) {
       console.error('Mermaid render error:', err);

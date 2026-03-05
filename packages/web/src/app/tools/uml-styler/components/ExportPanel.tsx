@@ -72,7 +72,7 @@ import { PDFDocument } from 'pdf-lib';
 interface ExportPanelProps {
   code: string;
   theme: string;
-  engine: 'mermaid' | 'plantuml';
+  engine: 'mermaid' | 'plantuml' | 'd2';
   scale?: 1 | 2 | 3 | 4;
 }
 

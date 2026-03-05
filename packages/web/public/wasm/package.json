@@ -2,14 +2,14 @@
   "name": "shard-den-wasm",
   "type": "module",
   "collaborators": [
-    "Your Name <your.email@example.com>"
+    "oGsLP <1145234011@qq.com>"
   ],
   "description": "WASM bindings for ShardDen - bundles all tools",
-  "version": "0.1.0",
+  "version": "0.3.2",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/shard-den"
+    "url": "https://github.com/oGsLP/shard-den"
   },
   "files": [
     "shard_den_wasm_bg.wasm",

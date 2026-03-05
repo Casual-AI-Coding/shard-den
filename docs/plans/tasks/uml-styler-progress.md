@@ -2,7 +2,9 @@
 
 > **创建日期:** 2026-02-28
 > **关联设计:** [2026-02-28-uml-styler-implementation.md](../2026-02-28-uml-styler-implementation.md)
-> **状态:** ✅ Phase 2 完成
+> **状态:** 🚀 Phase 4 进行中
+> **最后更新:** 2026-03-06
+> **当前任务:** Phase 4.1 D2 Engine Support
 > **最后更新:** 2026-02-28
 > **当前任务:** Phase 2 完成，待发布
 
@@ -14,8 +16,8 @@
 |-------|------|------|------|
 | Phase 1 | 核心框架 + Mermaid 引擎 | ✅ 完成 | 14/14 |
 | Phase 2 | PlantUML 引擎 + 扩展主题 + URL 分享 | ✅ 完成 | 11/11 |
-| Phase 3 | Desktop 存储增强 | 🚧 进行中 | 1/6 |
-| Phase 4 | D2/Graphviz 等新引擎 | 🔒 待开始 | 0/3 |
+| Phase 3 | Desktop 存储增强 | ✅ 完成 | 6/6 |
+| Phase 4 | D2/Graphviz 等新引擎 | 🚀 进行中 | 0/3 |
 
 ---
 
@@ -76,11 +78,10 @@
 |---|------|------|------|------|--------|
 | 3.1 | Desktop 存储 | 集成 Tauri 存储 API | ✅ 完成 | feat(uml-styler): Phase 3.1 集成 Tauri 存储 API | ✅ 通过 |
 | 3.2 | 历史记录 | 保存/加载历史项目 | ✅ 完成 | feat(uml-styler): Phase 3.2 历史记录保存与加载 | ✅ 通过 |
-| 3.3 | 收藏模板 | 用户自定义模板保存 | 🚧 进行中 | - | - |
-| 3.3 | 收藏模板 | 用户自定义模板保存 | 🔒 待开始 | - | - |
-| 3.4 | 自定义主题保存 | 用户主题持久化 | 🔒 待开始 | - | - |
-| 3.5 | 配置持久化 | 主题、分辨率等配置保存 | 🔒 待开始 | - | - |
-| 3.6 | 离线支持 | Mermaid 完全离线渲染 | 🔒 待开始 | - | - |
+| 3.3 | 收藏模板 | 用户自定义模板保存 | ✅ 完成 | feat(uml-styler): Phase 3.3 收藏模板保存与加载 | ✅ 通过 |
+| 3.4 | 自定义主题保存 | 用户主题持久化 | ✅ 完成 | feat(uml-styler): Phase 3.4 自定义主题保存 | ✅ 通过 |
+| 3.5 | 配置持久化 | 主题、分辨率等配置保存 | ✅ 完成 | feat(uml-styler): Phase 3.5 配置持久化 | ✅ 通过 |
+| 3.6 | 离线支持 | Mermaid 完全离线渲染 | ✅ 完成 | feat(uml-styler): Phase 3.6 离线支持 | ✅ 通过 |
 
 ---
 
@@ -88,9 +89,11 @@
 
 | # | 任务 | 描述 | 状态 | 提交 | Review |
 |---|------|------|------|------|--------|
-| 4.1 | D2 Engine | D2 引擎支持 | 🔒 待开始 | - | - |
-| 4.2 | Graphviz Engine | Graphviz/DOT 支持 | 🔒 待开始 | - | - |
-| 4.3 | WaveDrom Engine | WaveDrom 时序图支持 | 🔒 待开始 | - | - |
+| 4.1 | D2 Engine Core | 实现 D2 Engine (ServerURL) | 🚀 进行中 | - | - |
+| 4.2 | D2 前端集成 | 前端 Fetch 逻辑与错误处理 | 🔒 待开始 | - | - |
+| 4.3 | D2 语法高亮 | Monaco Editor D2 支持 | 🔒 待开始 | - | - |
+| 4.4 | Graphviz Engine | Graphviz/DOT 支持 | 🔒 待开始 | - | - |
+| 4.5 | WaveDrom Engine | WaveDrom 时序图支持 | 🔒 待开始 | - | - |
 
 ---
 

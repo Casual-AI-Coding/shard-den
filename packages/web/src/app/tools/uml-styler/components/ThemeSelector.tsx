@@ -9,7 +9,7 @@ import { ThemeTuning } from '../types';
 interface ThemeSelectorProps {
   theme: string;
   onThemeChange: (theme: string) => void;
-  engine: 'mermaid' | 'plantuml';
+  engine: 'mermaid' | 'plantuml' | 'd2';
   customThemes?: UmlTheme[];
   onDeleteCustomTheme?: (id: string) => void;
 }
@@ -20,6 +20,13 @@ const MERMAID_THEMES = [
   { id: 'dark', name: 'Dark', preview: '#1F2937' },
   { id: 'forest', name: 'Forest', preview: '#059669' },
   { id: 'neutral', name: 'Neutral', preview: '#6B7280' },
+];
+
+// D2 Themes
+const D2_THEMES = [
+  { id: '100', name: 'Neutral', preview: '#F3F4F6' },
+  { id: '200', name: 'Dark', preview: '#1F2937' },
+  { id: '300', name: 'Cool', preview: '#3B82F6' },
 ];
 
 // PlantUML 官方主题
@@ -43,7 +50,9 @@ const EMPTY_THEMES: UmlTheme[] = [];
 
 export default function ThemeSelector({ theme, onThemeChange, engine, customThemes = EMPTY_THEMES, onDeleteCustomTheme }: ThemeSelectorProps) {
   // 合并共享主题和引擎特定主题
-  const engineThemes = engine === 'plantuml' ? PLANTUML_THEMES : MERMAID_THEMES;
+  const engineThemes = engine === 'plantuml' ? PLANTUML_THEMES 
+    : engine === 'd2' ? D2_THEMES
+    : MERMAID_THEMES;
   const themes = [...SHARED_THEMES, ...engineThemes];
 
   // 如果切换引擎后当前主题不在列表中，重置为第一个主题

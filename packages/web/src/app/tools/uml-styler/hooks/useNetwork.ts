@@ -23,37 +23,37 @@ export function useNetwork(): UseNetworkReturn {
   const [isNetworkSupported, setIsNetworkSupported] = useState(true);
   const timeoutRef = useRef<number | null>(null);
 
+  const handleOnline = useCallback(() => {
+    setIsOnline(true);
+    // Mark that we were offline, to show recovery message
+    setWasOffline(true);
+    
+    // Clear any existing timeout before setting a new one
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    // Clear the recovery message after 5 seconds
+    timeoutRef.current = window.setTimeout(() => {
+      setWasOffline(false);
+    }, 5000);
+  }, []);
+
+  const handleOffline = useCallback(() => {
+    setIsOnline(false);
+    // Clear any pending recovery timeout when going offline
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     // Check if navigator.onLine is available (not available in some SSR scenarios)
     if (typeof navigator !== 'undefined') {
       setIsOnline(navigator.onLine);
       setIsNetworkSupported(typeof window !== 'undefined' && 'ononline' in window);
     }
-
-    const handleOnline = useCallback(() => {
-      setIsOnline(true);
-      // Mark that we were offline, to show recovery message
-      setWasOffline(true);
-      
-      // Clear any existing timeout before setting a new one
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      
-      // Clear the recovery message after 5 seconds
-      timeoutRef.current = window.setTimeout(() => {
-        setWasOffline(false);
-      }, 5000);
-    }, []);
-
-    const handleOffline = useCallback(() => {
-      setIsOnline(false);
-      // Clear any pending recovery timeout when going offline
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-    }, []);
 
     // Add event listeners
     if (typeof window !== 'undefined') {
@@ -71,7 +71,7 @@ export function useNetwork(): UseNetworkReturn {
         window.removeEventListener('offline', handleOffline);
       }
     };
-  }, []);
+  }, [handleOnline, handleOffline]);
 
   return {
     isOnline,

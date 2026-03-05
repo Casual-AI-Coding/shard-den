@@ -19,6 +19,7 @@ serde-wasm-bindgen = "0.6"
 
 # Internal dependencies - will add as tools are created
 shard-den-json-extractor = { path = "../tools/json-extractor", default-features = false, features = ["wasm"] }
+shard-den-uml-styler = { path = "../tools/uml-styler", default-features = false, features = ["wasm"] }
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires

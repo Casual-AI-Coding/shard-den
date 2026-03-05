@@ -23,6 +23,8 @@ pub enum DiagramType {
     Mindmap,
     Gantt,
     Activity,
+    /// D2 Diagram
+    D2,
 }
 
 /// 渲染提示 - 告诉前端如何渲染

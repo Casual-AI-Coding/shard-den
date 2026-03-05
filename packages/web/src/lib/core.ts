@@ -1,7 +1,7 @@
 // WASM bindings for ShardDen
 // This file loads the WASM module and exports tool classes
 
-import init, { JsonExtractor as WasmJsonExtractor, ping, version } from '@/../public/wasm/shard_den_wasm.js';
+import init, { JsonExtractor as WasmJsonExtractor, ping, version, render_diagram } from '@/../public/wasm/shard_den_wasm.js';
 
 let wasmReady = false;
 
@@ -18,9 +18,10 @@ export function getWasm() {
     throw new Error('WASM not initialized. Call initWasm() first.');
   }
   return {
-    JsonExtractor: WasmJsonExtractor,
-    ping,
+JsonExtractor: WasmJsonExtractor,
+ping,
     version,
+    render_diagram,
   };
 }
 
@@ -54,5 +55,13 @@ export const JsonExtractor = {
     } finally {
       // Clean up
     }
+  },
+};
+
+export const UmlStyler = {
+  async render(engine: string, code: string, theme: string): Promise<any> {
+    await initWasm();
+    const wasm = getWasm();
+    return wasm.render_diagram(engine, code, theme);
   },
 };
