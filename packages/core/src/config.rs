@@ -72,6 +72,7 @@ pub enum UmlEngine {
     #[default]
     Mermaid,
     PlantUML,
+    D2,
 }
 
 /// Export resolution presets

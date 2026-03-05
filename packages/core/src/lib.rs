@@ -11,6 +11,6 @@ pub mod error;
 pub mod history;
 pub mod logger;
 
-pub use config::{Config, UmlStylerConfig};
+pub use config::{Config, UmlEngine, UmlStylerConfig};
 pub use error::{Result, ShardDenError};
 pub use history::{HistoryEntry, HistoryStore};
