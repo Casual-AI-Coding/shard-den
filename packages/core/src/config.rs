@@ -322,7 +322,7 @@ mod tests {
         let decoded: ExportResolution = serde_json::from_str("\"X2\"").unwrap();
         assert_eq!(decoded, ExportResolution::X2);
 
-        let decoded_custom: ExportResolution = serde_json::from_str("150").unwrap();
+        let decoded_custom: ExportResolution = serde_json::from_str("{\"Custom\":150}").unwrap();
         assert_eq!(decoded_custom, ExportResolution::Custom(150));
     }
 

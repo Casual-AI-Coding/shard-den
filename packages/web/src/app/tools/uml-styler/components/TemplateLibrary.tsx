@@ -8,6 +8,7 @@ interface TemplateLibraryProps {
   onSelect: (code: string) => void;
   customTemplates?: UmlTemplate[];
   onDeleteCustomTemplate?: (id: string) => void;
+  onBeforeDelete?: (id: string) => void;
 }
 
 interface Template {
@@ -280,7 +281,8 @@ const CATEGORIES = ['全部', '流程图', '时序图', '类图', '状态图', '
 export default function TemplateLibrary({ 
   onSelect, 
   customTemplates = [],
-  onDeleteCustomTemplate 
+  onDeleteCustomTemplate,
+  onBeforeDelete
 }: TemplateLibraryProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('全部');
@@ -309,7 +311,9 @@ export default function TemplateLibrary({
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (onDeleteCustomTemplate && confirm('确定要删除这个自定义模板吗？')) {
+    if (onBeforeDelete) {
+      onBeforeDelete(id);
+    } else if (onDeleteCustomTemplate && window.confirm('确定要删除这个自定义模板吗？')) {
       onDeleteCustomTemplate(id);
     }
   };

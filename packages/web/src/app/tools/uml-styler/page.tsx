@@ -8,6 +8,7 @@ import ExportPanel from './components/ExportPanel';
 import TemplateLibrary from './components/TemplateLibrary';
 import HistoryPanel from './components/HistoryPanel';
 import { SaveTemplateModal } from './components/SaveTemplateModal';
+import { useToast, ToastContainer } from './components/Toast';
 import { Header } from '@/components/Header';
 import type { ThemeTuning } from './types';
 import { 
@@ -34,6 +35,8 @@ export default function UMLStylerPage() {
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
 
+  const { toasts, dismissToast, success, error: toastError } = useToast();
+
   // Initialize Mermaid and check platform
   useEffect(() => {
     import('mermaid').then((mermaid) => {
@@ -55,12 +58,14 @@ export default function UMLStylerPage() {
     
     loadUmlTemplates()
       .then((templates) => {
-        // Filter custom templates (is_custom: true)
-        const custom = templates.filter(t => (t as unknown as { is_custom?: boolean }).is_custom !== false);
-        setCustomTemplates(custom);
+        // Just set all templates without filtering is_custom since the Rust backend doesn't have it
+        setCustomTemplates(templates);
       })
-      .catch(console.error);
-  }, [isDesktop]);
+      .catch((err) => {
+        console.error('Failed to load templates:', err);
+        toastError('加载模板失败');
+      });
+  }, [isDesktop, toastError]);
 
   const handleCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
@@ -90,11 +95,11 @@ export default function UMLStylerPage() {
     const encoded = btoa(encodeURIComponent(code));
     const url = `${window.location.origin}${window.location.pathname}?code=${encoded}`;
     navigator.clipboard.writeText(url).then(() => {
-      alert('分享链接已复制到剪贴板！');
+      success('分享链接已复制到剪贴板！');
     }).catch(() => {
-      alert('复制失败');
+      toastError('复制失败');
     });
-  }, [code]);
+  }, [code, success, toastError]);
 
   const handleLoadHistory = useCallback((loadedCode: string, loadedEngine: string, loadedTheme: string) => {
     setError(null);
@@ -118,22 +123,24 @@ export default function UMLStylerPage() {
     try {
       await saveUmlTemplate(newTemplate);
       setCustomTemplates(prev => [...prev, newTemplate]);
+      success('模板保存成功');
     } catch (err) {
       console.error('Failed to save template:', err);
-      alert('保存模板失败');
+      toastError('保存模板失败');
     }
-  }, [code, engine]);
+  }, [code, engine, success, toastError]);
 
   // Delete custom template handler
   const handleDeleteCustomTemplate = useCallback(async (id: string) => {
     try {
       await deleteUmlTemplate(id);
       setCustomTemplates(prev => prev.filter(t => t.id !== id));
+      success('模板删除成功');
     } catch (err) {
       console.error('Failed to delete template:', err);
-      alert('删除模板失败');
+      toastError('删除模板失败');
     }
-  }, []);
+  }, [success, toastError]);
 
   return (
     <>
@@ -233,6 +240,9 @@ export default function UMLStylerPage() {
         currentCode={code}
         currentEngine={engine}
       />
+      
+      {/* Toasts */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </>
   );
 }

@@ -3372,7 +3372,7 @@ dependencies = [
 
 [[package]]
 name = "shard-den"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -3387,7 +3387,7 @@ dependencies = [
 
 [[package]]
 name = "shard-den-core"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -3402,9 +3402,10 @@ dependencies = [
 
 [[package]]
 name = "shard-den-desktop"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "anyhow",
+ "chrono",
  "directories",
  "serde",
  "serde_json",
@@ -3421,7 +3422,7 @@ dependencies = [
 
 [[package]]
 name = "shard-den-json-extractor"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "insta",
  "jsonpath-rust",
@@ -3439,7 +3440,7 @@ dependencies = [
 
 [[package]]
 name = "shard-den-uml-styler"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "console_error_panic_hook",
  "flate2",
@@ -3454,7 +3455,7 @@ dependencies = [
 
 [[package]]
 name = "shard-den-uml-styler-cli"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -3464,7 +3465,7 @@ dependencies = [
 
 [[package]]
 name = "shard-den-wasm"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "console_error_panic_hook",
  "serde",
