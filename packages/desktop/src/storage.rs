@@ -113,10 +113,7 @@ impl Storage {
         self.data_dir.join("uml_themes.json")
     }
 
-    /// Get path to UML config file
-    fn uml_config_path(&self) -> PathBuf {
-        self.data_dir.join("uml_config.json")
-    }
+
 
     /// Save configuration
     pub fn save_config(&self, config: &Config) -> shard_den_core::Result<()> {
@@ -197,11 +194,12 @@ impl Storage {
     // ==================== UML Templates ====================
 
     /// Save a UML template
-    pub fn save_uml_template(&self, template: UmlTemplate) -> shard_den_core::Result<()> {
+    pub fn save_uml_template(&self, mut template: UmlTemplate) -> shard_den_core::Result<()> {
         let mut templates = self.load_uml_templates()?;
 
         // Update existing or add new
         if let Some(idx) = templates.iter().position(|t| t.id == template.id) {
+            template.updated_at = chrono::Utc::now();
             templates[idx] = template;
         } else {
             templates.push(template);
@@ -238,11 +236,13 @@ impl Storage {
     // ==================== UML Themes ====================
 
     /// Save a custom UML theme
-    pub fn save_uml_theme(&self, theme: UmlTheme) -> shard_den_core::Result<()> {
+    pub fn save_uml_theme(&self, mut theme: UmlTheme) -> shard_den_core::Result<()> {
         let mut themes = self.load_uml_themes()?;
 
         // Update existing or add new
         if let Some(idx) = themes.iter().position(|t| t.id == theme.id) {
+            // Update timestamp when updating existing theme
+            theme.updated_at = chrono::Utc::now();
             themes[idx] = theme;
         } else {
             themes.push(theme);
@@ -280,21 +280,16 @@ impl Storage {
 
     /// Save UML Styler configuration
     pub fn save_uml_config(&self, config: &UmlStylerConfig) -> shard_den_core::Result<()> {
-        let path = self.uml_config_path();
-        let json = serde_json::to_string_pretty(config)?;
-        std::fs::write(path, json)?;
+        let mut full_config = self.load_config()?;
+        full_config.tools.uml_styler = config.clone();
+        self.save_config(&full_config)?;
         Ok(())
     }
 
     /// Load UML Styler configuration
     pub fn load_uml_config(&self) -> shard_den_core::Result<UmlStylerConfig> {
-        let path = self.uml_config_path();
-        if !path.exists() {
-            return Ok(UmlStylerConfig::default());
-        }
-        let json = std::fs::read_to_string(path)?;
-        let config: UmlStylerConfig = serde_json::from_str(&json)?;
-        Ok(config)
+        let full_config = self.load_config()?;
+        Ok(full_config.tools.uml_styler)
     }
 
     /// Create storage with custom data directory (for testing only)
