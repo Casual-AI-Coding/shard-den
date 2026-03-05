@@ -155,3 +155,175 @@ export async function saveExtractionHistory(
     metadata: { paths, format },
   });
 }
+
+// ==================== UML Styler Types ====================
+
+export interface UmlTemplate {
+  id: string;
+  name: string;
+  description: string;
+  code: string;
+  engine: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UmlTheme {
+  id: string;
+  name: string;
+  theme_type: string;
+  config: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UmlStylerConfig {
+  default_theme: string;
+  default_engine: 'Mermaid' | 'PlantUML';
+  export_resolution: 'Default' | 'X2' | 'X3' | 'X4' | { Custom: number };
+  auto_save: boolean;
+  auto_save_interval_secs: number;
+}
+
+// ==================== UML Styler Storage Functions ====================
+
+/**
+ * Save a UML template (Desktop only)
+ */
+export async function saveUmlTemplate(template: UmlTemplate): Promise<void> {
+  const invoke = await getInvoke();
+  if (!invoke) {
+    console.warn('saveUmlTemplate: Not in Tauri environment, skipping');
+    return;
+  }
+  return invoke('save_uml_template', { template });
+}
+
+/**
+ * Load all UML templates (Desktop only)
+ */
+export async function loadUmlTemplates(): Promise<UmlTemplate[]> {
+  const invoke = await getInvoke();
+  if (!invoke) {
+    console.warn('loadUmlTemplates: Not in Tauri environment, skipping');
+    return [];
+  }
+  return invoke<UmlTemplate[]>('load_uml_templates');
+}
+
+/**
+ * Delete a UML template by ID (Desktop only)
+ */
+export async function deleteUmlTemplate(id: string): Promise<void> {
+  const invoke = await getInvoke();
+  if (!invoke) {
+    console.warn('deleteUmlTemplate: Not in Tauri environment, skipping');
+    return;
+  }
+  return invoke('delete_uml_template', { id });
+}
+
+/**
+ * Save a custom UML theme (Desktop only)
+ */
+export async function saveUmlTheme(theme: UmlTheme): Promise<void> {
+  const invoke = await getInvoke();
+  if (!invoke) {
+    console.warn('saveUmlTheme: Not in Tauri environment, skipping');
+    return;
+  }
+  return invoke('save_uml_theme', { theme });
+}
+
+/**
+ * Load all custom UML themes (Desktop only)
+ */
+export async function loadUmlThemes(): Promise<UmlTheme[]> {
+  const invoke = await getInvoke();
+  if (!invoke) {
+    console.warn('loadUmlThemes: Not in Tauri environment, skipping');
+    return [];
+  }
+  return invoke<UmlTheme[]>('load_uml_themes');
+}
+
+/**
+ * Delete a custom UML theme by ID (Desktop only)
+ */
+export async function deleteUmlTheme(id: string): Promise<void> {
+  const invoke = await getInvoke();
+  if (!invoke) {
+    console.warn('deleteUmlTheme: Not in Tauri environment, skipping');
+    return;
+  }
+  return invoke('delete_uml_theme', { id });
+}
+
+/**
+ * Save UML Styler configuration (Desktop only)
+ */
+export async function saveUmlConfig(config: UmlStylerConfig): Promise<void> {
+  const invoke = await getInvoke();
+  if (!invoke) {
+    console.warn('saveUmlConfig: Not in Tauri environment, skipping');
+    return;
+  }
+  return invoke('save_uml_config', { config });
+}
+
+/**
+ * Load UML Styler configuration (Desktop only)
+ */
+export async function loadUmlConfig(): Promise<UmlStylerConfig> {
+  const invoke = await getInvoke();
+  if (!invoke) {
+    console.warn('loadUmlConfig: Not in Tauri environment, skipping');
+    return getDefaultUmlConfig();
+  }
+  return invoke<UmlStylerConfig>('load_uml_config');
+}
+
+/**
+ * Get default UML Styler configuration
+ */
+export function getDefaultUmlConfig(): UmlStylerConfig {
+  return {
+    default_theme: 'shared/default',
+    default_engine: 'Mermaid',
+    export_resolution: 'Default',
+    auto_save: true,
+    auto_save_interval_secs: 30,
+  };
+}
+
+/**
+ * Helper to create a new UML template
+ */
+export function createUmlTemplateInput(
+  name: string,
+  description: string,
+  code: string,
+  engine: string
+): Omit<UmlTemplate, 'id' | 'created_at' | 'updated_at'> {
+  return {
+    name,
+    description,
+    code,
+    engine,
+  };
+}
+
+/**
+ * Helper to create a new custom UML theme
+ */
+export function createUmlThemeInput(
+  name: string,
+  themeType: string,
+  config: Record<string, unknown>
+): Omit<UmlTheme, 'id' | 'created_at' | 'updated_at'> {
+  return {
+    name,
+    theme_type: themeType,
+    config,
+  };
+}

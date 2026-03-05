@@ -1,12 +1,13 @@
 //! Tauri commands for desktop functionality
 //!
 //! These commands are exposed to the frontend via IPC.
+//
 
-use shard_den_core::{Config, HistoryEntry};
+use shard_den_core::{Config, HistoryEntry, UmlStylerConfig};
 use shard_den_json_extractor::JsonExtractorCore;
 use tauri::State;
 
-use crate::storage::Storage;
+use crate::storage::{Storage, UmlTemplate, UmlTheme};
 
 /// Application state
 pub struct AppState {
@@ -89,6 +90,74 @@ pub fn extract_json_with_format(
     extractor
         .extract_with_format(&json, &paths, output_format)
         .map_err(|e| e.to_string())
+}
+
+// ==================== UML Styler Commands ====================
+
+/// Save UML template
+#[tauri::command]
+pub fn save_uml_template(template: UmlTemplate, state: State<'_, AppState>) -> Result<(), String> {
+    state
+        .storage
+        .save_uml_template(template)
+        .map_err(|e| e.to_string())
+}
+
+/// Load all UML templates
+#[tauri::command]
+pub fn load_uml_templates(state: State<'_, AppState>) -> Result<Vec<UmlTemplate>, String> {
+    state
+        .storage
+        .load_uml_templates()
+        .map_err(|e| e.to_string())
+}
+
+/// Delete UML template by ID
+#[tauri::command]
+pub fn delete_uml_template(id: String, state: State<'_, AppState>) -> Result<(), String> {
+    state
+        .storage
+        .delete_uml_template(&id)
+        .map_err(|e| e.to_string())
+}
+
+/// Save custom UML theme
+#[tauri::command]
+pub fn save_uml_theme(theme: UmlTheme, state: State<'_, AppState>) -> Result<(), String> {
+    state
+        .storage
+        .save_uml_theme(theme)
+        .map_err(|e| e.to_string())
+}
+
+/// Load all custom UML themes
+#[tauri::command]
+pub fn load_uml_themes(state: State<'_, AppState>) -> Result<Vec<UmlTheme>, String> {
+    state.storage.load_uml_themes().map_err(|e| e.to_string())
+}
+
+/// Delete custom UML theme by ID
+#[tauri::command]
+pub fn delete_uml_theme(id: String, state: State<'_, AppState>) -> Result<(), String> {
+    state
+        .storage
+        .delete_uml_theme(&id)
+        .map_err(|e| e.to_string())
+}
+
+/// Save UML Styler configuration
+#[tauri::command]
+pub fn save_uml_config(config: UmlStylerConfig, state: State<'_, AppState>) -> Result<(), String> {
+    state
+        .storage
+        .save_uml_config(&config)
+        .map_err(|e| e.to_string())
+}
+
+/// Load UML Styler configuration
+#[tauri::command]
+pub fn load_uml_config(state: State<'_, AppState>) -> Result<UmlStylerConfig, String> {
+    state.storage.load_uml_config().map_err(|e| e.to_string())
 }
 
 #[cfg(test)]
@@ -203,5 +272,75 @@ mod tests {
         let paths = "$.name".to_string();
         let result = extract_json(json, paths);
         assert!(result.is_err());
+    }
+
+    // UML Styler command tests
+    #[test]
+    fn test_save_and_load_uml_template() {
+        let (storage, _temp_dir) = create_storage();
+        let template = UmlTemplate::new(
+            "Test".to_string(),
+            "Desc".to_string(),
+            "code".to_string(),
+            "mermaid".to_string(),
+        );
+        storage.save_uml_template(template).unwrap();
+        let templates = storage.load_uml_templates().unwrap();
+        assert_eq!(templates.len(), 1);
+    }
+
+    #[test]
+    fn test_delete_uml_template() {
+        let (storage, _temp_dir) = create_storage();
+        let template = UmlTemplate::new(
+            "Test".to_string(),
+            "Desc".to_string(),
+            "code".to_string(),
+            "mermaid".to_string(),
+        );
+        storage.save_uml_template(template).unwrap();
+        let templates = storage.load_uml_templates().unwrap();
+        let id = templates[0].id.clone();
+        storage.delete_uml_template(&id).unwrap();
+        let templates = storage.load_uml_templates().unwrap();
+        assert!(templates.is_empty());
+    }
+
+    #[test]
+    fn test_save_and_load_uml_theme() {
+        let (storage, _temp_dir) = create_storage();
+        let theme = UmlTheme::new(
+            "Dark".to_string(),
+            "shared".to_string(),
+            serde_json::json!({"primary": "#000"}),
+        );
+        storage.save_uml_theme(theme).unwrap();
+        let themes = storage.load_uml_themes().unwrap();
+        assert_eq!(themes.len(), 1);
+    }
+
+    #[test]
+    fn test_delete_uml_theme() {
+        let (storage, _temp_dir) = create_storage();
+        let theme = UmlTheme::new(
+            "Test".to_string(),
+            "shared".to_string(),
+            serde_json::json!({}),
+        );
+        storage.save_uml_theme(theme).unwrap();
+        let themes = storage.load_uml_themes().unwrap();
+        let id = themes[0].id.clone();
+        storage.delete_uml_theme(&id).unwrap();
+        let themes = storage.load_uml_themes().unwrap();
+        assert!(themes.is_empty());
+    }
+
+    #[test]
+    fn test_save_and_load_uml_config() {
+        let (storage, _temp_dir) = create_storage();
+        let config = UmlStylerConfig::default();
+        storage.save_uml_config(&config).unwrap();
+        let loaded = storage.load_uml_config().unwrap();
+        assert_eq!(loaded.default_theme, "shared/default");
     }
 }

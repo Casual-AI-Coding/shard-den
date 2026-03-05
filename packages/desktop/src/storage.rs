@@ -4,10 +4,74 @@
 //! - macOS: ~/Library/Application Support/com.shardden.app/
 //! - Windows: %APPDATA%/com.shardden.app/
 //! - Linux: ~/.local/share/com.shardden.app/
+//!
 
 use directories::ProjectDirs;
-use shard_den_core::{Config, HistoryEntry};
+use serde::{Deserialize, Serialize};
+use shard_den_core::{Config, HistoryEntry, UmlStylerConfig};
 use std::path::PathBuf;
+
+/// A saved UML template
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UmlTemplate {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub code: String,
+    pub engine: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl UmlTemplate {
+    pub fn new(name: String, description: String, code: String, engine: String) -> Self {
+        let now = chrono::Utc::now();
+        Self {
+            id: format!("tpl-{}", uuid_simple()),
+            name,
+            description,
+            code,
+            engine,
+            created_at: now,
+            updated_at: now,
+        }
+    }
+}
+
+/// A saved custom UML theme
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UmlTheme {
+    pub id: String,
+    pub name: String,
+    pub theme_type: String,
+    pub config: serde_json::Value,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl UmlTheme {
+    pub fn new(name: String, theme_type: String, config: serde_json::Value) -> Self {
+        let now = chrono::Utc::now();
+        Self {
+            id: format!("thm-{}", uuid_simple()),
+            name,
+            theme_type,
+            config,
+            created_at: now,
+            updated_at: now,
+        }
+    }
+}
+
+/// Generate a simple UUID-like ID
+fn uuid_simple() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    format!("{:x}", timestamp)
+}
 
 /// File-based storage for desktop
 pub struct Storage {
@@ -37,6 +101,21 @@ impl Storage {
     /// Get path to history file
     fn history_path(&self) -> PathBuf {
         self.data_dir.join("history.json")
+    }
+
+    /// Get path to UML templates file
+    fn templates_path(&self) -> PathBuf {
+        self.data_dir.join("uml_templates.json")
+    }
+
+    /// Get path to UML themes file
+    fn themes_path(&self) -> PathBuf {
+        self.data_dir.join("uml_themes.json")
+    }
+
+    /// Get path to UML config file
+    fn uml_config_path(&self) -> PathBuf {
+        self.data_dir.join("uml_config.json")
     }
 
     /// Save configuration
@@ -78,8 +157,6 @@ impl Storage {
     }
 
     /// List history entries
-
-    /// List history entries
     pub fn list_history(
         &self, tool: Option<&str>, limit: usize,
     ) -> shard_den_core::Result<Vec<HistoryEntry>> {
@@ -115,6 +192,109 @@ impl Storage {
         let json = serde_json::to_string_pretty(entries)?;
         std::fs::write(path, json)?;
         Ok(())
+    }
+
+    // ==================== UML Templates ====================
+
+    /// Save a UML template
+    pub fn save_uml_template(&self, template: UmlTemplate) -> shard_den_core::Result<()> {
+        let mut templates = self.load_uml_templates()?;
+
+        // Update existing or add new
+        if let Some(idx) = templates.iter().position(|t| t.id == template.id) {
+            templates[idx] = template;
+        } else {
+            templates.push(template);
+        }
+
+        let path = self.templates_path();
+        let json = serde_json::to_string_pretty(&templates)?;
+        std::fs::write(path, json)?;
+        Ok(())
+    }
+
+    /// Load all UML templates
+    pub fn load_uml_templates(&self) -> shard_den_core::Result<Vec<UmlTemplate>> {
+        let path = self.templates_path();
+        if !path.exists() {
+            return Ok(vec![]);
+        }
+        let json = std::fs::read_to_string(path)?;
+        let templates: Vec<UmlTemplate> = serde_json::from_str(&json)?;
+        Ok(templates)
+    }
+
+    /// Delete a UML template by ID
+    pub fn delete_uml_template(&self, id: &str) -> shard_den_core::Result<()> {
+        let mut templates = self.load_uml_templates()?;
+        templates.retain(|t| t.id != id);
+
+        let path = self.templates_path();
+        let json = serde_json::to_string_pretty(&templates)?;
+        std::fs::write(path, json)?;
+        Ok(())
+    }
+
+    // ==================== UML Themes ====================
+
+    /// Save a custom UML theme
+    pub fn save_uml_theme(&self, theme: UmlTheme) -> shard_den_core::Result<()> {
+        let mut themes = self.load_uml_themes()?;
+
+        // Update existing or add new
+        if let Some(idx) = themes.iter().position(|t| t.id == theme.id) {
+            themes[idx] = theme;
+        } else {
+            themes.push(theme);
+        }
+
+        let path = self.themes_path();
+        let json = serde_json::to_string_pretty(&themes)?;
+        std::fs::write(path, json)?;
+        Ok(())
+    }
+
+    /// Load all custom UML themes
+    pub fn load_uml_themes(&self) -> shard_den_core::Result<Vec<UmlTheme>> {
+        let path = self.themes_path();
+        if !path.exists() {
+            return Ok(vec![]);
+        }
+        let json = std::fs::read_to_string(path)?;
+        let themes: Vec<UmlTheme> = serde_json::from_str(&json)?;
+        Ok(themes)
+    }
+
+    /// Delete a custom UML theme by ID
+    pub fn delete_uml_theme(&self, id: &str) -> shard_den_core::Result<()> {
+        let mut themes = self.load_uml_themes()?;
+        themes.retain(|t| t.id != id);
+
+        let path = self.themes_path();
+        let json = serde_json::to_string_pretty(&themes)?;
+        std::fs::write(path, json)?;
+        Ok(())
+    }
+
+    // ==================== UML Config ====================
+
+    /// Save UML Styler configuration
+    pub fn save_uml_config(&self, config: &UmlStylerConfig) -> shard_den_core::Result<()> {
+        let path = self.uml_config_path();
+        let json = serde_json::to_string_pretty(config)?;
+        std::fs::write(path, json)?;
+        Ok(())
+    }
+
+    /// Load UML Styler configuration
+    pub fn load_uml_config(&self) -> shard_den_core::Result<UmlStylerConfig> {
+        let path = self.uml_config_path();
+        if !path.exists() {
+            return Ok(UmlStylerConfig::default());
+        }
+        let json = std::fs::read_to_string(path)?;
+        let config: UmlStylerConfig = serde_json::from_str(&json)?;
+        Ok(config)
     }
 
     /// Create storage with custom data directory (for testing only)
@@ -223,5 +403,130 @@ mod tests {
     fn test_storage_new() {
         let result = Storage::new();
         assert!(result.is_ok());
+    }
+
+    // UML Template tests
+    #[test]
+    fn test_save_and_load_uml_template() {
+        let (storage, _temp_dir) = create_storage();
+        let template = UmlTemplate::new(
+            "Test Template".to_string(),
+            "A test template".to_string(),
+            "graph TD\nA-->B".to_string(),
+            "mermaid".to_string(),
+        );
+        storage.save_uml_template(template.clone()).unwrap();
+
+        let templates = storage.load_uml_templates().unwrap();
+        assert_eq!(templates.len(), 1);
+        assert_eq!(templates[0].name, "Test Template");
+    }
+
+    #[test]
+    fn test_update_uml_template() {
+        let (storage, _temp_dir) = create_storage();
+        let template = UmlTemplate::new(
+            "Test Template".to_string(),
+            "Description".to_string(),
+            "code1".to_string(),
+            "mermaid".to_string(),
+        );
+        storage.save_uml_template(template).unwrap();
+
+        // Update with same ID
+        let updated = UmlTemplate {
+            id: storage.load_uml_templates().unwrap()[0].id.clone(),
+            name: "Updated Name".to_string(),
+            description: "Updated Description".to_string(),
+            code: "code2".to_string(),
+            engine: "plantuml".to_string(),
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+        };
+        storage.save_uml_template(updated).unwrap();
+
+        let templates = storage.load_uml_templates().unwrap();
+        assert_eq!(templates.len(), 1);
+        assert_eq!(templates[0].name, "Updated Name");
+    }
+
+    #[test]
+    fn test_delete_uml_template() {
+        let (storage, _temp_dir) = create_storage();
+        let template = UmlTemplate::new(
+            "Test Template".to_string(),
+            "Description".to_string(),
+            "code".to_string(),
+            "mermaid".to_string(),
+        );
+        storage.save_uml_template(template).unwrap();
+
+        let templates = storage.load_uml_templates().unwrap();
+        let id = templates[0].id.clone();
+
+        storage.delete_uml_template(&id).unwrap();
+        let templates = storage.load_uml_templates().unwrap();
+        assert!(templates.is_empty());
+    }
+
+    // UML Theme tests
+    #[test]
+    fn test_save_and_load_uml_theme() {
+        let (storage, _temp_dir) = create_storage();
+        let theme = UmlTheme::new(
+            "Dark Theme".to_string(),
+            "shared".to_string(),
+            serde_json::json!({"primary": "#000000"}),
+        );
+        storage.save_uml_theme(theme.clone()).unwrap();
+
+        let themes = storage.load_uml_themes().unwrap();
+        assert_eq!(themes.len(), 1);
+        assert_eq!(themes[0].name, "Dark Theme");
+    }
+
+    #[test]
+    fn test_delete_uml_theme() {
+        let (storage, _temp_dir) = create_storage();
+        let theme = UmlTheme::new(
+            "Test Theme".to_string(),
+            "shared".to_string(),
+            serde_json::json!({}),
+        );
+        storage.save_uml_theme(theme).unwrap();
+
+        let themes = storage.load_uml_themes().unwrap();
+        let id = themes[0].id.clone();
+
+        storage.delete_uml_theme(&id).unwrap();
+        let themes = storage.load_uml_themes().unwrap();
+        assert!(themes.is_empty());
+    }
+
+    // UML Config tests
+    #[test]
+    fn test_save_and_load_uml_config() {
+        let (storage, _temp_dir) = create_storage();
+        let config = UmlStylerConfig::default();
+        storage.save_uml_config(&config).unwrap();
+
+        let loaded = storage.load_uml_config().unwrap();
+        assert_eq!(loaded.default_theme, "shared/default");
+    }
+
+    #[test]
+    fn test_load_uml_config_default() {
+        let (storage, _temp_dir) = create_storage();
+        // Don't save anything, should return default
+        let config = storage.load_uml_config().unwrap();
+        assert_eq!(config.default_theme, "shared/default");
+    }
+
+    #[test]
+    fn test_uuid_simple_generation() {
+        let id1 = uuid_simple();
+        let id2 = uuid_simple();
+        assert!(!id1.is_empty());
+        assert!(!id2.is_empty());
     }
 }

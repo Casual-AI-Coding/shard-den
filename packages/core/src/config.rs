@@ -24,6 +24,7 @@ impl Default for Config {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ToolConfig {
     pub json_extractor: JsonExtractorConfig,
+    pub uml_styler: UmlStylerConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,6 +44,47 @@ impl Default for JsonExtractorConfig {
     }
 }
 
+/// UML Styler specific configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UmlStylerConfig {
+    pub default_theme: String,
+    pub default_engine: UmlEngine,
+    pub export_resolution: ExportResolution,
+    pub auto_save: bool,
+    pub auto_save_interval_secs: u32,
+}
+
+impl Default for UmlStylerConfig {
+    fn default() -> Self {
+        Self {
+            default_theme: "shared/default".to_string(),
+            default_engine: UmlEngine::Mermaid,
+            export_resolution: ExportResolution::Default,
+            auto_save: true,
+            auto_save_interval_secs: 30,
+        }
+    }
+}
+
+/// UML diagram engine
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default, PartialEq)]
+pub enum UmlEngine {
+    #[default]
+    Mermaid,
+    PlantUML,
+}
+
+/// Export resolution presets
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default, PartialEq)]
+pub enum ExportResolution {
+    #[default]
+    Default, // 1x
+    X2, // 2x
+    X3, // 3x
+    X4, // 4x
+    Custom(u32),
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Default, PartialEq)]
 pub enum OutputFormat {
     #[default]
@@ -59,8 +101,6 @@ pub struct UiConfig {
 
 impl Default for UiConfig {
     fn default() -> Self {
-        // 从 LANG 环境变量读取语言设置，格式如 "zh_CN.UTF-8"
-        // 取第一部分（如 "zh_CN"），不存在时回退到 "zh-CN"
         let language = std::env::var("LANG")
             .ok()
             .and_then(|l| l.split('.').next().map(|s| s.to_string()))
@@ -95,9 +135,12 @@ impl Default for HistoryConfig {
         }
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
     fn test_default_config() {
         let config = Config::default();
         assert!(config.history.enabled);
@@ -137,25 +180,15 @@ mod tests {
 
     #[test]
     fn test_output_format_serialization() {
-        // Test serialization
         let json_str = serde_json::to_string(&OutputFormat::Json).unwrap();
-        assert!(
-            json_str.contains("Json"),
-            "Expected 'Json', got: {}",
-            json_str
-        );
+        assert!(json_str.contains("Json"));
 
         let csv_str = serde_json::to_string(&OutputFormat::Csv).unwrap();
-        assert!(csv_str.contains("Csv"), "Expected 'Csv', got: {}", csv_str);
+        assert!(csv_str.contains("Csv"));
 
         let text_str = serde_json::to_string(&OutputFormat::Text).unwrap();
-        assert!(
-            text_str.contains("Text"),
-            "Expected 'Text', got: {}",
-            text_str
-        );
+        assert!(text_str.contains("Text"));
 
-        // Test deserialization
         let format: OutputFormat = serde_json::from_str("\"Json\"").unwrap();
         assert_eq!(format, OutputFormat::Json);
 
@@ -174,28 +207,14 @@ mod tests {
 
     #[test]
     fn test_theme_variants() {
-        // Test serialization
         let light_json = serde_json::to_string(&Theme::Light).unwrap();
         let dark_json = serde_json::to_string(&Theme::Dark).unwrap();
         let system_json = serde_json::to_string(&Theme::System).unwrap();
 
-        assert!(
-            light_json.contains("Light"),
-            "Expected 'Light', got: {}",
-            light_json
-        );
-        assert!(
-            dark_json.contains("Dark"),
-            "Expected 'Dark', got: {}",
-            dark_json
-        );
-        assert!(
-            system_json.contains("System"),
-            "Expected 'System', got: {}",
-            system_json
-        );
+        assert!(light_json.contains("Light"));
+        assert!(dark_json.contains("Dark"));
+        assert!(system_json.contains("System"));
 
-        // Test deserialization
         let light: Theme = serde_json::from_str("\"Light\"").unwrap();
         let dark: Theme = serde_json::from_str("\"Dark\"").unwrap();
         let system: Theme = serde_json::from_str("\"System\"").unwrap();
@@ -204,6 +223,7 @@ mod tests {
         assert!(matches!(dark, Theme::Dark));
         assert!(matches!(system, Theme::System));
     }
+
     #[test]
     fn test_history_config_default() {
         let history_config = HistoryConfig::default();
@@ -228,6 +248,7 @@ mod tests {
                     max_history: 200,
                     favorite_paths: vec!["/home/user/data".to_string()],
                 },
+                uml_styler: UmlStylerConfig::default(),
             },
             ui: UiConfig {
                 theme: Theme::Dark,
@@ -245,5 +266,90 @@ mod tests {
         );
         assert_eq!(config.ui.theme, Theme::Dark);
         assert!(!config.history.enabled);
+    }
+
+    #[test]
+    fn test_uml_styler_config_default() {
+        let config = UmlStylerConfig::default();
+        assert_eq!(config.default_theme, "shared/default");
+        assert_eq!(config.default_engine, UmlEngine::Mermaid);
+        assert_eq!(config.export_resolution, ExportResolution::Default);
+        assert!(config.auto_save);
+        assert_eq!(config.auto_save_interval_secs, 30);
+    }
+
+    #[test]
+    fn test_uml_styler_config_custom() {
+        let config = UmlStylerConfig {
+            default_theme: "shared/dark".to_string(),
+            default_engine: UmlEngine::PlantUML,
+            export_resolution: ExportResolution::X4,
+            auto_save: false,
+            auto_save_interval_secs: 60,
+        };
+
+        assert_eq!(config.default_theme, "shared/dark");
+        assert_eq!(config.default_engine, UmlEngine::PlantUML);
+        assert_eq!(config.export_resolution, ExportResolution::X4);
+        assert!(!config.auto_save);
+        assert_eq!(config.auto_save_interval_secs, 60);
+    }
+
+    #[test]
+    fn test_uml_engine_serialization() {
+        let mermaid = serde_json::to_string(&UmlEngine::Mermaid).unwrap();
+        assert!(mermaid.contains("Mermaid"));
+
+        let plantuml = serde_json::to_string(&UmlEngine::PlantUML).unwrap();
+        assert!(plantuml.contains("PlantUML"));
+
+        let decoded: UmlEngine = serde_json::from_str("\"Mermaid\"").unwrap();
+        assert_eq!(decoded, UmlEngine::Mermaid);
+    }
+
+    #[test]
+    fn test_export_resolution_serialization() {
+        let default = serde_json::to_string(&ExportResolution::Default).unwrap();
+        let x2 = serde_json::to_string(&ExportResolution::X2).unwrap();
+        let x4 = serde_json::to_string(&ExportResolution::X4).unwrap();
+        let custom = serde_json::to_string(&ExportResolution::Custom(300)).unwrap();
+
+        assert!(default.contains("Default"));
+        assert!(x2.contains("X2"));
+        assert!(x4.contains("X4"));
+        assert!(custom.contains("300"));
+
+        let decoded: ExportResolution = serde_json::from_str("\"X2\"").unwrap();
+        assert_eq!(decoded, ExportResolution::X2);
+
+        let decoded_custom: ExportResolution = serde_json::from_str("150").unwrap();
+        assert_eq!(decoded_custom, ExportResolution::Custom(150));
+    }
+
+    #[test]
+    fn test_uml_styler_config_serialization() {
+        let config = UmlStylerConfig::default();
+        let json = serde_json::to_string(&config).unwrap();
+        let deserialized: UmlStylerConfig = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.default_theme, config.default_theme);
+        assert_eq!(deserialized.default_engine, config.default_engine);
+    }
+
+    #[test]
+    fn test_tool_config_with_uml_styler() {
+        let tool_config = ToolConfig {
+            json_extractor: JsonExtractorConfig::default(),
+            uml_styler: UmlStylerConfig {
+                default_theme: "shared/business".to_string(),
+                default_engine: UmlEngine::PlantUML,
+                export_resolution: ExportResolution::Custom(300),
+                auto_save: true,
+                auto_save_interval_secs: 45,
+            },
+        };
+
+        assert_eq!(tool_config.uml_styler.default_theme, "shared/business");
+        assert_eq!(tool_config.uml_styler.default_engine, UmlEngine::PlantUML);
     }
 }
