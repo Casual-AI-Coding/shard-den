@@ -17,6 +17,7 @@ shard-den-core = { version = "0.3.2", path = "../../core" }
 thiserror.workspace = true
 base64 = "0.21"
 flate2 = "1.0"
+tracing.workspace = true
 urlencoding = "2.1"
 
 wasm-bindgen = { workspace = true, optional = true }

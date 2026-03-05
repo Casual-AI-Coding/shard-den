@@ -89,10 +89,10 @@
 
 | # | 任务 | 描述 | 状态 | 提交 | Review |
 |---|------|------|------|------|--------|
-| 4.1 | D2 Engine Core | 实现 D2 Engine (ServerURL) | 🚀 进行中 | - | - |
-| 4.2 | D2 前端集成 | 前端 Fetch 逻辑与错误处理 | 🔒 待开始 | - | - |
-| 4.3 | D2 语法高亮 | Monaco Editor D2 支持 | 🔒 待开始 | - | - |
-| 4.4 | Graphviz Engine | Graphviz/DOT 支持 | 🔒 待开始 | - | - |
+| 4.1 | D2 Engine Core | 实现 D2 Engine (ServerURL) | ✅ 完成 | `feat(d2): implement D2 engine` | - |
+| 4.2 | D2 前端集成 | 前端 Fetch 逻辑与错误处理 | ✅ 完成 | `feat(d2): integrate D2 into frontend` | - |
+| 4.3 | D2 语法高亮 | Monaco Editor D2 支持 | ✅ 完成 | `feat(d2): add D2 syntax highlighting` | - |
+| 4.4 | Graphviz Engine | Graphviz/DOT 支持 | 🚀 进行中 | - | - |
 | 4.5 | WaveDrom Engine | WaveDrom 时序图支持 | 🔒 待开始 | - | - |
 
 ---
