@@ -337,7 +337,7 @@ export default function CodeEditor({
           onChange={(e) => onEngineChange(e.target.value as 'mermaid' | 'plantuml' | 'd2')}
           className="px-3 py-1.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
         >
-<option value="mermaid">Mermaid</option>
+          <option value="mermaid">Mermaid</option>
           <option value="plantuml">PlantUML</option>
           <option value="d2">D2</option>
         </select>

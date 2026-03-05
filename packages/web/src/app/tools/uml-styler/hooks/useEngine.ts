@@ -1,103 +1,181 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import mermaid from 'mermaid';
 import { UmlStyler } from '@/lib/core';
+import { analyzeComplexity } from '../lib/workers/complexity';
 
 export type EngineType = 'mermaid' | 'plantuml' | 'd2';
 
-export interface UseEngineReturn {
-  engine: EngineType;
-  setEngine: (engine: EngineType) => void;
-  handleEngineChange: (engine: EngineType) => void;
-  isEngineReady: boolean;
-  initializeEngine: () => Promise<void>;
-  renderDiagram: (code: string, theme: string) => Promise<string>;
+// Mermaid theme mapping
+const MERMAID_THEMES: Record<string, string> = {
+  'default': 'default',
+  'dark': 'dark',
+  'forest': 'forest',
+  'neutral': 'neutral',
+};
+
+interface RenderResult {
+  svg: string;
+  error: string | null;
+  isSimplified: boolean;
+  complexity: { nodeCount: number; isComplex: boolean } | null;
 }
 
-export function useEngine(initialEngine: EngineType = 'mermaid'): UseEngineReturn {
-  const [engine, setEngine] = useState<EngineType>(initialEngine);
-  const [isEngineReady, setIsEngineReady] = useState(false);
+interface WorkerResponse {
+  type: 'success' | 'error' | 'timeout';
+  id: string;
+  svg?: string;
+  error?: string;
+}
 
-  const handleEngineChange = useCallback((newEngine: EngineType) => {
-    setEngine(newEngine);
+export function useDiagramRenderer() {
+  const [isRendering, setIsRendering] = useState(false);
+  const [renderResult, setRenderResult] = useState<RenderResult>({
+    svg: '',
+    error: null,
+    isSimplified: false,
+    complexity: null,
+  });
+  
+  const workerRef = useRef<Worker | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const renderCountRef = useRef(0);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (workerRef.current) workerRef.current.terminate();
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, []);
 
-  const initializeEngine = useCallback(async () => {
-    try {
-      const mermaid = await import('mermaid');
-      mermaid.default.initialize({
-        startOnLoad: false,
-        theme: 'default',
-        securityLevel: 'loose',
+  const renderOnMainThread = async (code: string, theme: string) => {
+    const mermaidTheme = MERMAID_THEMES[theme] || 'default';
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: mermaidTheme as any,
+      securityLevel: 'loose',
+    });
+    const id = `mermaid-${Date.now()}-${++renderCountRef.current}`;
+    const { svg } = await mermaid.render(id, code);
+    return svg;
+  };
+
+  const renderWithWorker = async (code: string, theme: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      // Use the public path to the worker
+      const worker = new Worker('/workers/mermaid.worker.js');
+      workerRef.current = worker;
+
+      const renderId = `mermaid-${Date.now()}-${++renderCountRef.current}`;
+      const requestId = `${renderId}-${Math.random().toString(36).substr(2, 9)}`;
+
+      timeoutRef.current = setTimeout(() => {
+        worker.terminate();
+        workerRef.current = null;
+        reject(new Error('TIMEOUT'));
+      }, 5000);
+
+      worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        worker.terminate();
+        workerRef.current = null;
+
+        if (event.data.type === 'success') {
+          resolve(event.data.svg || '');
+        } else {
+          reject(new Error(event.data.error));
+        }
+      };
+
+      worker.onerror = (err) => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        worker.terminate();
+        workerRef.current = null;
+        reject(err);
+      };
+
+      worker.postMessage({
+        type: 'render',
+        id: requestId,
+        code,
+        theme,
       });
-      setIsEngineReady(true);
-    } catch (error) {
-      console.error('Failed to initialize mermaid:', error);
-      throw error;
-    }
-  }, []);
+    });
+  };
 
-  const renderDiagram = useCallback(async (code: string, theme: string): Promise<string> => {
+  const render = useCallback(async (code: string, theme: string, engine: string) => {
     if (!code.trim()) {
-      return '';
+      setRenderResult(prev => ({ ...prev, svg: '', error: null, isSimplified: false }));
+      return;
+    }
+
+    setIsRendering(true);
+    setRenderResult(prev => ({ ...prev, error: null }));
+
+    // Cleanup previous worker/timeout
+    if (workerRef.current) {
+        workerRef.current.terminate();
+        workerRef.current = null;
+    }
+    if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
     }
 
     try {
-      // Call Rust Core via WASM to get rendering hint
-      // Note: Rust returns serialized RenderHint
+      // Analyze complexity
+      const complexityResult = analyzeComplexity(code);
+      setRenderResult(prev => ({ ...prev, complexity: complexityResult, isSimplified: false }));
+
+      // Get hint from WASM backend
+      // Note: UmlStyler.render returns the RenderHint object or string
       const hint = await UmlStyler.render(engine, code, theme);
 
+      let svg = '';
       if (hint === 'FrontendJS') {
-        // Frontend rendering (Mermaid)
-        const mermaid = await import('mermaid');
-        
-        // Map theme to Mermaid theme
-        const mermaidTheme = theme === 'dark' ? 'dark' 
-          : theme === 'forest' ? 'forest' 
-          : theme === 'neutral' ? 'neutral' 
-          : 'default';
-
-        mermaid.default.initialize({
-          startOnLoad: false,
-          theme: mermaidTheme as any,
-          securityLevel: 'loose',
-        });
-
-        const id = `mermaid-${Date.now()}`;
-        const { svg } = await mermaid.default.render(id, code);
-        return svg;
-      } 
-      else if (typeof hint === 'object' && 'ServerURL' in hint) {
-        // Server-side rendering (PlantUML, D2)
-        const url = hint.ServerURL;
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Server rendering failed: ${response.statusText}`);
+        if (complexityResult.isComplex) {
+          try {
+            svg = await renderWithWorker(code, theme);
+          } catch (err: any) {
+            if (err.message === 'TIMEOUT') {
+               // Fallback to main thread with simplified flag
+               setRenderResult(prev => ({ ...prev, isSimplified: true, error: '图表较大，渲染时间较长，已显示简化版' }));
+               // Try to render on main thread anyway, it might freeze UI briefly but better than nothing?
+               // Or maybe we don't render on main thread if worker timed out?
+               // Preview.tsx logic was: setIsSimplified(true) -> renderOnMainThread().
+               svg = await renderOnMainThread(code, theme);
+            } else {
+               throw err;
+            }
+          }
+        } else {
+          svg = await renderOnMainThread(code, theme);
         }
-        const svg = await response.text();
-        // Check if response is valid SVG
-        if (!svg.includes('<svg')) {
-            throw new Error('Invalid SVG response from server');
-        }
-        return svg;
+      } else if (typeof hint === 'object' && 'ServerURL' in hint) {
+         const url = (hint as any).ServerURL;
+         const response = await fetch(url);
+         if (!response.ok) throw new Error(`Server rendering failed: ${response.statusText}`);
+         svg = await response.text();
+         if (!svg.includes('<svg')) throw new Error('Invalid SVG response from server');
+      } else {
+         throw new Error(`Unsupported render mode: ${JSON.stringify(hint)}`);
       }
-      else {
-        throw new Error(`Unsupported render hint: ${JSON.stringify(hint)}`);
-      }
+      
+      setRenderResult(prev => ({ ...prev, svg, error: null }));
     } catch (err: any) {
-      console.error(`${engine} render error:`, err);
-      // Fallback for offline or WASM failure?
-      // For now, rethrow
-      throw err;
+      console.error('Render error:', err);
+      const errMsg = err.message || 'Render failed';
+      setRenderResult(prev => ({ ...prev, error: errMsg, svg: '' }));
+    } finally {
+      setIsRendering(false);
     }
-  }, [engine]);
+  }, []);
 
   return {
-    engine,
-    setEngine,
-    handleEngineChange,
-    isEngineReady,
-    initializeEngine,
-    renderDiagram,
+    render,
+    isRendering,
+    ...renderResult
   };
 }

@@ -1,115 +1,102 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useEngine, type EngineType } from './useEngine';
+import { useDiagramRenderer } from './useEngine';
+import { UmlStyler } from '@/lib/core';
 
-// Mock mermaid module
+// Mock mermaid
 vi.mock('mermaid', () => ({
   default: {
     initialize: vi.fn(),
-    render: vi.fn().mockResolvedValue({ svg: '<svg>test diagram</svg>' }),
+    render: vi.fn().mockResolvedValue({ svg: '<svg>mermaid</svg>' }),
   },
 }));
 
-describe('useEngine', () => {
+// Mock UmlStyler
+vi.mock('@/lib/core', () => ({
+  UmlStyler: {
+    render: vi.fn(),
+  },
+}));
+
+// Mock complexity worker
+vi.mock('../lib/workers/complexity', () => ({
+  analyzeComplexity: vi.fn().mockReturnValue({ nodeCount: 5, isComplex: false }),
+}));
+
+// Mock Worker
+class MockWorker {
+  onmessage: ((event: any) => void) | null = null;
+  onerror: ((error: any) => void) | null = null;
+  postMessage(_data: any) {
+    // Simulate success response for now
+    setTimeout(() => {
+        if (this.onmessage) {
+            this.onmessage({ data: { type: 'success', svg: '<svg>worker</svg>' } } as any);
+        }
+    }, 10);
+  }
+  terminate() {}
+}
+global.Worker = MockWorker as any;
+
+// Mock fetch
+global.fetch = vi.fn();
+
+describe('useDiagramRenderer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('引擎切换', () => {
-    it('应该使用默认引擎 mermaid', () => {
-      const { result } = renderHook(() => useEngine());
-      expect(result.current.engine).toBe('mermaid');
-    });
-
-    it('应该接受自定义初始引擎', () => {
-      const { result } = renderHook(() => useEngine('plantuml'));
-      expect(result.current.engine).toBe('plantuml');
-    });
-
-    it('应该通过 setEngine 更新引擎', () => {
-      const { result } = renderHook(() => useEngine());
-      
-      act(() => {
-        result.current.setEngine('plantuml');
-      });
-      
-      expect(result.current.engine).toBe('plantuml');
-    });
-
-    it('应该通过 handleEngineChange 回调更新引擎', () => {
-      const { result } = renderHook(() => useEngine());
-      
-      act(() => {
-        result.current.handleEngineChange('plantuml');
-      });
-      
-      expect(result.current.engine).toBe('plantuml');
-    });
+  it('initial state is correct', () => {
+    const { result } = renderHook(() => useDiagramRenderer());
+    expect(result.current.svg).toBe('');
+    expect(result.current.error).toBeNull();
+    expect(result.current.isRendering).toBe(false);
   });
 
-  describe('引擎初始化', () => {
-    it('应该正确初始化 mermaid 引擎', async () => {
-      const { result } = renderHook(() => useEngine());
-      
-      await act(async () => {
-        await result.current.initializeEngine();
-      });
-      
-      expect(result.current.isEngineReady).toBe(true);
+  it('renders mermaid (FrontendJS) on main thread', async () => {
+    vi.mocked(UmlStyler.render).mockResolvedValue('FrontendJS');
+    
+    const { result } = renderHook(() => useDiagramRenderer());
+    
+    await act(async () => {
+      await result.current.render('graph TD; A-->B', 'default', 'mermaid');
     });
 
-    it('初始化失败时应该抛出错误', async () => {
-      // Mock mermaid default.initialize to throw
-      const mermaidModule = await import('mermaid');
-      vi.mocked(mermaidModule.default.initialize).mockImplementationOnce(() => {
-        throw new Error('Module not found');
-      });
-      
-      const { result } = renderHook(() => useEngine());
-      
-      await expect(result.current.initializeEngine()).rejects.toThrow('Module not found');
-    });
+    expect(UmlStyler.render).toHaveBeenCalledWith('mermaid', 'graph TD; A-->B', 'default');
+    expect(result.current.svg).toContain('<svg>mermaid</svg>');
+    expect(result.current.error).toBeNull();
   });
-  describe('渲染调用', () => {
-    it('应该返回空字符串当代码为空', async () => {
-      const { result } = renderHook(() => useEngine());
-      
-      const svg = await result.current.renderDiagram('', 'default');
-      expect(svg).toBe('');
+
+  it('renders ServerURL (D2)', async () => {
+    vi.mocked(UmlStyler.render).mockResolvedValue({ ServerURL: 'https://kroki.io/d2/svg/...' });
+    vi.mocked(global.fetch).mockResolvedValue({
+        ok: true,
+        text: async () => '<svg>d2</svg>',
+    } as Response);
+
+    const { result } = renderHook(() => useDiagramRenderer());
+
+    await act(async () => {
+      await result.current.render('x -> y', 'default', 'd2');
     });
 
-    it('应该正确渲染 mermaid 代码', async () => {
-      const { result } = renderHook(() => useEngine());
-      
-      const code = 'flowchart TD\nA --> B';
-      const svg = await result.current.renderDiagram(code, 'default');
-      
-      expect(svg).toBe('<svg>test diagram</svg>');
+    expect(UmlStyler.render).toHaveBeenCalledWith('d2', 'x -> y', 'default');
+    expect(global.fetch).toHaveBeenCalledWith('https://kroki.io/d2/svg/...');
+    expect(result.current.svg).toBe('<svg>d2</svg>');
+  });
+
+  it('handles errors', async () => {
+    vi.mocked(UmlStyler.render).mockRejectedValue(new Error('WASM Error'));
+
+    const { result } = renderHook(() => useDiagramRenderer());
+
+    await act(async () => {
+      await result.current.render('error', 'default', 'mermaid');
     });
 
-    it('应该使用主题参数渲染', async () => {
-      const { result } = renderHook(() => useEngine());
-      
-      const code = 'flowchart TD\nA --> B';
-      await result.current.renderDiagram(code, 'dark');
-      
-      // Verify mermaid was called with theme
-      const mermaidModule = await import('mermaid');
-      expect(mermaidModule.default.initialize).toHaveBeenCalledWith(
-        expect.objectContaining({
-          theme: 'dark',
-        })
-      );
-    });
-
-    it('PlantUML 引擎应该抛出未实现错误', async () => {
-      const { result } = renderHook(() => useEngine('plantuml'));
-      
-      const code = '@startuml\nA --> B\n@enduml';
-      
-      await expect(result.current.renderDiagram(code, 'default')).rejects.toThrow(
-        'PlantUML rendering will be implemented in Phase 2'
-      );
-    });
+    expect(result.current.error).toBe('WASM Error');
+    expect(result.current.svg).toBe('');
   });
 });

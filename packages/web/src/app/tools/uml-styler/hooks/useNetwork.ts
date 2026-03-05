@@ -21,32 +21,9 @@ export function useNetwork(): UseNetworkReturn {
   const [isOnline, setIsOnline] = useState(true);
   const [wasOffline, setWasOffline] = useState(false);
   const [isNetworkSupported, setIsNetworkSupported] = useState(true);
-  const timeoutRef = useRef<number | null>(null);
 
-  const handleOnline = useCallback(() => {
-    setIsOnline(true);
-    // Mark that we were offline, to show recovery message
-    setWasOffline(true);
-    
-    // Clear any existing timeout before setting a new one
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    
-    // Clear the recovery message after 5 seconds
-    timeoutRef.current = window.setTimeout(() => {
-      setWasOffline(false);
-    }, 5000);
-  }, []);
 
-  const handleOffline = useCallback(() => {
-    setIsOnline(false);
-    // Clear any pending recovery timeout when going offline
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  }, []);
+
 
   useEffect(() => {
     // Check if navigator.onLine is available (not available in some SSR scenarios)
@@ -54,6 +31,33 @@ export function useNetwork(): UseNetworkReturn {
       setIsOnline(navigator.onLine);
       setIsNetworkSupported(typeof window !== 'undefined' && 'ononline' in window);
     }
+
+    let timeoutId: number | null = null;
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      // Mark that we were offline, to show recovery message
+      setWasOffline(true);
+      
+      // Clear any existing timeout before setting a new one
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      // Clear the recovery message after 5 seconds
+      timeoutId = window.setTimeout(() => {
+        setWasOffline(false);
+      }, 5000);
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      // Clear any pending recovery timeout when going offline
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+    };
 
     // Add event listeners
     if (typeof window !== 'undefined') {
@@ -63,15 +67,15 @@ export function useNetwork(): UseNetworkReturn {
 
     return () => {
       // Clean up timeout on unmount
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
       }
       if (typeof window !== 'undefined') {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
       }
     };
-  }, [handleOnline, handleOffline]);
+  }, []);
 
   return {
     isOnline,

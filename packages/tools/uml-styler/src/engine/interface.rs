@@ -6,7 +6,7 @@ use crate::theme::Theme;
 use std::fmt::Debug;
 
 #[cfg(feature = "wasm")]
-use wasm_bindgen::prelude::*;
+
 
 /// 图表类型
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

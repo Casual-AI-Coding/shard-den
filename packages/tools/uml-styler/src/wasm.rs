@@ -1,8 +1,17 @@
 //! WASM 导出模块
 
-use crate::engine::{D2Engine, Engine, EngineRegistry, MermaidEngine, PlantUmlEngine};
+use crate::engine::{D2Engine, EngineRegistry, MermaidEngine, PlantUmlEngine};
 use crate::theme::{Theme, ThemeCategory, ThemeTuning};
 use wasm_bindgen::prelude::*;
+use once_cell::sync::Lazy;
+
+static REGISTRY: Lazy<EngineRegistry> = Lazy::new(|| {
+    let mut registry = EngineRegistry::new();
+    registry.register(Box::new(MermaidEngine::new()));
+    registry.register(Box::new(PlantUmlEngine::new()));
+    registry.register(Box::new(D2Engine::new()));
+    registry
+});
 
 /// 初始化 WASM
 #[wasm_bindgen]
@@ -21,12 +30,7 @@ pub fn get_version() -> String {
 /// 渲染图表
 #[wasm_bindgen]
 pub fn render_diagram(engine_name: &str, code: &str, theme_id: &str) -> Result<JsValue, JsValue> {
-    let mut registry = EngineRegistry::new();
-    registry.register(Box::new(MermaidEngine::new()));
-    registry.register(Box::new(PlantUmlEngine::new()));
-    registry.register(Box::new(D2Engine::new()));
-
-    let engine = registry
+    let engine = REGISTRY
         .get_engine(engine_name)
         .ok_or_else(|| JsValue::from_str(&format!("Engine not found: {}", engine_name)))?;
 

@@ -20,9 +20,9 @@ export function getWasm() {
   return {
 JsonExtractor: WasmJsonExtractor,
 ping,
-    version,
-    render_diagram,
-  };
+version,
+render_diagram,
+};
 }
 
 // Re-export tool classes - create new instance each time to avoid wasm-bindgen refcount bug

@@ -3445,6 +3445,7 @@ dependencies = [
  "base64 0.21.7",
  "console_error_panic_hook",
  "flate2",
+ "once_cell",
  "serde",
  "serde-wasm-bindgen",
  "shard-den-core",

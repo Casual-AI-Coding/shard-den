@@ -1,8 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import mermaid from 'mermaid';
-import { analyzeComplexity } from '../lib/workers/complexity';
+import React, { useEffect, useRef, useState } from 'react';
 import ThemeSelector from './ThemeSelector';
 import ThemeTuner from './ThemeTuner';
 import ExportPanel from './ExportPanel';
@@ -10,23 +8,7 @@ import type { ThemeTuning } from '../types';
 import { Save } from 'lucide-react';
 import type { UmlTheme } from '@/lib/tauri';
 import { useNetwork } from '../hooks/useNetwork';
-import { UmlStyler } from '@/lib/core';
-
-// Worker message types
-interface WorkerRequest {
-  type: 'render';
-  id: string;
-  code: string;
-  theme: string;
-}
-
-interface WorkerResponse {
-  type: 'success' | 'error' | 'timeout';
-  id: string;
-  svg?: string;
-  error?: string;
-  simplified?: boolean;
-}
+import { useDiagramRenderer } from '../hooks/useEngine';
 
 interface PreviewProps {
   code: string;
@@ -44,205 +26,40 @@ interface PreviewProps {
   onScaleChange?: (scale: 1 | 2 | 3 | 4) => void;
 }
 
-// Mermaid theme mapping
-const MERMAID_THEMES: Record<string, string> = {
-  'default': 'default',
-  'dark': 'dark',
-  'forest': 'forest',
-  'neutral': 'neutral',
-};
-
 export default function Preview({ code, theme, engine, tuning, onTuningChange, onError, onThemeChange, onShare, customThemes, onDeleteCustomTheme, onSaveTheme, scale: propScale, onScaleChange }: PreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [svg, setSvg] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
-  const [isRendering, setIsRendering] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [localScale, setLocalScale] = useState<1 | 2 | 3 | 4>(2);
   const scale = propScale || localScale;
   const [showTuner, setShowTuner] = useState(false);
-  const [complexity, setComplexity] = useState<{ nodeCount: number; isComplex: boolean } | null>(null);
-  const [isSimplified, setIsSimplified] = useState(false);
-  const [renderMethod, setRenderMethod] = useState<'main' | 'worker'>('main');
+  
   const { isOnline } = useNetwork();
+  const { render, isRendering, svg, error, isSimplified, complexity } = useDiagramRenderer();
 
-  const renderCountRef = useRef(0);
-  const workerRef = useRef<Worker | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Render on main thread (for simple diagrams)
-  const renderOnMainThread = async (diagramCode: string) => {
-    const mermaidTheme = MERMAID_THEMES[theme] || 'default';
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: mermaidTheme as any,
-      securityLevel: 'loose',
-    });
-
-    const id = `mermaid-${Date.now()}-${++renderCountRef.current}`;
-    const { svg: renderedSvg } = await mermaid.render(id, diagramCode);
-    setSvg(renderedSvg);
-  };
-
-  // Render with Web Worker (for complex diagrams)
-  const renderWithWorker = async (diagramCode: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      // Create worker using public path
-      const worker = new Worker('/workers/mermaid.worker.js');
-      workerRef.current = worker;
-
-      const renderId = `mermaid-${Date.now()}-${++renderCountRef.current}`;
-      const requestId = `${renderId}-${Math.random().toString(36).substr(2, 9)}`;
-
-      // Set timeout for 5 seconds
-      timeoutRef.current = setTimeout(() => {
-        worker.terminate();
-        workerRef.current = null;
-        
-        // Show simplified version
-        setIsSimplified(true);
-        setError('图表较大，渲染时间较长，已显示简化版');
-        onError?.('图表较大，已简化显示');
-        
-        // Try to render on main thread
-        renderOnMainThread(diagramCode).then(resolve).catch(reject);
-      }, 5000);
-
-      worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
-        }
-        worker.terminate();
-        workerRef.current = null;
-
-        if (event.data.type === 'success') {
-          setSvg(event.data.svg || '');
-          resolve();
-        } else {
-          reject(new Error(event.data.error));
-        }
-      };
-
-      worker.onerror = (err) => {
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
-        }
-        worker.terminate();
-        workerRef.current = null;
-        reject(err);
-      };
-
-      const request: WorkerRequest = {
-        type: 'render',
-        id: requestId,
-        code: diagramCode,
-        theme,
-      };
-
-      worker.postMessage(request);
-    });
-  };
-
-  const renderDiagram = useCallback(async () => {
-    if (!code.trim()) {
-      setSvg('');
-      setError(null);
-      onError?.(null);
-      setComplexity(null);
-      setIsSimplified(false);
-      return;
-    }
-
-    // Analyze complexity
-    const complexityResult = analyzeComplexity(code);
-    setComplexity({ nodeCount: complexityResult.nodeCount, isComplex: complexityResult.isComplex });
-    setIsSimplified(false);
-    setRenderMethod(complexityResult.isComplex ? 'worker' : 'main');
-
-    setIsRendering(true);
-    setError(null);
-    onError?.(null);
-
-    // Cleanup previous worker and timeout
-    if (workerRef.current) {
-      workerRef.current.terminate();
-      workerRef.current = null;
-    }
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-
-    try {
-      // Get render hint from WASM backend
-      const hint = await UmlStyler.render(engine, code, theme);
-
-      if (hint === 'FrontendJS') {
-        // Use existing Mermaid logic (Worker or Main Thread)
-        if (complexityResult.isComplex) {
-          await renderWithWorker(code);
-        } else {
-          await renderOnMainThread(code);
-        }
-      } else if (typeof hint === 'object' && 'ServerURL' in hint) {
-        // Server-side rendering (D2, PlantUML)
-        const url = (hint as any).ServerURL;
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Server rendering failed: ${response.statusText}`);
-        }
-        const svgText = await response.text();
-        if (!svgText.includes('<svg')) {
-           throw new Error('Invalid SVG response from server');
-        }
-        setSvg(svgText);
-      } else {
-        throw new Error(`Unsupported render mode: ${JSON.stringify(hint)}`);
-      }
-    } catch (err: any) {
-      console.error('Mermaid render error:', err);
-      const errMsg = err.message || 'Failed to render diagram';
-      setError(errMsg);
-      onError?.(errMsg);
-      setSvg('');
-    } finally {
-      setIsRendering(false);
-    }
-  }, [code, theme, engine, onError]);
-
+  // Sync error to parent
   useEffect(() => {
+    onError?.(error);
+  }, [error, onError]);
+
+  // Debounced render
+  useEffect(() => {
+    // Check offline status for server-side engines
+    if ((engine === 'plantuml' || engine === 'd2') && !isOnline) {
+       // If offline, don't try to render, just show error
+       // We can trigger an error state here manually if the hook doesn't support "blocking"
+       // But the hook's render clears error.
+       // So we should NOT call render.
+       // And we should set the error.
+       onError?.(`${engine === 'plantuml' ? 'PlantUML' : 'D2'} 需要网络连接，请检查网络后重试`);
+       return;
+    }
+
     const timer = setTimeout(() => {
-      renderDiagram();
+      render(code, theme, engine);
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [renderDiagram]);
-
-  // Handle engine change when offline
-  useEffect(() => {
-    if (engine === 'plantuml' && !isOnline) {
-      const errMsg = 'PlantUML 需要网络连接，请检查网络后重试';
-      setError(errMsg);
-      onError?.(errMsg);
-      setSvg('');
-    }
-  }, [engine, isOnline, onError]);
-
-  // Cleanup on unmount
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (workerRef.current) {
-        workerRef.current.terminate();
-      }
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+  }, [code, theme, engine, render, isOnline, onError]);
 
   const handleZoomIn = () => setZoom(z => Math.min(z + 25, 300));
   const handleZoomOut = () => setZoom(z => Math.max(z - 25, 25));
@@ -264,7 +81,7 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
           <span className="text-sm font-medium text-[var(--text)]">预览</span>
           {isRendering && (
             <span className="text-xs text-blue-400 animate-pulse">
-              {renderMethod === 'worker' ? '大图渲染中...' : '渲染中...'}
+              {complexity?.isComplex ? '大图渲染中...' : '渲染中...'}
             </span>
           )}
           {isSimplified && (
