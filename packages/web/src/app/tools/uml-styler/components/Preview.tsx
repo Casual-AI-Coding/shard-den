@@ -38,6 +38,8 @@ interface PreviewProps {
   customThemes?: UmlTheme[];
   onDeleteCustomTheme?: (id: string) => void;
   onSaveTheme?: () => void;
+  scale?: 1 | 2 | 3 | 4;
+  onScaleChange?: (scale: 1 | 2 | 3 | 4) => void;
 }
 
 // Mermaid theme mapping
@@ -48,13 +50,14 @@ const MERMAID_THEMES: Record<string, string> = {
   'neutral': 'neutral',
 };
 
-export default function Preview({ code, theme, engine, tuning, onTuningChange, onError, onThemeChange, onShare, customThemes, onDeleteCustomTheme, onSaveTheme }: PreviewProps) {
+export default function Preview({ code, theme, engine, tuning, onTuningChange, onError, onThemeChange, onShare, customThemes, onDeleteCustomTheme, onSaveTheme, scale: propScale, onScaleChange }: PreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [isRendering, setIsRendering] = useState(false);
   const [zoom, setZoom] = useState(100);
-  const [scale, setScale] = useState<1 | 2 | 3 | 4>(2);
+  const [localScale, setLocalScale] = useState<1 | 2 | 3 | 4>(2);
+  const scale = propScale || localScale;
   const [showTuner, setShowTuner] = useState(false);
   const [complexity, setComplexity] = useState<{ nodeCount: number; isComplex: boolean } | null>(null);
   const [isSimplified, setIsSimplified] = useState(false);
@@ -404,7 +407,14 @@ export default function Preview({ code, theme, engine, tuning, onTuningChange, o
             <span className="text-xs text-[var(--text-secondary)]">分辨率:</span>
             <select
               value={scale}
-              onChange={(e) => setScale(Number(e.target.value) as 1 | 2 | 3 | 4)}
+              onChange={(e) => {
+                const newScale = Number(e.target.value) as 1 | 2 | 3 | 4;
+                if (onScaleChange) {
+                  onScaleChange(newScale);
+                } else {
+                  setLocalScale(newScale);
+                }
+              }}
               className="px-2 py-1 text-sm bg-[var(--surface)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
               <option value={1}>1x</option>

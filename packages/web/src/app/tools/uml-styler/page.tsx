@@ -9,6 +9,7 @@ import TemplateLibrary from './components/TemplateLibrary';
 import HistoryPanel from './components/HistoryPanel';
 import { SaveThemeModal } from './components/SaveThemeModal';
 import { SaveTemplateModal } from './components/SaveTemplateModal';
+import { SettingsModal } from './components/SettingsModal';
 import { useToast, ToastContainer } from './components/Toast';
 import { Header } from '@/components/Header';
 import type { ThemeTuning } from './types';
@@ -20,10 +21,14 @@ import {
   loadUmlThemes,
   saveUmlTheme,
   deleteUmlTheme,
+  loadUmlConfig,
+  saveUmlConfig,
+  getDefaultUmlConfig,
+  type UmlStylerConfig,
   type UmlTemplate,
   type UmlTheme
 } from '@/lib/tauri';
-import { Save } from 'lucide-react';
+import { Save, Settings } from 'lucide-react';
 
 export default function UMLStylerPage() {
   const [code, setCode] = useState<string>('flowchart TD\n    A[Start] --> B[End]');
@@ -41,6 +46,8 @@ export default function UMLStylerPage() {
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [showSaveThemeModal, setShowSaveThemeModal] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [config, setConfig] = useState<UmlStylerConfig>(getDefaultUmlConfig());
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const { toasts, dismissToast, success, error: toastError } = useToast();
 
@@ -64,6 +71,16 @@ export default function UMLStylerPage() {
     if (!isDesktop) return;
     
     // Load templates
+    // Load config
+    loadUmlConfig()
+      .then((cfg) => {
+        setConfig(cfg);
+        setTheme(cfg.default_theme);
+        setEngine(cfg.default_engine.toLowerCase() as 'mermaid' | 'plantuml');
+      })
+      .catch((err) => {
+        console.error('Failed to load config:', err);
+      });
     loadUmlTemplates()
       .then((templates) => {
         setCustomTemplates(templates);
@@ -100,11 +117,23 @@ export default function UMLStylerPage() {
     if (customTheme && customTheme.config) {
       setTuning(customTheme.config as ThemeTuning);
     }
-  }, [customThemes]);
+    // Update config
+    if (isDesktop) {
+      const newConfig = { ...config, default_theme: newTheme };
+      setConfig(newConfig);
+      saveUmlConfig(newConfig).catch(console.error);
+    }
+  }, [customThemes, config, isDesktop]);
 
   const handleEngineChange = useCallback((newEngine: 'mermaid' | 'plantuml') => {
     setEngine(newEngine);
-  }, []);
+    // Update config
+    if (isDesktop) {
+      const newConfig = { ...config, default_engine: (newEngine === 'mermaid' ? 'Mermaid' : 'PlantUML') as 'Mermaid' | 'PlantUML' };
+      setConfig(newConfig);
+      saveUmlConfig(newConfig).catch(console.error);
+    }
+  }, [config, isDesktop]);
 
   const handleError = useCallback((err: string | null) => {
     setError(err);
@@ -201,17 +230,36 @@ export default function UMLStylerPage() {
         setTuning({});
       }
       success('主题删除成功');
-      setCustomThemes(prev => prev.filter(t => t.id !== id));
-      if (theme === id) {
-        setTheme('default');
-      }
-      success('主题删除成功');
     } catch (err) {
       console.error('Failed to delete theme:', err);
       toastError('删除主题失败');
     }
   }, [theme, success, toastError]);
 
+  const handleScaleChange = useCallback((newScale: 1 | 2 | 3 | 4) => {
+    let res: UmlStylerConfig['export_resolution'] = 'Default';
+    if (newScale === 2) res = 'X2';
+    if (newScale === 3) res = 'X3';
+    if (newScale === 4) res = 'X4';
+    
+    if (isDesktop) {
+      const newConfig = { ...config, export_resolution: res };
+      setConfig(newConfig);
+      saveUmlConfig(newConfig).catch(console.error);
+    }
+  }, [config, isDesktop]);
+
+  const handleConfigSave = useCallback((newConfig: UmlStylerConfig) => {
+    setConfig(newConfig);
+    if (isDesktop) {
+      saveUmlConfig(newConfig).then(() => {
+        success('配置保存成功');
+      }).catch((err) => {
+        console.error('Failed to save config:', err);
+        toastError('保存配置失败');
+      });
+    }
+  }, [isDesktop, success, toastError]);
   return (
     <>
       <Header title="UML Styler" />
@@ -268,6 +316,14 @@ export default function UMLStylerPage() {
                     <span>保存模板</span>
                   </button>
                 )}
+                  <button
+                    onClick={() => setShowSettingsModal(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] rounded transition-colors"
+                    title="设置"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>设置</span>
+                  </button>
                 
                 <div className="text-xs text-[var(--text-secondary)]">
                   Ln {cursorPosition.line}, Col {cursorPosition.col}
@@ -281,6 +337,13 @@ export default function UMLStylerPage() {
                 code={code} 
                 theme={theme}
                 engine={engine}
+                scale={
+                  config.export_resolution === 'Default' ? 1 :
+                  config.export_resolution === 'X2' ? 2 :
+                  config.export_resolution === 'X3' ? 3 :
+                  config.export_resolution === 'X4' ? 4 : 2
+                }
+                onScaleChange={handleScaleChange}
                 tuning={tuning}
                 onTuningChange={handleTuningChange}
                 onError={handleError}
@@ -320,6 +383,13 @@ export default function UMLStylerPage() {
         onSave={handleSaveAsTheme}
         currentTuning={tuning}
         currentEngine={engine}
+      />
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        config={config}
+        onSave={handleConfigSave}
       />
       
       {/* Toasts */}
