@@ -35,9 +35,6 @@ export default function UMLStylerPage() {
   const [code, setCode] = useState<string>('flowchart TD\n    A[Start] --> B[End]');
   const [theme, setTheme] = useState<string>('default');
   const [engine, setEngine] = useState<'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom'>('mermaid');
-  const [code, setCode] = useState<string>('flowchart TD\n    A[Start] --> B[End]');
-  const [theme, setTheme] = useState<string>('default');
-  const [engine, setEngine] = useState<'mermaid' | 'plantuml' | 'd2' | 'graphviz'>('mermaid');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cursorPosition, setCursorPosition] = useState({ line: 1, col: 1 });
@@ -75,17 +72,11 @@ export default function UMLStylerPage() {
     if (!isDesktop) return;
     
     // Load config
-    // Load config
     loadUmlConfig()
       .then((cfg) => {
         setConfig(cfg);
         setTheme(cfg.default_theme);
         setEngine(cfg.default_engine.toLowerCase() as 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom');
-      })
-      .then((cfg) => {
-        setConfig(cfg);
-        setTheme(cfg.default_theme);
-        setEngine(cfg.default_engine.toLowerCase() as 'mermaid' | 'plantuml' | 'd2' | 'graphviz');
       })
       .catch((err) => {
         console.error('Failed to load config:', err);
@@ -109,14 +100,15 @@ export default function UMLStylerPage() {
         toastError('加载主题失败');
       });
   }, [isDesktop, toastError]);
-    // Debounced config save
-    useEffect(() => {
-      if (!isDesktop) return;
-      const timer = setTimeout(() => {
-        saveUmlConfig(config).catch(console.error);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }, [config, isDesktop]);
+
+  // Debounced config save
+  useEffect(() => {
+    if (!isDesktop) return;
+    const timer = setTimeout(() => {
+      saveUmlConfig(config).catch(console.error);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [config, isDesktop]);
 
   const handleCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
@@ -156,20 +148,7 @@ export default function UMLStylerPage() {
       }));
     }
   }, [isDesktop]);
-    setEngine(newEngine);
-    // Update config
-    if (isDesktop) {
-      setConfig(prev => ({ 
-        ...prev, 
-        default_engine: (
-          newEngine === 'mermaid' ? 'Mermaid' : 
-          newEngine === 'plantuml' ? 'PlantUML' : 
-          newEngine === 'd2' ? 'D2' :
-          'Graphviz'
-        ) as 'Mermaid' | 'PlantUML' | 'D2' | 'Graphviz' 
-      }));
-    }
-  }, [isDesktop]);
+
   const handleError = useCallback((err: string | null) => {
     setError(err);
   }, []);
@@ -192,11 +171,6 @@ export default function UMLStylerPage() {
     setError(null);
     setCode(loadedCode);
     setEngine(loadedEngine as 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom');
-    setTheme(loadedTheme);
-  }, []);
-    setError(null);
-    setCode(loadedCode);
-    setEngine(loadedEngine as 'mermaid' | 'plantuml' | 'd2' | 'graphviz');
     setTheme(loadedTheme);
   }, []);
 
@@ -291,6 +265,7 @@ export default function UMLStylerPage() {
     setConfig(newConfig);
     success('配置保存成功');
   }, [success]);
+
   return (
     <>
       <Header title="UML Styler" />
@@ -416,6 +391,7 @@ export default function UMLStylerPage() {
         currentTuning={tuning}
         currentEngine={engine}
       />
+
       {/* Settings Modal */}
       <SettingsModal
         isOpen={showSettingsModal}

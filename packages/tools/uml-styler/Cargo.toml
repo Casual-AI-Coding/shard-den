@@ -13,7 +13,7 @@ wasm = ["wasm-bindgen", "serde-wasm-bindgen", "console_error_panic_hook"]
 
 [dependencies]
 serde.workspace = true
-serde_json = "1.0"
+serde_json.workspace = true
 shard-den-core = { version = "0.3.2", path = "../../core" }
 thiserror.workspace = true
 base64 = "0.21"

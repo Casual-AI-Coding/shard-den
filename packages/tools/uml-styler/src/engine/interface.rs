@@ -6,7 +6,7 @@ use crate::engine::{
 use crate::error::{Diagnostic, EngineError};
 use crate::templates::Template;
 use crate::theme::Theme;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt::Debug;
 
 /// 图表类型
@@ -68,7 +68,7 @@ pub trait Engine: Debug + Send + Sync {
 /// 引擎注册表
 #[derive(Debug, Default)]
 pub struct EngineRegistry {
-    engines: HashMap<String, Box<dyn Engine>>,
+    engines: BTreeMap<String, Box<dyn Engine>>,
 }
 
 impl EngineRegistry {

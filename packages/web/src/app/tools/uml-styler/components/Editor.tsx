@@ -11,12 +11,6 @@ interface EditorProps {
   engine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom';
   onEngineChange: (engine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom') => void;
 }
-  code: string;
-  onChange: (code: string) => void;
-  onCursorChange?: (line: number, col: number) => void;
-  engine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz';
-  onEngineChange: (engine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz') => void;
-}
 
 // Mermaid syntax highlight config
 const MERMAID_LANGUAGE_CONFIG = {
@@ -130,7 +124,7 @@ const PLANTUML_TOKEN_PROVIDER = {
   tokenizer: {
     root: [
       [/'[^\n]*$/, 'comment'],
-      [/\/\*/, 'comment', '@comment'],
+      [\/\*/, 'comment', '@comment'],
       [/[{}()\[\]]/, '@brackets'],
       [/[a-zA-Z_]\w*/, {
         cases: {
@@ -273,7 +267,7 @@ const DOT_TOKEN_PROVIDER = {
   tokenizer: {
     root: [
       [/'[^\n]*$/, 'comment'],
-      [/\/\*/, 'comment', '@comment'],
+      [\/\*/, 'comment', '@comment'],
       [/[{}()\[\]]/, '@brackets'],
       [/[a-zA-Z_]\w*/, {
         cases: {
@@ -325,17 +319,6 @@ function getLanguageForEngine(engine: string): string {
       return 'dot';
     case 'wavedrom':
       return 'json';
-    default:
-      return 'mermaid';
-  }
-}
-  switch (engine) {
-    case 'plantuml':
-      return 'plantuml';
-    case 'd2':
-      return 'd2';
-    case 'graphviz':
-      return 'dot';
     default:
       return 'mermaid';
   }
@@ -440,7 +423,6 @@ export default function CodeEditor({
       {/* Toolbar */}
       <div className="h-12 px-4 bg-[var(--bg)] border-b border-[var(--border)] flex items-center gap-2 shrink-0">
         {/* Engine Selector */}
-        {/* Engine Selector */}
         <select
           value={engine}
           onChange={(e) => onEngineChange(e.target.value as 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom')}
@@ -451,15 +433,6 @@ export default function CodeEditor({
           <option value="d2">D2</option>
           <option value="graphviz">Graphviz</option>
           <option value="wavedrom">WaveDrom</option>
-        </select>
-          value={engine}
-          onChange={(e) => onEngineChange(e.target.value as 'mermaid' | 'plantuml' | 'd2' | 'graphviz')}
-          className="px-3 py-1.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-        >
-          <option value="mermaid">Mermaid</option>
-          <option value="plantuml">PlantUML</option>
-          <option value="d2">D2</option>
-          <option value="graphviz">Graphviz</option>
         </select>
 
         {/* Format Button */}

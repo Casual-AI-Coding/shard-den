@@ -106,7 +106,7 @@ export default function ThemeSelector({ theme, onThemeChange, engine, customThem
                 <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">自定义</span>
               </div>
               {customThemes.map((t) => (
-                <div key={t.id} className="group_item relative flex items-center">
+                <div key={t.id} className="group/item relative flex items-center">
                   <button
                     onClick={() => onThemeChange(t.id)}
                     className={`flex-1 flex items-center gap-2 px-2 py-1.5 text-sm rounded transition-colors ${
@@ -127,7 +127,7 @@ export default function ThemeSelector({ theme, onThemeChange, engine, customThem
                         e.stopPropagation();
                         onDeleteCustomTheme(t.id);
                       }}
-                      className="absolute right-1 p-1 text-[var(--text-secondary)] hover:text-red-400 opacity-0 group-hover_item:opacity-100 transition-opacity"
+                      className="absolute right-1 p-1 text-[var(--text-secondary)] hover:text-red-400 opacity-0 group-hover/item:opacity-100 transition-opacity"
                       title="删除主题"
                     >
                       <Trash2 className="w-3.5 h-3.5" />

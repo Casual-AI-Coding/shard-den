@@ -12,6 +12,9 @@ use std::fmt::Debug;
 /// WaveDrom server base URL
 const WAVEDROM_SERVER_URL: &str = "https://wavedrom.com/editor.html";
 
+/// Maximum safe URL length for browsers
+const MAX_URL_LENGTH: usize = 4000;
+
 /// WaveDrom rendering engine
 #[derive(Debug)]
 pub struct WaveDromEngine {
@@ -32,14 +35,12 @@ impl WaveDromEngine {
     }
 
     fn get_wavedrom_themes() -> Vec<Theme> {
-        vec![
-            Theme {
-                id: "wavedrom/default".to_string(),
-                name: "Default".to_string(),
-                category: ThemeCategory::Shared,
-                tuning: ThemeTuning::default(),
-            },
-        ]
+        vec![Theme {
+            id: "wavedrom/default".to_string(),
+            name: "Default".to_string(),
+            category: ThemeCategory::Shared,
+            tuning: ThemeTuning::default(),
+        }]
     }
 
     fn get_wavedrom_templates() -> Vec<Template> {
@@ -189,6 +190,16 @@ impl Engine for WaveDromEngine {
         let encoded = urlencoding::encode(code);
         let url = format!("{}#{}", WAVEDROM_SERVER_URL, encoded);
 
+        // Check URL length to avoid browser limits
+        if url.len() > MAX_URL_LENGTH {
+            return Err(EngineError::RenderError(format!(
+                "Diagram too large: URL length ({} chars) exceeds maximum allowed ({} chars). \
+                 Try simplifying your diagram.",
+                url.len(),
+                MAX_URL_LENGTH
+            )));
+        }
+
         Ok(RenderHint::ServerURL(url))
     }
 
@@ -292,6 +303,20 @@ mod tests {
     }
 
     #[test]
+    fn test_wavedrom_render_url_too_long() {
+        let engine = WaveDromEngine::new();
+        let theme = Theme::default();
+        // Create a very large JSON that will exceed URL length limit
+        let large_signal = "\"signal\": [".to_string()
+            + &"{\"name\": \"a\", \"wave\": \"p.....\"},".repeat(500)
+            + "]";
+        let code = format!("{{{}}}", large_signal);
+        let result = engine.render(&code, &theme);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("too large"));
+    }
+
+    #[test]
     fn test_wavedrom_validate_valid() {
         let engine = WaveDromEngine::new();
         let code = r#"{"signal": [{"name": "clk", "wave": "p....."}]}"#;
@@ -315,7 +340,7 @@ mod tests {
     #[test]
     fn test_wavedrom_validate_malformed_json() {
         let engine = WaveDromEngine::new();
-        let code = r#"{"signal": [{"name": "clk"#;
+        let code = r#"{"signal": [{"name": "clk""#;
         let result = engine.validate(code);
         assert!(result.is_ok());
         let diagnostics = result.unwrap();
@@ -337,8 +362,8 @@ mod tests {
         assert!(result.is_ok());
         let diagnostics = result.unwrap();
         // Should have a warning about missing signal field
-        assert!(diagnostics.iter().any(|d| 
-            d.message.contains("signal") && d.severity == Severity::Warning
-        ));
+        assert!(diagnostics
+            .iter()
+            .any(|d| d.message.contains("signal") && d.severity == Severity::Warning));
     }
 }
