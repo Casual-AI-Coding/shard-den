@@ -34,6 +34,9 @@ import { Save, Settings } from 'lucide-react';
 export default function UMLStylerPage() {
   const [code, setCode] = useState<string>('flowchart TD\n    A[Start] --> B[End]');
   const [theme, setTheme] = useState<string>('default');
+  const [engine, setEngine] = useState<'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom'>('mermaid');
+  const [code, setCode] = useState<string>('flowchart TD\n    A[Start] --> B[End]');
+  const [theme, setTheme] = useState<string>('default');
   const [engine, setEngine] = useState<'mermaid' | 'plantuml' | 'd2' | 'graphviz'>('mermaid');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +77,11 @@ export default function UMLStylerPage() {
     // Load config
     // Load config
     loadUmlConfig()
+      .then((cfg) => {
+        setConfig(cfg);
+        setTheme(cfg.default_theme);
+        setEngine(cfg.default_engine.toLowerCase() as 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom');
+      })
       .then((cfg) => {
         setConfig(cfg);
         setTheme(cfg.default_theme);
@@ -132,7 +140,22 @@ export default function UMLStylerPage() {
     }
   }, [customThemes, isDesktop]);
 
-  const handleEngineChange = useCallback((newEngine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz') => {
+  const handleEngineChange = useCallback((newEngine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom') => {
+    setEngine(newEngine);
+    // Update config
+    if (isDesktop) {
+      setConfig(prev => ({ 
+        ...prev, 
+        default_engine: (
+          newEngine === 'mermaid' ? 'Mermaid' : 
+          newEngine === 'plantuml' ? 'PlantUML' : 
+          newEngine === 'd2' ? 'D2' :
+          newEngine === 'wavedrom' ? 'WaveDrom' :
+          'Graphviz'
+        ) as 'Mermaid' | 'PlantUML' | 'D2' | 'Graphviz' | 'WaveDrom' 
+      }));
+    }
+  }, [isDesktop]);
     setEngine(newEngine);
     // Update config
     if (isDesktop) {
@@ -166,6 +189,11 @@ export default function UMLStylerPage() {
   }, [code, success, toastError]);
 
   const handleLoadHistory = useCallback((loadedCode: string, loadedEngine: string, loadedTheme: string) => {
+    setError(null);
+    setCode(loadedCode);
+    setEngine(loadedEngine as 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom');
+    setTheme(loadedTheme);
+  }, []);
     setError(null);
     setCode(loadedCode);
     setEngine(loadedEngine as 'mermaid' | 'plantuml' | 'd2' | 'graphviz');

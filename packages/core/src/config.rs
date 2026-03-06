@@ -74,6 +74,8 @@ pub enum UmlEngine {
     D2,
     /// Graphviz/DOT Engine
     Graphviz,
+    /// WaveDrom Digital Timing Diagram
+    WaveDrom,
 }
 
 /// Export resolution presets
@@ -284,14 +286,14 @@ mod tests {
     fn test_uml_styler_config_custom() {
         let config = UmlStylerConfig {
             default_theme: "shared/dark".to_string(),
-            default_engine: UmlEngine::PlantUML,
+            default_engine: UmlEngine::Graphviz,
             export_resolution: ExportResolution::X4,
             auto_save: false,
             auto_save_interval_secs: 60,
         };
 
         assert_eq!(config.default_theme, "shared/dark");
-        assert_eq!(config.default_engine, UmlEngine::PlantUML);
+        assert_eq!(config.default_engine, UmlEngine::Graphviz);
         assert_eq!(config.export_resolution, ExportResolution::X4);
         assert!(!config.auto_save);
         assert_eq!(config.auto_save_interval_secs, 60);
@@ -302,8 +304,11 @@ mod tests {
         let mermaid = serde_json::to_string(&UmlEngine::Mermaid).unwrap();
         assert!(mermaid.contains("Mermaid"));
 
-        let plantuml = serde_json::to_string(&UmlEngine::PlantUML).unwrap();
-        assert!(plantuml.contains("PlantUML"));
+        let graphviz = serde_json::to_string(&UmlEngine::Graphviz).unwrap();
+        assert!(graphviz.contains("Graphviz"));
+
+        let wavedrom = serde_json::to_string(&UmlEngine::WaveDrom).unwrap();
+        assert!(wavedrom.contains("WaveDrom"));
 
         let decoded: UmlEngine = serde_json::from_str("\"Mermaid\"").unwrap();
         assert_eq!(decoded, UmlEngine::Mermaid);
@@ -344,7 +349,7 @@ mod tests {
             json_extractor: JsonExtractorConfig::default(),
             uml_styler: UmlStylerConfig {
                 default_theme: "shared/business".to_string(),
-                default_engine: UmlEngine::PlantUML,
+                default_engine: UmlEngine::Graphviz,
                 export_resolution: ExportResolution::Custom(300),
                 auto_save: true,
                 auto_save_interval_secs: 45,
@@ -352,6 +357,6 @@ mod tests {
         };
 
         assert_eq!(tool_config.uml_styler.default_theme, "shared/business");
-        assert_eq!(tool_config.uml_styler.default_engine, UmlEngine::PlantUML);
+        assert_eq!(tool_config.uml_styler.default_engine, UmlEngine::Graphviz);
     }
 }

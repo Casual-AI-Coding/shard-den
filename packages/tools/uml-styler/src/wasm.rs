@@ -1,5 +1,19 @@
 //! WASM 导出模块
 
+use crate::engine::{D2Engine, EngineRegistry, MermaidEngine, PlantUmlEngine, WaveDromEngine};
+use crate::theme::{Theme, ThemeCategory, ThemeTuning};
+use wasm_bindgen::prelude::*;
+use once_cell::sync::Lazy;
+
+YP|static REGISTRY: Lazy<EngineRegistry> = Lazy::new(|| {
+    let mut registry = EngineRegistry::new();
+    registry.register(Box::new(MermaidEngine::new()));
+    registry.register(Box::new(PlantUmlEngine::new()));
+    registry.register(Box::new(D2Engine::new()));
+    registry.register(Box::new(WaveDromEngine::new()));
+    registry
+});
+
 use crate::engine::{D2Engine, EngineRegistry, MermaidEngine, PlantUmlEngine};
 use crate::theme::{Theme, ThemeCategory, ThemeTuning};
 use wasm_bindgen::prelude::*;

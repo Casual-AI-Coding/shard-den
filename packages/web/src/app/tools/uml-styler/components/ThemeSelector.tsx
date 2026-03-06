@@ -9,7 +9,7 @@ import { ThemeTuning } from '../types';
 interface ThemeSelectorProps {
   theme: string;
   onThemeChange: (theme: string) => void;
-  engine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz';
+  engine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom';
   customThemes?: UmlTheme[];
   onDeleteCustomTheme?: (id: string) => void;
 }
@@ -26,7 +26,7 @@ const MERMAID_THEMES = [
 const D2_THEMES = [
   { id: '100', name: 'Neutral', preview: '#F3F4F6' },
   { id: '200', name: 'Dark', preview: '#1F2937' },
-  ];
+];
 
 // Graphviz Themes (Layout engines)
 const GRAPHVIZ_THEMES = [
@@ -46,6 +46,11 @@ const PLANTUML_THEMES = [
   { id: 'vibrant', name: 'Vibrant', preview: '#1A1A1A' },
 ];
 
+// WaveDrom Themes (Limited options)
+const WAVEDROM_THEMES = [
+  { id: 'wavedrom/default', name: 'Default', preview: '#3B82F6' },
+];
+
 // 共享主题（适用于两个引擎）
 const SHARED_THEMES = [
   { id: 'shared/default', name: 'Default', preview: '#3B82F6', category: 'shared' },
@@ -59,7 +64,10 @@ const EMPTY_THEMES: UmlTheme[] = [];
 
 export default function ThemeSelector({ theme, onThemeChange, engine, customThemes = EMPTY_THEMES, onDeleteCustomTheme }: ThemeSelectorProps) {
   // 合并共享主题和引擎特定主题
+  const engineThemes = engine === 'plantuml' ? PLANTUML_THEMES
+    : engine === 'd2' ? D2_THEMES
     : engine === 'graphviz' ? GRAPHVIZ_THEMES
+    : engine === 'wavedrom' ? WAVEDROM_THEMES
     : MERMAID_THEMES;
   const themes = [...SHARED_THEMES, ...engineThemes];
 
@@ -98,7 +106,7 @@ export default function ThemeSelector({ theme, onThemeChange, engine, customThem
                 <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">自定义</span>
               </div>
               {customThemes.map((t) => (
-                <div key={t.id} className="group/item relative flex items-center">
+                <div key={t.id} className="group_item relative flex items-center">
                   <button
                     onClick={() => onThemeChange(t.id)}
                     className={`flex-1 flex items-center gap-2 px-2 py-1.5 text-sm rounded transition-colors ${
@@ -119,7 +127,7 @@ export default function ThemeSelector({ theme, onThemeChange, engine, customThem
                         e.stopPropagation();
                         onDeleteCustomTheme(t.id);
                       }}
-                      className="absolute right-1 p-1 text-[var(--text-secondary)] hover:text-red-400 opacity-0 group-hover/item:opacity-100 transition-opacity"
+                      className="absolute right-1 p-1 text-[var(--text-secondary)] hover:text-red-400 opacity-0 group-hover_item:opacity-100 transition-opacity"
                       title="删除主题"
                     >
                       <Trash2 className="w-3.5 h-3.5" />

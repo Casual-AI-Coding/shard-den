@@ -44,22 +44,26 @@ fn test_diagram_type_all_variants() {
         DiagramType::Mindmap,
         DiagramType::Gantt,
         DiagramType::Activity,
+        DiagramType::D2,
+        DiagramType::Graphviz,
+        DiagramType::WaveDrom,
     ];
-    assert_eq!(types.len(), 11);
+    assert_eq!(types.len(), 14);
 }
 
 #[test]
 fn test_engine_registry_new() {
     let registry = shard_den_uml_styler::engine::EngineRegistry::new();
-    assert!(registry.list_engines().is_empty());
+    // EngineRegistry::new() now pre-registers all 5 engines
+    assert_eq!(registry.list_engines().len(), 5);
 }
 
 #[test]
 fn test_engine_registry_register() {
-    use shard_den_uml_styler::engine::Engine;
     use shard_den_uml_styler::engine::MermaidEngine;
 
-    let mut registry = shard_den_uml_styler::engine::EngineRegistry::new();
+    // Use default() to get an empty registry
+    let mut registry = shard_den_uml_styler::engine::EngineRegistry::default();
     let engine = Box::new(MermaidEngine::new());
     registry.register(engine);
 
@@ -70,10 +74,10 @@ fn test_engine_registry_register() {
 
 #[test]
 fn test_engine_registry_get_engine() {
-    use shard_den_uml_styler::engine::Engine;
     use shard_den_uml_styler::engine::MermaidEngine;
 
-    let mut registry = shard_den_uml_styler::engine::EngineRegistry::new();
+    // Use default() to get an empty registry
+    let mut registry = shard_den_uml_styler::engine::EngineRegistry::default();
     let engine = Box::new(MermaidEngine::new());
     registry.register(engine);
 

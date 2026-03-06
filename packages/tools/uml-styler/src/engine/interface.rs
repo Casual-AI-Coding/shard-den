@@ -1,8 +1,12 @@
 //! Engine Interface - 引擎核心接口定义
 
+use crate::engine::{
+    D2Engine, GraphvizEngine, MermaidEngine, PlantUmlEngine, WaveDromEngine,
+};
 use crate::error::{Diagnostic, EngineError};
 use crate::templates::Template;
 use crate::theme::Theme;
+use std::collections::HashMap;
 use std::fmt::Debug;
 
 /// 图表类型
@@ -24,6 +28,8 @@ pub enum DiagramType {
     D2,
     /// Graphviz/DOT Diagram
     Graphviz,
+    /// WaveDrom Digital Timing Diagram
+    WaveDrom,
 }
 
 /// 渲染提示 - 告诉前端如何渲染
@@ -62,28 +68,30 @@ pub trait Engine: Debug + Send + Sync {
 /// 引擎注册表
 #[derive(Debug, Default)]
 pub struct EngineRegistry {
-    engines: Vec<Box<dyn Engine>>,
+    engines: HashMap<String, Box<dyn Engine>>,
 }
 
 impl EngineRegistry {
     pub fn new() -> Self {
-        Self {
-            engines: Vec::new(),
-        }
+        let mut registry = Self::default();
+        // Register default engines
+        registry.register(Box::new(MermaidEngine::new()));
+        registry.register(Box::new(PlantUmlEngine::new()));
+        registry.register(Box::new(D2Engine::new()));
+        registry.register(Box::new(GraphvizEngine::new()));
+        registry.register(Box::new(WaveDromEngine::new()));
+        registry
     }
 
     pub fn register(&mut self, engine: Box<dyn Engine>) {
-        self.engines.push(engine);
+        self.engines.insert(engine.name().to_string(), engine);
     }
 
     pub fn get_engine(&self, name: &str) -> Option<&dyn Engine> {
-        self.engines
-            .iter()
-            .find(|e| e.name() == name)
-            .map(|e| e.as_ref())
+        self.engines.get(name).map(|e| e.as_ref())
     }
 
     pub fn list_engines(&self) -> Vec<&str> {
-        self.engines.iter().map(|e| e.name()).collect()
+        self.engines.keys().map(|k| k.as_str()).collect()
     }
 }

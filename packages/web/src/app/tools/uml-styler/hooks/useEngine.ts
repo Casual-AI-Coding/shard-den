@@ -5,7 +5,7 @@ import mermaid from 'mermaid';
 import { UmlStyler } from '@/lib/core';
 import { analyzeComplexity } from '../lib/workers/complexity';
 
-export type EngineType = 'mermaid' | 'plantuml' | 'd2' | 'graphviz';
+export type EngineType = 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom';
 
 // Mermaid theme mapping
 const MERMAID_THEMES: Record<string, string> = {
