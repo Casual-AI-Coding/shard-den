@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useCallback } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import type { editor, Position } from 'monaco-editor';
 
@@ -124,7 +124,7 @@ const PLANTUML_TOKEN_PROVIDER = {
   tokenizer: {
     root: [
       [/'[^\n]*$/, 'comment'],
-      [\/\*/, 'comment', '@comment'],
+      [/\/\*/, 'comment', '@comment'],
       [/[{}()\[\]]/, '@brackets'],
       [/[a-zA-Z_]\w*/, {
         cases: {
@@ -267,7 +267,7 @@ const DOT_TOKEN_PROVIDER = {
   tokenizer: {
     root: [
       [/'[^\n]*$/, 'comment'],
-      [\/\*/, 'comment', '@comment'],
+      [/\/\*/, 'comment', '@comment'],
       [/[{}()\[\]]/, '@brackets'],
       [/[a-zA-Z_]\w*/, {
         cases: {
@@ -324,12 +324,12 @@ function getLanguageForEngine(engine: string): string {
   }
 }
 
-export default function CodeEditor({ 
-  code, 
-  onChange, 
+export default function CodeEditor({
+  code,
+  onChange,
   onCursorChange,
-  engine, 
-  onEngineChange 
+  engine,
+  onEngineChange
 }: EditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
@@ -441,8 +441,7 @@ export default function CodeEditor({
           className="px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] rounded transition-colors"
           title="Format code"
         >
-          格式化
-        </button>
+          鏍煎紡鍖?        </button>
 
         {/* Clear Button */}
         <button
@@ -450,7 +449,7 @@ export default function CodeEditor({
           className="px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
           title="Clear editor"
         >
-          清空
+          娓呯┖
         </button>
       </div>
 

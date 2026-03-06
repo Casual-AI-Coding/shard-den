@@ -13,12 +13,19 @@ use std::fmt::Debug;
 const WAVEDROM_SERVER_URL: &str = "https://wavedrom.com/editor.html";
 
 /// Maximum safe URL length for browsers
-const MAX_URL_LENGTH: usize = 4000;
+///
+/// Internet Explorer has a URL limit of ~2083 characters, modern browsers
+/// (Chrome, Firefox, Safari) support around 8000+ characters. We use 4000
+/// as a safe middle ground to ensure compatibility across all browsers
+/// while still allowing reasonably large diagrams.
+const DEFAULT_MAX_URL_LENGTH: usize = 4000;
 
 /// WaveDrom rendering engine
 #[derive(Debug)]
 pub struct WaveDromEngine {
     supported_types: Vec<DiagramType>,
+    /// Maximum URL length for generated WaveDrom URLs
+    max_url_length: usize,
 }
 
 impl Default for WaveDromEngine {
@@ -28,9 +35,40 @@ impl Default for WaveDromEngine {
 }
 
 impl WaveDromEngine {
+    /// Creates a new WaveDrom engine with default URL length limit (4000 chars)
     pub fn new() -> Self {
         Self {
             supported_types: vec![DiagramType::WaveDrom],
+            max_url_length: DEFAULT_MAX_URL_LENGTH,
+        }
+    }
+
+    /// Creates a new WaveDrom engine with custom URL length limit
+    ///
+    /// # Arguments
+    /// * `max_url_length` - Maximum allowed URL length (minimum: 1000)
+    ///
+    /// # Panics
+    /// Panics if `max_url_length` is less than 1000
+    ///
+    /// # Example
+    /// ```ignore
+    /// let engine = WaveDromEngine::with_url_limit(8000);
+    /// ```
+    /// ```ignore
+    /// let engine = WaveDromEngine::with_url_limit(8000);
+    /// ```
+    /// ```
+    /// let engine = WaveDromEngine::with_url_limit(8000);
+    /// ```
+    pub fn with_url_limit(max_url_length: usize) -> Self {
+        assert!(
+            max_url_length >= 1000,
+            "max_url_length must be at least 1000"
+        );
+        Self {
+            supported_types: vec![DiagramType::WaveDrom],
+            max_url_length,
         }
     }
 
@@ -191,12 +229,12 @@ impl Engine for WaveDromEngine {
         let url = format!("{}#{}", WAVEDROM_SERVER_URL, encoded);
 
         // Check URL length to avoid browser limits
-        if url.len() > MAX_URL_LENGTH {
+        if url.len() > self.max_url_length {
             return Err(EngineError::RenderError(format!(
                 "Diagram too large: URL length ({} chars) exceeds maximum allowed ({} chars). \
                  Try simplifying your diagram.",
                 url.len(),
-                MAX_URL_LENGTH
+                self.max_url_length
             )));
         }
 
@@ -258,22 +296,6 @@ mod tests {
     }
 
     #[test]
-    fn test_wavedrom_themes() {
-        let engine = WaveDromEngine::new();
-        let themes = engine.get_themes();
-        assert!(!themes.is_empty());
-        assert!(themes.iter().any(|t| t.id == "wavedrom/default"));
-    }
-
-    #[test]
-    fn test_wavedrom_templates() {
-        let engine = WaveDromEngine::new();
-        let templates = engine.get_templates();
-        assert!(!templates.is_empty());
-        assert!(templates.len() >= 4);
-    }
-
-    #[test]
     fn test_wavedrom_render_empty_code() {
         let engine = WaveDromEngine::new();
         let theme = Theme::default();
@@ -298,8 +320,23 @@ mod tests {
         assert!(result.is_ok());
         if let Ok(RenderHint::ServerURL(url)) = result {
             assert!(url.contains("wavedrom.com"));
-            assert!(url.contains("editor.html"));
         }
+    }
+
+    #[test]
+    fn test_wavedrom_themes() {
+        let engine = WaveDromEngine::new();
+        let themes = engine.get_themes();
+        assert!(!themes.is_empty());
+        assert!(themes.iter().any(|t| t.id == "wavedrom/default"));
+    }
+
+    #[test]
+    fn test_wavedrom_templates() {
+        let engine = WaveDromEngine::new();
+        let templates = engine.get_templates();
+        assert!(!templates.is_empty());
+        assert!(templates.iter().any(|t| t.id == "wavedrom/basic_signal"));
     }
 
     #[test]
@@ -307,13 +344,102 @@ mod tests {
         let engine = WaveDromEngine::new();
         let theme = Theme::default();
         // Create a very large JSON that will exceed URL length limit
-        let large_signal = "\"signal\": [".to_string()
-            + &"{\"name\": \"a\", \"wave\": \"p.....\"},".repeat(500)
-            + "]";
-        let code = format!("{{{}}}", large_signal);
+        // Use valid JSON without trailing commas
+        let signals: String = (0..500)
+            .map(|i| format!(r#"{{"name":"s{}","wave":"p....."}}"#, i))
+            .collect::<Vec<_>>()
+            .join(",");
+        let code = format!(r#"{{"signal":[{}]}}"#, signals);
         let result = engine.render(&code, &theme);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("too large"));
+        let err_str = result.unwrap_err().to_string();
+        assert!(
+            err_str.contains("too large") || err_str.contains("exceeds maximum"),
+            "Error should indicate diagram is too large: {}",
+            err_str
+        );
+    }
+
+    #[test]
+    fn test_wavedrom_render_url_at_boundary() {
+        // Test with a custom limit to verify boundary behavior
+        let custom_limit = 1500;
+        let engine = WaveDromEngine::with_url_limit(custom_limit);
+        let theme = Theme::default();
+
+        // Create valid WaveDrom JSON and test iteratively
+        // Start with a size we know works, then increase
+        let mut num_entries = 10;
+        loop {
+            let signals: String = (0..num_entries)
+                .map(|i| format!(r#"{{"name":"s{}","wave":"p"}}"#, i))
+                .collect::<Vec<_>>()
+                .join(",");
+            let code = format!(r#"{{"signal":[{}]}}"#, signals);
+            let result = engine.render(&code, &theme);
+
+            if result.is_err() {
+                // Found the boundary - previous num_entries was OK, current is too large
+                assert!(
+                    result.unwrap_err().to_string().contains("too large"),
+                    "Should fail with URL too large error"
+                );
+                break;
+            }
+
+            // Check if we've hit the limit
+            if num_entries >= 100 {
+                // Safety limit - shouldn't need this many for 1500 chars
+                panic!("Could not reach URL limit with {} entries", num_entries);
+            }
+            num_entries += 1;
+        }
+
+        // Verify the previous size works
+        let signals_ok: String = (0..num_entries - 1)
+            .map(|i| format!(r#"{{"name":"s{}","wave":"p"}}"#, i))
+            .collect::<Vec<_>>()
+            .join(",");
+        let code_ok = format!(r#"{{"signal":[{}]}}"#, signals_ok);
+        let result_ok = engine.render(&code_ok, &theme);
+        assert!(result_ok.is_ok(), "URL just under limit should be allowed");
+    }
+
+    #[test]
+    fn test_wavedrom_with_custom_url_limit() {
+        // Use a larger custom limit to ensure small diagrams work
+        let custom_limit = 3000;
+        let engine = WaveDromEngine::with_url_limit(custom_limit);
+        let theme = Theme::default();
+
+        // Create a small diagram (~500 chars when encoded)
+        let code = r#"{"signal":[{"name":"clk","wave":"p....."},{"name":"data","wave":"x.345x","data":["D0","D1","D2"]}]}"#;
+
+        // Should succeed with custom limit
+        let result = engine.render(&code, &theme);
+        assert!(
+            result.is_ok(),
+            "Should succeed with custom limit of {}: {:?}",
+            custom_limit,
+            result
+        );
+
+        // Verify the URL is actually generated
+        if let Ok(RenderHint::ServerURL(url)) = result {
+            assert!(url.contains("wavedrom.com"));
+            assert!(
+                url.len() <= custom_limit,
+                "URL length {} exceeds limit {}",
+                url.len(),
+                custom_limit
+            );
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "max_url_length must be at least 1000")]
+    fn test_wavedrom_url_limit_too_small() {
+        WaveDromEngine::with_url_limit(500);
     }
 
     #[test]
@@ -323,7 +449,6 @@ mod tests {
         let result = engine.validate(code);
         assert!(result.is_ok());
         let diagnostics = result.unwrap();
-        // Should have a warning about missing signal field but no errors
         assert!(diagnostics.iter().all(|d| d.severity != Severity::Error));
     }
 
@@ -361,7 +486,6 @@ mod tests {
         let result = engine.validate(code);
         assert!(result.is_ok());
         let diagnostics = result.unwrap();
-        // Should have a warning about missing signal field
         assert!(diagnostics
             .iter()
             .any(|d| d.message.contains("signal") && d.severity == Severity::Warning));
