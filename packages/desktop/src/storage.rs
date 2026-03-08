@@ -164,7 +164,7 @@ impl Storage {
 
         let filtered: Vec<_> = entries
             .into_iter()
-            .filter(|e| tool.map_or(true, |t| e.tool == t))
+            .filter(|e| tool.is_none_or(|t| e.tool == t))
             .rev()
             .take(limit)
             .collect();
