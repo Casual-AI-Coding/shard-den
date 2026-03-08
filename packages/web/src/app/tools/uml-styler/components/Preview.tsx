@@ -13,7 +13,7 @@ import { useDiagramRenderer } from '../hooks/useEngine';
 interface PreviewProps {
   code: string;
   theme: string;
-  engine: 'mermaid' | 'plantuml' | 'd2';
+  engine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom';
   tuning?: ThemeTuning;
   onTuningChange?: (tuning: ThemeTuning) => void;
   onError?: (error: string | null) => void;

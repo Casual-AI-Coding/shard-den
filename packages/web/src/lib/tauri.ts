@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tauri API bindings for Desktop features
  * These functions only work in Tauri (Desktop) environment
  */
@@ -200,7 +200,7 @@ export interface UmlTheme {
 
 export interface UmlStylerConfig {
   default_theme: string;
-  default_engine: 'Mermaid' | 'PlantUML' | 'D2';
+  default_engine: 'Mermaid' | 'PlantUML' | 'D2' | 'Graphviz' | 'WaveDrom';
   export_resolution: 'Default' | 'X2' | 'X3' | 'X4' | { Custom: number };
   auto_save: boolean;
   auto_save_interval_secs: number;

@@ -170,7 +170,7 @@ impl WaveDromEngine {
         match serde_json::from_str::<serde_json::Value>(code) {
             Ok(json) => {
                 // Check for required "signal" field
-                if !json.get("signal").is_some() {
+                if json.get("signal").is_none() {
                     diagnostics.push(Diagnostic {
                         line: 1,
                         column: 1,

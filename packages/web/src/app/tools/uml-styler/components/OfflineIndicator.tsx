@@ -4,7 +4,7 @@ import { useNetwork } from '../hooks/useNetwork';
 import { WifiOff, Check } from 'lucide-react';
 
 interface OfflineIndicatorProps {
-  engine?: 'mermaid' | 'plantuml' | 'd2' | 'graphviz';
+  engine?: 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom';
 }
 
 /**

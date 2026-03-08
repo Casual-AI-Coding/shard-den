@@ -14,8 +14,6 @@ pub use mermaid::MermaidEngine;
 pub use plantuml::PlantUmlEngine;
 pub use wavedrom::WaveDromEngine;
 
-#[cfg(feature = "wasm")]
-use crate::error::EngineError;
 
 /// 创建引擎实例
 pub fn create_engine(engine_type: &str) -> Option<Box<dyn Engine>> {
