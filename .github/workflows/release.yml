@@ -154,10 +154,10 @@ jobs:
     - name: Package Web
       run: |
         VERSION="${{ env.VERSION }}"
-        cd packages/web/.next
+        cd packages/web/out
         tar czvf ../../../shard-den-$VERSION-web.tar.gz *
         cd ../../..
-        zip -r shard-den-$VERSION-web.zip packages/web/.next/
+        zip -r shard-den-$VERSION-web.zip packages/web/out/
     
     - name: Upload Web Artifact
       uses: actions/upload-artifact@v4
@@ -215,7 +215,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: web
-        path: packages/web/.next
+        path: packages/web/out
 
     # 2. Use Rust cache
     - uses: Swatinem/rust-cache@v2
