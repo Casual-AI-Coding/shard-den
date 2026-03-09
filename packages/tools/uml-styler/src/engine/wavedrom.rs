@@ -58,7 +58,7 @@ impl WaveDromEngine {
     /// ```ignore
     /// let engine = WaveDromEngine::with_url_limit(8000);
     /// ```
-    /// ```
+    /// ```ignore
     /// let engine = WaveDromEngine::with_url_limit(8000);
     /// ```
     pub fn with_url_limit(max_url_length: usize) -> Self {
