@@ -42,19 +42,26 @@ jobs:
       with:
         targets: ${{ matrix.target }}
     
+    - name: Install UPX
+      uses: crazy-max/ghaction-upx@v3
+      with:
+        install-only: true
+        version: latest
+    
     - name: Build CLI
       run: cargo build --release -p shard-den --target ${{ matrix.target }}
     
-    - name: Package CLI
+    - name: Compress with UPX
       shell: bash
       run: |
-        VERSION="${{ env.VERSION }}"
-        cd target/${{ matrix.target }}/release
-        if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          7z a ../../../shard-den-$VERSION-cli-${{ matrix.name }}.zip shard-den${{ matrix.suffix }}
+        if command -v upx &> /dev/null; then
+          echo "Compressing binary with UPX..."
+          upx --best target/${{ matrix.target }}/release/shard-den${{ matrix.suffix }} || echo "UPX compression skipped"
         else
-          tar czvf ../../../shard-den-$VERSION-cli-${{ matrix.name }}.tar.gz shard-den${{ matrix.suffix }}
+          echo "UPX not available, skipping compression"
         fi
+    
+    - name: Package CLI
         cd ../../..
     
     - name: Upload CLI Artifact
@@ -244,8 +251,37 @@ jobs:
         tool: tauri-cli
 
     - name: Build Desktop App
+    - name: Install UPX
+      uses: crazy-max/ghaction-upx@v3
+      with:
+        install-only: true
+        version: latest
+
+    - name: Build Desktop App
       working-directory: packages/desktop
       run: cargo tauri build --target ${{ matrix.target }}
+
+    - name: Compress Desktop Binary with UPX (Windows)
+      if: matrix.platform == 'windows'
+      shell: bash
+      run: |
+        if command -v upx &> /dev/null; then
+          echo "Compressing Windows binary with UPX..."
+          upx --best packages/desktop/target/${{ matrix.target }}/release/ShardDen.exe || echo "UPX compression skipped"
+        else
+          echo "UPX not available"
+        fi
+
+    - name: Compress Desktop Binary with UPX (Linux)
+      if: matrix.platform == 'linux'
+      shell: bash
+      run: |
+        if command -v upx &> /dev/null; then
+          echo "Compressing Linux binary with UPX..."
+          find packages/desktop/target/${{ matrix.target }}/release/bundle -name "ShardDen" -exec upx --best {} \; 2>/dev/null || echo "UPX compression skipped"
+        else
+          echo "UPX not available"
+        fi
 
     - name: Upload Desktop Artifact (Linux AppImage)
       if: matrix.platform == 'linux'
