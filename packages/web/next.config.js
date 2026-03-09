@@ -1,14 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
+  distDir: 'out',
   serverExternalPackages: ['@tauri-apps/api'],
-  async rewrites() {
-    return [
-      {
-        source: '/wasm/:path*',
-        destination: '/wasm/:path*',
-      },
-    ];
-  },
   webpack: (config, { isServer }) => {
     // Support WASM
     config.experiments = {

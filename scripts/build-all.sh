@@ -59,7 +59,16 @@ echo -e "${YELLOW}⚠️  Desktop build requires Tauri CLI${NC}"
 echo "   Install with: cargo install tauri-cli"
 echo ""
 echo "   Then run: cargo tauri build --manifest-path packages/desktop/Cargo.toml"
-
+echo ""
+echo "📦 Compressing with UPX (if available)..."
+if command -v upx &> /dev/null; then
+    echo "  → UPX found, compressing binaries..."
+    find src-tauri/target/release/bundle -name "*.exe" -exec upx --best {} \; 2>/dev/null || true
+    find src-tauri/target/release/bundle -name "ShardDen" -exec upx --best {} \; 2>/dev/null || true
+    echo -e "${GREEN}✅ UPX compression complete${NC}"
+else
+    echo -e "${YELLOW}⚠️  UPX not found. Install with: scoop install upx (Windows) or brew install upx (macOS)${NC}"
+fi
 echo ""
 echo -e "${GREEN}✅ Build complete!${NC}"
 echo ""

@@ -56,7 +56,7 @@ mockall = "0.12"
 insta = { version = "1.34", features = ["json"] }
 
 [profile.release]
-opt-level = 3
+opt-level = "s"
 lto = true
 codegen-units = 1
 panic = "abort"

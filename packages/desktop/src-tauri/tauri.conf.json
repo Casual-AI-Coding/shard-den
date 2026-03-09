@@ -54,8 +54,8 @@
     "shortDescription": "Developer toolkit platform",
     "longDescription": "A modular developer toolkit platform with JSON extraction and more tools.",
     "windows": {
-      "webviewInstallMode": {
-        "type": "downloadBootstrapper"
+"webviewInstallMode": {
+        "type": "skip"
       }
     }
   }

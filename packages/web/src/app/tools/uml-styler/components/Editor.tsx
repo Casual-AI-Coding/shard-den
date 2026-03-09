@@ -1,8 +1,21 @@
-﻿'use client';
+'use client';
 
 import React, { useRef, useCallback } from 'react';
-import Editor, { OnMount } from '@monaco-editor/react';
+import dynamic from 'next/dynamic';
 import type { editor, Position } from 'monaco-editor';
+
+// 动态加载 Monaco Editor，减少初始包大小
+const MonacoEditor = dynamic(
+  () => import('@monaco-editor/react').then((mod) => mod.Editor),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-full text-[var(--text-secondary)]">
+        加载编辑器中...
+      </div>
+    ),
+  }
+);
 
 interface EditorProps {
   code: string;
@@ -294,7 +307,6 @@ const DOT_TOKEN_PROVIDER = {
 const PLANTUML_COMPLETIONS = [
   { label: '@startuml', kind: 14, insertText: '@startuml\\n$0\\n@enduml', insertTextRules: 4, documentation: 'Start a PlantUML diagram' },
   { label: 'actor', kind: 14, insertText: 'actor ${1:Name} as ${2:alias}', insertTextRules: 4, documentation: 'Define an actor' },
-  { label: 'participant', kind: 14, insertText: 'participant ${1:Name} as ${2:alias}', insertTextRules: 4, documentation: 'Define a participant' },
   { label: 'class', kind: 14, insertText: 'class ${1:ClassName} {\\n\\t${2:attributes}\\n}', insertTextRules: 4, documentation: 'Define a class' },
   { label: 'interface', kind: 14, insertText: 'interface ${1:InterfaceName} {\\n\\t${2:methods}\\n}', insertTextRules: 4, documentation: 'Define an interface' },
   { label: 'package', kind: 14, insertText: 'package ${1:PackageName} {\\n\\t${2:contents}\\n}', insertTextRules: 4, documentation: 'Define a package' },
@@ -308,6 +320,9 @@ const PLANTUML_COMPLETIONS = [
   { label: 'if-endif', kind: 27, insertText: 'if ${1:condition} then\\n\\t${2:action}\\nendif', insertTextRules: 4, documentation: 'If statement' },
   { label: 'while-endwhile', kind: 27, insertText: 'while ${1:condition}\\n\\t${2:action}\\nendwhile', insertTextRules: 4, documentation: 'While loop' },
 ];
+
+// Type for Monaco's OnMount callback
+type OnMount = (editor: editor.IStandaloneCodeEditor, monaco: typeof import('monaco-editor')) => void;
 
 function getLanguageForEngine(engine: string): string {
   switch (engine) {
@@ -441,7 +456,8 @@ export default function CodeEditor({
           className="px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] rounded transition-colors"
           title="Format code"
         >
-          鏍煎紡鍖?        </button>
+          格式化
+        </button>
 
         {/* Clear Button */}
         <button
@@ -449,13 +465,13 @@ export default function CodeEditor({
           className="px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
           title="Clear editor"
         >
-          娓呯┖
+          清空
         </button>
       </div>
 
       {/* Editor */}
       <div className="flex-1 min-h-0">
-        <Editor
+        <MonacoEditor
           height="100%"
           language={getLanguageForEngine(engine)}
           value={code}
