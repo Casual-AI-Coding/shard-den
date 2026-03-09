@@ -55,7 +55,10 @@ pub fn load_history(
 /// Clear all history
 #[tauri::command]
 pub fn clear_history(tool: Option<String>, state: State<'_, AppState>) -> Result<(), String> {
-    state.storage.clear_history(tool.as_deref()).map_err(|e| e.to_string())
+    state
+        .storage
+        .clear_history(tool.as_deref())
+        .map_err(|e| e.to_string())
 }
 
 /// Detect paths in JSON

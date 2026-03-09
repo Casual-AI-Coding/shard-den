@@ -51,7 +51,9 @@ pub struct UmlTheme {
 }
 
 impl UmlTheme {
-    pub fn new(name: String, description: String, theme_type: String, config: serde_json::Value) -> Self {
+    pub fn new(
+        name: String, description: String, theme_type: String, config: serde_json::Value,
+    ) -> Self {
         let now = chrono::Utc::now();
         Self {
             id: format!("thm-{}", uuid_simple()),
@@ -64,7 +66,6 @@ impl UmlTheme {
         }
     }
 }
-
 
 /// Generate a simple UUID-like ID
 fn uuid_simple() -> String {
@@ -115,8 +116,6 @@ impl Storage {
     fn themes_path(&self) -> PathBuf {
         self.data_dir.join("uml_themes.json")
     }
-
-
 
     /// Save configuration
     pub fn save_config(&self, config: &Config) -> shard_den_core::Result<()> {
@@ -172,7 +171,7 @@ impl Storage {
         Ok(filtered)
     }
 
-/// Clear all history
+    /// Clear all history
     pub fn clear_history(&self, tool: Option<&str>) -> shard_den_core::Result<()> {
         if let Some(t) = tool {
             let mut entries = self.load_history_entries()?;

@@ -1,8 +1,6 @@
 //! Engine Interface - 引擎核心接口定义
 
-use crate::engine::{
-    D2Engine, GraphvizEngine, MermaidEngine, PlantUmlEngine, WaveDromEngine,
-};
+use crate::engine::{D2Engine, GraphvizEngine, MermaidEngine, PlantUmlEngine, WaveDromEngine};
 use crate::error::{Diagnostic, EngineError};
 use crate::templates::Template;
 use crate::theme::Theme;
