@@ -1,21 +1,8 @@
 'use client';
 
 import React, { useRef, useCallback } from 'react';
-import dynamic from 'next/dynamic';
+import Editor from '@monaco-editor/react';
 import type { editor, Position } from 'monaco-editor';
-
-// 动态加载 Monaco Editor，减少初始包大小
-const MonacoEditor = dynamic(
-  () => import('@monaco-editor/react').then((mod) => mod.Editor),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center h-full text-[var(--text-secondary)]">
-        加载编辑器中...
-      </div>
-    ),
-  }
-);
 
 interface EditorProps {
   code: string;
@@ -302,7 +289,6 @@ const DOT_TOKEN_PROVIDER = {
   },
 };
 
-
 // PlantUML Completion Provider
 const PLANTUML_COMPLETIONS = [
   { label: '@startuml', kind: 14, insertText: '@startuml\\n$0\\n@enduml', insertTextRules: 4, documentation: 'Start a PlantUML diagram' },
@@ -471,7 +457,7 @@ export default function CodeEditor({
 
       {/* Editor */}
       <div className="flex-1 min-h-0">
-        <MonacoEditor
+        <Editor
           height="100%"
           language={getLanguageForEngine(engine)}
           value={code}
