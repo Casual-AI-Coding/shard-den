@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-03-10
+
+### Added
+- **D2 Engine** - 新增 D2 图表渲染引擎支持
+- **Graphviz Engine** - 新增 Graphviz/DOT 图表引擎支持
+- **WaveDrom Engine** - 新增 WaveDrom 时序图引擎支持
+- **Desktop 存储增强** - Tauri 存储 API 集成，支持历史记录、收藏模板、自定义主题
+- **离线支持** - Mermaid 完全离线渲染
+- **Monaco Editor 动态加载** - 编辑器按需加载，减少初始包大小
+
+### Changed
+- **打包体积优化** - 优化后 Windows 包从 100MB 降至 30-50MB
+- **WASM 文件去重** - 修复 WASM 文件重复打包问题
+- **Cargo 编译优化** - `opt-level = "s"` 优化体积
+
+### Infrastructure
+- 新增 UPX 压缩构建脚本
+- 更新所有版本依赖到 0.3.3
+- 所有阶段任务完成 (Phase 3 & 4)
+
+
+
 ## [0.3.2] - 2026-03-05
 
 ### Added
@@ -325,7 +347,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CLI = Core**: Native Rust, no WASM overhead
 - **Shared Core**: Same Rust code compiled for all targets
 
-## [Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.3.2...HEAD
+## [Unreleased]: https://github.com/oGsLP/shard-den/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.3
+[0.3.2]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.2
 [0.3.2]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.2
 [0.3.1]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.1
 [0.3.1]: https://github.com/oGsLP/shard-den/releases/tag/v0.3.1
