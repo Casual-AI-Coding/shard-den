@@ -6,7 +6,7 @@ const fs = require('fs');
  * Run this script after npm install
  */
 
-const sourceDir = path.join(__dirname, '..', 'node_modules', 'monaco-editor', 'min');
+const sourceDir = path.join(__dirname, '..', '..', '..', 'node_modules', 'monaco-editor', 'min');
 const targetDir = path.join(__dirname, '..', 'public', 'monaco-editor');
 
 function copyRecursive(src, dest) {

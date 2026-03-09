@@ -3,6 +3,16 @@
 import React, { useRef, useCallback } from 'react';
 import Editor from '@monaco-editor/react';
 import type { editor, Position } from 'monaco-editor';
+import { loader } from '@monaco-editor/react';
+
+// 配置 Monaco Editor 从本地加载，避免 CDN 被拦截
+loader.config({
+  paths: {
+    vs: '/monaco-editor/vs',
+  },
+});
+
+
 
 interface EditorProps {
   code: string;
