@@ -52,11 +52,6 @@
     "copyright": "Copyright (c) 2026",
     "category": "DeveloperTool",
     "shortDescription": "Developer toolkit platform",
-    "longDescription": "A modular developer toolkit platform with JSON extraction and more tools.",
-    "windows": {
-"webviewInstallMode": {
-        "type": "skip"
-      }
-    }
+    "longDescription": "A modular developer toolkit platform with JSON extraction and more tools."
   }
 }
