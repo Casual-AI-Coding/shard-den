@@ -1,18 +1,6 @@
 'use client';
 
-import React, { useRef, useCallback } from 'react';
-import Editor from '@monaco-editor/react';
-import type { editor, Position } from 'monaco-editor';
-import { loader } from '@monaco-editor/react';
-
-// 配置 Monaco Editor 从本地加载，避免 CDN 被拦截
-loader.config({
-  paths: {
-    vs: '/monaco-editor/vs',
-  },
-});
-
-
+import React, { useRef, useCallback, useState, useEffect } from 'react';
 
 interface EditorProps {
   code: string;
@@ -22,472 +10,119 @@ interface EditorProps {
   onEngineChange: (engine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom') => void;
 }
 
-// Mermaid syntax highlight config
-const MERMAID_LANGUAGE_CONFIG = {
-  comments: {
-    lineComment: '%%',
-  },
-  brackets: [
-    ['{', '}'],
-    ['[', ']'],
-    ['(', ')'],
-  ],
-  autoClosingPairs: [
-    { open: '{', close: '}' },
-    { open: '[', close: ']' },
-    { open: '(', close: ')' },
-    { open: '"', close: '"' },
-  ],
-};
-
-const MERMAID_TOKEN_PROVIDER = {
-  defaultToken: '',
-  tokenPostfix: '.mermaid',
-
-  keywords: [
-    'graph', 'flowchart', 'sequenceDiagram', 'classDiagram', 'stateDiagram',
-    'erDiagram', 'gantt', 'pie', 'mindmap', 'journey', 'gitGraph',
-    'TD', 'TB', 'BT', 'RL', 'LR', 'subgraph', 'end',
-    'participant', 'actor', 'note', 'over', 'loop', 'alt', 'else', 'opt',
-    'par', 'rect', 'autonumber', 'activate', 'deactivate',
-    'class', 'namespace', 'direction', 'state', 'scale',
-  ],
-
-  operators: [
-    '-->', '--', '->', '->>', '-.-', '-.->', ':::', '|',
-    '{', '}', '(', ')', '[', ']', '<', '>',
-  ],
-
-  symbols: /[=><!~?:&|+\-*\/\^%]+/,
-
-  tokenizer: {
-    root: [
-      [/\%\%.*$/, 'comment'],
-      [/[{}()\[\]]/, '@brackets'],
-      [/[a-zA-Z_]\w*/, {
-        cases: {
-          '@keywords': 'keyword',
-          '@default': 'identifier',
-        },
-      }],
-      [/["']([^"']*)["']/, 'string'],
-      [/\d+/, 'number'],
-    ],
-  },
-};
-
-// PlantUML syntax highlight config
-const PLANTUML_LANGUAGE_CONFIG = {
-  comments: {
-    lineComment: "'",
-    blockComment: ['/*', '*/'],
-  },
-  brackets: [
-    ['{', '}'],
-    ['[', ']'],
-    ['(', ')'],
-  ],
-  autoClosingPairs: [
-    { open: '{', close: '}' },
-    { open: '[', close: ']' },
-    { open: '(', close: ')' },
-    { open: '"', close: '"' },
-  ],
-  surroundingPairs: [
-    { open: '{', close: '}' },
-    { open: '[', close: ']' },
-    { open: '(', close: ')' },
-    { open: '"', close: '"' },
-  ],
-};
-
-const PLANTUML_TOKEN_PROVIDER = {
-  defaultToken: '',
-  tokenPostfix: '.plantuml',
-
-  keywords: [
-    '@startuml', '@enduml', 'actor', 'participant',
-    'class', 'interface', 'abstract', 'enum', 'annotation', 'component', 'node',
-    'folder', 'file', 'package', 'frame', 'rectangle', 'cloud', 'database',
-    'stack', 'queue', 'storage', 'artifact', 'boundary', 'control', 'entity',
-    'agent', 'collections', 'usecase', 'object', 'card',
-    'note', 'title', 'skinparam', '!theme', '!include', '!definelong', '!define',
-    '!unquoted', 'as', 'extends', 'implements',
-    'if', 'else', 'elseif', 'endif', 'while', 'endwhile', 'repeat', 'again',
-    'fork', 'endfork', 'merge', 'split', 'endsplit', 'partition', 'endpartition',
-    'state', 'entry', 'exit', 'end', 'choice', 'join', 'junction',
-    'start', 'stop', 'kill', 'detach', 'return', 'wait', 'read', 'write',
-    'activate', 'deactivate', 'destroy', 'create', 'new', 'order', 'hide', 'show',
-    'left', 'right', 'up', 'down', 'also', 'endlink', 'over', 'of', 'is',
-    'on', 'off', 'strict', 'lazy', 'gray', 'white', 'hidden', 'plain',
-    'stereotype', 'top', 'bottom', 'header', 'footer',
-    'legend', 'endlegend', 'caption', 'center', 'rotate', 'ref',
-  ],
-
-  operators: [
-    '->', '-->', '<-', '<--', '->>', '<<-', '<->', '<-->', '->x', 'x->',
-    '--', '==', '::', '..', '//', '==>', '<==', '..>', '<..', '/>', '<\\',
-  ],
-
-  symbols: /[=><!~?:&|+\-*\/\^%]+/,
-
-  tokenizer: {
-    root: [
-      [/'[^\n]*$/, 'comment'],
-      [/\/\*/, 'comment', '@comment'],
-      [/[{}()\[\]]/, '@brackets'],
-      [/[a-zA-Z_]\w*/, {
-        cases: {
-          '@keywords': 'keyword',
-          '@default': 'identifier',
-        },
-      }],
-      [/[<][>-]/, 'type.identifier'],
-      [/`[^`]*`/, 'string'],
-      [/\d+/, 'number'],
-      [/[;,.]/, 'delimiter'],
-      [/[=><!~?:&|+\-*\/\^%]+/, {
-        cases: {
-          '@operators': 'operator',
-          '@default': '',
-        },
-      }],
-    ],
-    comment: [
-      [/[^\/*]+/, 'comment'],
-      [/\*\//, 'comment', '@pop'],
-      [/[\/*]/, 'comment'],
-    ],
-    string: [
-      [/[^'\\]+/, 'string'],
-      [/\\./, 'string.escape'],
-      [/'/, 'string', '@pop'],
-    ],
-  },
-};
-
-// D2 syntax highlight config (Basic)
-const D2_LANGUAGE_CONFIG = {
-  comments: {
-    lineComment: '#',
-  },
-  brackets: [
-    ['{', '}'],
-    ['[', ']'],
-    ['(', ')'],
-  ],
-  autoClosingPairs: [
-    { open: '{', close: '}' },
-    { open: '[', close: ']' },
-    { open: '(', close: ')' },
-    { open: '"', close: '"' },
-    { open: "'", close: "'" },
-  ],
-  surroundingPairs: [
-    { open: '{', close: '}' },
-    { open: '[', close: ']' },
-    { open: '(', close: ')' },
-    { open: '"', close: '"' },
-    { open: "'", close: "'" },
-  ],
-};
-
-const D2_TOKEN_PROVIDER = {
-  defaultToken: '',
-  tokenPostfix: '.d2',
-
-  keywords: [
-    'direction', 'shape', 'label', 'near', 'top', 'bottom', 'left', 'right',
-    'class', 'style', 'vars', 'classes', 'layers', 'scenarios', 'steps',
-  ],
-
-  operators: [
-    '->', '<-', '<->', '--', ':', ';', '.',
-  ],
-
-  symbols: /[=><!~?:&|+\-*\/\^%]+/,
-
-  tokenizer: {
-    root: [
-      [/#.*$/, 'comment'],
-      [/[{}()\[\]]/, '@brackets'],
-      [/[a-zA-Z_]\w*/, {
-        cases: {
-          '@keywords': 'keyword',
-          '@default': 'identifier',
-        },
-      }],
-      [/["']([^"']*)["']/, 'string'],
-      [/\d+/, 'number'],
-      [/[;,.]/, 'delimiter'],
-      [/[=><!~?:&|+\-*\/\^%]+/, {
-        cases: {
-          '@operators': 'operator',
-          '@default': '',
-        },
-      }],
-    ],
-  },
-};
-
-// DOT (Graphviz) syntax highlight config
-const DOT_LANGUAGE_CONFIG = {
-  comments: {
-    lineComment: '//',
-    blockComment: ['/*', '*/'],
-  },
-  brackets: [
-    ['{', '}'],
-    ['[', ']'],
-    ['(', ')'],
-  ],
-  autoClosingPairs: [
-    { open: '{', close: '}' },
-    { open: '[', close: ']' },
-    { open: '(', close: ')' },
-    { open: '"', close: '"' },
-  ],
-  surroundingPairs: [
-    { open: '{', close: '}' },
-    { open: '[', close: ']' },
-    { open: '(', close: ')' },
-    { open: '"', close: '"' },
-  ],
-};
-
-const DOT_TOKEN_PROVIDER = {
-  defaultToken: '',
-  tokenPostfix: '.dot',
-
-  keywords: [
-    'digraph', 'graph', 'subgraph', 'node', 'edge',
-    'rankdir', 'rank', 'same', 'minlen', 'weight',
-    'shape', 'style', 'color', 'fillcolor', 'fontcolor',
-    'label', 'tooltip', 'URL', 'href',
-    'bend', 'curved', 'straight', 'line', 'ortho',
-    'ranktype', 'tight', 'cluster', 'compound',
-  ],
-
-  operators: [
-    '->', '--', '<-', '<->', '==', '..', '::',
-  ],
-
-  symbols: /[=><!~?:&|+\-*\/\^%]+/,
-
-  tokenizer: {
-    root: [
-      [/'[^\n]*$/, 'comment'],
-      [/\/\*/, 'comment', '@comment'],
-      [/[{}()\[\]]/, '@brackets'],
-      [/[a-zA-Z_]\w*/, {
-        cases: {
-          '@keywords': 'keyword',
-          '@default': 'identifier',
-        },
-      }],
-      [/[<][>-]/, 'type.identifier'],
-      [/`[^`]*`/, 'string'],
-      [/\d+/, 'number'],
-      [/[;,.]/, 'delimiter'],
-      [/->|--|<-|<->|==|\.\.|::/, 'operator'],
-    ],
-    comment: [
-      [/[^\/*]+/, 'comment'],
-      [/\*\//, 'comment', '@pop'],
-      [/[\/*]/, 'comment'],
-    ],
-  },
-};
-
-// PlantUML Completion Provider
-const PLANTUML_COMPLETIONS = [
-  { label: '@startuml', kind: 14, insertText: '@startuml\\n$0\\n@enduml', insertTextRules: 4, documentation: 'Start a PlantUML diagram' },
-  { label: 'actor', kind: 14, insertText: 'actor ${1:Name} as ${2:alias}', insertTextRules: 4, documentation: 'Define an actor' },
-  { label: 'class', kind: 14, insertText: 'class ${1:ClassName} {\\n\\t${2:attributes}\\n}', insertTextRules: 4, documentation: 'Define a class' },
-  { label: 'interface', kind: 14, insertText: 'interface ${1:InterfaceName} {\\n\\t${2:methods}\\n}', insertTextRules: 4, documentation: 'Define an interface' },
-  { label: 'package', kind: 14, insertText: 'package ${1:PackageName} {\\n\\t${2:contents}\\n}', insertTextRules: 4, documentation: 'Define a package' },
-  { label: 'note', kind: 14, insertText: 'note ${1:left|right|over} of ${2:element}\\n\\t${3:content}\\nend note', insertTextRules: 4, documentation: 'Add a note' },
-  { label: 'title', kind: 14, insertText: 'title ${1:Diagram Title}', insertTextRules: 4, documentation: 'Set diagram title' },
-  { label: 'skinparam', kind: 14, insertText: 'skinparam ${1:parameter} ${2:value}', insertTextRules: 4, documentation: 'Set skin parameter' },
-  { label: '!theme', kind: 14, insertText: '!theme ${1:theme-name}', insertTextRules: 4, documentation: 'Apply a theme' },
-  { label: 'sequence-arrow', kind: 27, insertText: '${1:A} -> ${2:B} : ${3:message}', insertTextRules: 4, documentation: 'Sequence arrow' },
-  { label: 'class-inheritance', kind: 27, insertText: '${1:Child} --|> ${2:Parent}', insertTextRules: 4, documentation: 'Class inheritance' },
-  { label: 'class-composition', kind: 27, insertText: '${1:A} *-- ${2:B}', insertTextRules: 4, documentation: 'Class composition' },
-  { label: 'if-endif', kind: 27, insertText: 'if ${1:condition} then\\n\\t${2:action}\\nendif', insertTextRules: 4, documentation: 'If statement' },
-  { label: 'while-endwhile', kind: 27, insertText: 'while ${1:condition}\\n\\t${2:action}\\nendwhile', insertTextRules: 4, documentation: 'While loop' },
+const engines = [
+  { id: 'mermaid', name: 'Mermaid', icon: '📊' },
+  { id: 'plantuml', name: 'PlantUML', icon: '🌿' },
+  { id: 'd2', name: 'D2', icon: '🔷' },
+  { id: 'graphviz', name: 'Graphviz', icon: '🕸️' },
+  { id: 'wavedrom', name: 'WaveDrom', icon: '〰️' },
 ];
 
-// Type for Monaco's OnMount callback
-type OnMount = (editor: editor.IStandaloneCodeEditor, monaco: typeof import('monaco-editor')) => void;
-
-function getLanguageForEngine(engine: string): string {
-  switch (engine) {
-    case 'plantuml':
-      return 'plantuml';
-    case 'd2':
-      return 'd2';
-    case 'graphviz':
-      return 'dot';
-    case 'wavedrom':
-      return 'json';
-    default:
-      return 'mermaid';
-  }
-}
-
-export default function CodeEditor({
-  code,
-  onChange,
+export default function EditorPanel({ 
+  code, 
+  onChange, 
   onCursorChange,
   engine,
-  onEngineChange
+  onEngineChange,
 }: EditorProps) {
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [cursorLine, setCursorLine] = useState(1);
+  const [cursorCol, setCursorCol] = useState(1);
 
-  const handleEditorMount: OnMount = useCallback((editor, monaco) => {
-    editorRef.current = editor;
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newCode = e.target.value;
+    onChange(newCode);
+  }, [onChange]);
 
-    // Register Mermaid language
-    if (!monaco.languages.getLanguages().some((lang: { id: string }) => lang.id === 'mermaid')) {
-      monaco.languages.register({ id: 'mermaid' });
-      monaco.languages.setLanguageConfiguration('mermaid', MERMAID_LANGUAGE_CONFIG as any);
-      monaco.languages.setMonarchTokensProvider('mermaid', MERMAID_TOKEN_PROVIDER as any);
-    }
+  const handleCursorChange = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea || !onCursorChange) return;
 
-    // Register PlantUML language
-    if (!monaco.languages.getLanguages().some((lang: { id: string }) => lang.id === 'plantuml')) {
-      monaco.languages.register({ id: 'plantuml' });
-      monaco.languages.setLanguageConfiguration('plantuml', PLANTUML_LANGUAGE_CONFIG as any);
-      monaco.languages.setMonarchTokensProvider('plantuml', PLANTUML_TOKEN_PROVIDER as any);
-    }
+    const cursorPosition = textarea.selectionStart;
+    const textBeforeCursor = textarea.value.substring(0, cursorPosition);
+    const lines = textBeforeCursor.split('\n');
+    const line = lines.length;
+    const col = lines[lines.length - 1].length + 1;
 
-    // Register D2 language
-    if (!monaco.languages.getLanguages().some((lang: { id: string }) => lang.id === 'd2')) {
-      monaco.languages.register({ id: 'd2' });
-      monaco.languages.setLanguageConfiguration('d2', D2_LANGUAGE_CONFIG as any);
-      monaco.languages.setMonarchTokensProvider('d2', D2_TOKEN_PROVIDER as any);
-    }
-
-    // Register DOT language
-    if (!monaco.languages.getLanguages().some((lang: { id: string }) => lang.id === 'dot')) {
-      monaco.languages.register({ id: 'dot' });
-      monaco.languages.setLanguageConfiguration('dot', DOT_LANGUAGE_CONFIG as any);
-      monaco.languages.setMonarchTokensProvider('dot', DOT_TOKEN_PROVIDER as any);
-    }
-
-    // Register PlantUML completion provider
-    monaco.languages.registerCompletionItemProvider('plantuml', {
-      provideCompletionItems: (model: editor.ITextModel, position: Position) => {
-        const word = model.getWordUntilPosition(position);
-        const range = {
-          startLineNumber: position.lineNumber,
-          endLineNumber: position.lineNumber,
-          startColumn: word.startColumn,
-          endColumn: word.endColumn,
-        };
-
-        return {
-          suggestions: PLANTUML_COMPLETIONS.map((item) => ({
-            ...item,
-            range,
-          })),
-        };
-      },
-    });
-
-    // Set editor options
-    editor.updateOptions({
-      minimap: { enabled: false },
-      fontSize: 14,
-      lineNumbers: 'on',
-      wordWrap: 'on',
-      automaticLayout: true,
-      scrollBeyondLastLine: false,
-      padding: { top: 16, bottom: 16 },
-    });
-
-    // Listen to cursor position changes
-    editor.onDidChangeCursorPosition((e) => {
-      if (onCursorChange) {
-        onCursorChange(e.position.lineNumber, e.position.column);
-      }
-    });
+    setCursorLine(line);
+    setCursorCol(col);
+    onCursorChange(line, col);
   }, [onCursorChange]);
 
-  const handleChange = (value: string | undefined) => {
-    onChange(value || '');
-  };
-
-  const handleClear = () => {
-    onChange('');
-    editorRef.current?.focus();
-  };
-
-  const handleFormat = () => {
-    // Simple formatting: trim trailing whitespace from each line
-    const formatted = code.split('\n').map(line => line.trimEnd()).join('\n');
-    onChange(formatted);
-  };
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const textarea = e.currentTarget;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newValue = textarea.value.substring(0, start) + '  ' + textarea.value.substring(end);
+      
+      // Create a synthetic change event
+      const event = {
+        target: { value: newValue }
+      } as React.ChangeEvent<HTMLTextAreaElement>;
+      
+      handleChange(event);
+      
+      // Set cursor position after the inserted tabs
+      requestAnimationFrame(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 2;
+      });
+    }
+  }, [handleChange]);
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-[var(--surface-primary)]">
       {/* Toolbar */}
-      <div className="h-12 px-4 bg-[var(--bg)] border-b border-[var(--border)] flex items-center gap-2 shrink-0">
-        {/* Engine Selector */}
-        <select
-          value={engine}
-          onChange={(e) => onEngineChange(e.target.value as 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom')}
-          className="px-3 py-1.5 text-sm bg-[var(--surface)] border border-[var(--border)] rounded hover:border-[var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-        >
-          <option value="mermaid">Mermaid</option>
-          <option value="plantuml">PlantUML</option>
-          <option value="d2">D2</option>
-          <option value="graphviz">Graphviz</option>
-          <option value="wavedrom">WaveDrom</option>
-        </select>
-
-        {/* Format Button */}
-        <button
-          onClick={handleFormat}
-          className="px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] rounded transition-colors"
-          title="Format code"
-        >
-          格式化
-        </button>
-
-        {/* Clear Button */}
-        <button
-          onClick={handleClear}
-          className="px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
-          title="Clear editor"
-        >
-          清空
-        </button>
+      <div className="flex items-center justify-between px-4 py-2 bg-[var(--surface-secondary)] border-b border-[var(--border-color)]">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-[var(--text-primary)]">语法:</span>
+          <select
+            value={engine}
+            onChange={(e) => onEngineChange(e.target.value as typeof engine)}
+            className="px-3 py-1 bg-[var(--surface-primary)] border border-[var(--border-color)] rounded text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--primary-color)]"
+          >
+            {engines.map((eng) => (
+              <option key={eng.id} value={eng.id}>
+                {eng.icon} {eng.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="text-xs text-[var(--text-secondary)]">
+          行 {cursorLine}, 列 {cursorCol}
+        </div>
       </div>
 
-      {/* Editor */}
-      <div className="flex-1 min-h-0">
-        <Editor
-          height="100%"
-          language={getLanguageForEngine(engine)}
+      {/* Editor Container */}
+      <div className="flex-1 relative">
+        <textarea
+          ref={textareaRef}
           value={code}
           onChange={handleChange}
-          onMount={handleEditorMount}
-          theme="vs-dark"
-          options={{
-            minimap: { enabled: false },
-            fontSize: 14,
-            lineNumbers: 'on',
-            wordWrap: 'on',
-            automaticLayout: true,
-            scrollBeyondLastLine: false,
-            padding: { top: 16, bottom: 16 },
-            fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
-            renderLineHighlight: 'line',
-            cursorBlinking: 'smooth',
-            smoothScrolling: true,
+          onKeyUp={handleCursorChange}
+          onClick={handleCursorChange}
+          onKeyDown={handleKeyDown}
+          className="w-full h-full p-4 resize-none outline-none bg-[var(--surface-primary)] text-[var(--text-primary)] font-mono text-sm leading-6 border-none"
+          style={{ 
+            fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+            tabSize: 2,
           }}
+          spellCheck={false}
+          placeholder="输入图表代码..."
         />
+      </div>
+
+      {/* Status Bar */}
+      <div className="flex items-center justify-between px-4 py-2 bg-[var(--surface-secondary)] border-t border-[var(--border-color)] text-xs text-[var(--text-secondary)]">
+        <div className="flex items-center gap-4">
+          <span>{code.split('\n').length} 行</span>
+          <span>{code.length} 字符</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span>UTF-8</span>
+          <span>{engine.toUpperCase()}</span>
+        </div>
       </div>
     </div>
   );
