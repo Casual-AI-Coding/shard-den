@@ -4,7 +4,6 @@ import React from 'react';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Header } from '@/components/Header';
 import { HelpButton } from '@/components/ui/HelpButton';
-import { ToolLayout } from '@/components/tools/ToolLayout';
 import { StatusBar } from '@/components/tools/StatusBar';
 import { initWasm, JsonExtractor } from '@/lib/core';
 import { saveExtractionHistory, isTauri } from '@/lib/tauri';
@@ -39,8 +38,7 @@ export default function JsonExtractorPage() {
     setInput,
     setOutput,
     setError,
-    setIsLoading,
-    reset
+    setIsLoading
   } = useToolState<string, string>({
     persistToSessionStorage: true,
     sessionStorageKey: 'json-extractor-input'
@@ -66,7 +64,7 @@ export default function JsonExtractorPage() {
   const { copy: copyToClipboard } = useClipboard();
 
   // 文件操作
-  const { exportFile, importFromUrl, readFileAsText, onError: handleFileError } = useFileOperations({
+  const { exportFile, importFromUrl, readFileAsText } = useFileOperations({
     onError: (msg) => showError(msg)
   });
 
@@ -308,7 +306,7 @@ export default function JsonExtractorPage() {
             <div className="h-full min-h-[500px]">
               <OutputPanel 
                 output={output} 
-                error={error} 
+                error={error || ''} 
                 format={format} 
                 onFormatChange={setFormat}
                 onCopy={handleCopy} 

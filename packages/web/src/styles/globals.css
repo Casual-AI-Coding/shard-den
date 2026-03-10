@@ -188,11 +188,15 @@
   --accent-color: var(--accent);
   --border-color: var(--border);
   
-  /* 动画时长 */
+  /* 动画时长 - 统一标准 */
   --duration-fast: 150ms;
-  --duration-normal: 250ms;
-  --duration-slow: 350ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
   
+  /* 动画缓动 - 指数缓动 (confident, decisive) */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-expo: cubic-bezier(0.16, 0, 0.3, 1);
+  --ease-in-out-expo: cubic-bezier(0.7, 0, 0.3, 1);
   /* 圆角系统 */
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -384,12 +388,32 @@ select:focus-visible {
   }
 }
 
+@keyframes slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 
@@ -401,6 +425,39 @@ select:focus-visible {
   to {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes scale-out {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+@keyframes modal-in {
+  from {
+    transform: scale(0.95) translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes modal-out {
+  from {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.95) translateY(10px);
+    opacity: 0;
   }
 }
 

@@ -26,7 +26,8 @@ export interface UseToolStateReturn<TInput, TOutput> extends ToolState<TInput, T
   /** 设置错误 */
   setError: (error: string | null) => void;
   /** 设置加载状态 */
-  setIsLoading: (loading: boolean) => /** 重置所有状态 */
+  setIsLoading: (loading: boolean) => void;
+  /** 重置所有状态 */
   reset: () => void;
   /** 批量更新状态 */
   setState: (state: Partial<ToolState<TInput, TOutput>>) => void;

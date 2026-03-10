@@ -13,6 +13,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { useToast, ToastContainer } from './components/Toast';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { Header } from '@/components/Header';
+import { StatusBar } from '@/components/tools/StatusBar';
 import type { ThemeTuning } from './types';
 import { 
   isTauri, 
@@ -283,6 +284,17 @@ export default function UMLStylerPage() {
           </div>
         ) : (
           <div className="flex-1 flex">
+            {/* 错误状态显示 */}
+            {error && (
+              <div className="absolute top-16 left-4 right-4 z-10">
+                <StatusBar 
+                  type="error" 
+                  message={error} 
+                  onDismiss={() => setError(null)} 
+                />
+              </div>
+            )}
+            
             {/* Left: Editor (40%) */}
             <div className="w-2/5 min-w-[400px] flex flex-col border-r border-[var(--border)] bg-[var(--surface)]">
               <Editor 

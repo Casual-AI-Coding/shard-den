@@ -1,7 +1,7 @@
 'use client';
 
 import { AlertCircle, CheckCircle, Info, AlertTriangle, X } from 'lucide-react';
-import { cn, type ClassValue } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 export type StatusType = 'success' | 'error' | 'info' | 'warning';
 
