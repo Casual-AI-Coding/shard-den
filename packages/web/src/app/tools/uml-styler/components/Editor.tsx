@@ -7,43 +7,70 @@ import Prism from 'prismjs';
 // Import Prism languages
 import 'prismjs/components/prism-markdown';
 import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-json';
+import 'prismjs/components/prism-yaml';
+import 'prismjs/components/prism-css';
 import 'prismjs/themes/prism-tomorrow.css';
+
+// Editor constants
+const EDITOR_FONT_FAMILY = 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace';
+const EDITOR_FONT_SIZE = 14;
+const EDITOR_PADDING = 16;
+const DEFAULT_CURSOR_LINE = 1;
+const DEFAULT_CURSOR_COL = 1;
+
+// Engine type definition
+type EngineType = 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom';
+
+// Engine configurations
+const ENGINE_CONFIG: Record<EngineType, { id: EngineType; name: string; icon: string; grammar: string }> = {
+  mermaid: { id: 'mermaid', name: 'Mermaid', icon: '📊', grammar: 'markdown' },
+  plantuml: { id: 'plantuml', name: 'PlantUML', icon: '🌿', grammar: 'markdown' },
+  d2: { id: 'd2', name: 'D2', icon: '🔷', grammar: 'markdown' },
+  graphviz: { id: 'graphviz', name: 'Graphviz', icon: '🕸️', grammar: 'markdown' },
+  wavedrom: { id: 'wavedrom', name: 'WaveDrom', icon: '〰️', grammar: 'javascript' },
+};
+
+const engines = Object.values(ENGINE_CONFIG);
 
 interface EditorProps {
   code: string;
   onChange: (code: string) => void;
   onCursorChange?: (line: number, col: number) => void;
-  engine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom';
-  onEngineChange: (engine: 'mermaid' | 'plantuml' | 'd2' | 'graphviz' | 'wavedrom') => void;
+  engine: EngineType;
+  onEngineChange: (engine: EngineType) => void;
 }
 
-const engines = [
-  { id: 'mermaid', name: 'Mermaid', icon: '📊' },
-  { id: 'plantuml', name: 'PlantUML', icon: '🌿' },
-  { id: 'd2', name: 'D2', icon: '🔷' },
-  { id: 'graphviz', name: 'Graphviz', icon: '🕸️' },
-  { id: 'wavedrom', name: 'WaveDrom', icon: '〰️' },
-];
+// Get Prism grammar based on engine with fallback
+const getGrammar = (engine: EngineType): Prism.Grammar | { plain: true } => {
+  const config = ENGINE_CONFIG[engine];
+  if (!config) {
+    return { plain: true };
+  }
 
-// Get Prism grammar based on engine
-const getGrammar = (engine: string) => {
-  switch (engine) {
-    case 'mermaid':
-    case 'plantuml':
-    case 'd2':
-    case 'graphviz':
-    case 'wavedrom':
-      return Prism.languages.markdown || Prism.languages.text;
+  switch (config.grammar) {
+    case 'markdown':
+      return Prism.languages.markdown || Prism.languages.text || { plain: true };
+    case 'javascript':
+      return Prism.languages.javascript || Prism.languages.text || { plain: true };
     default:
-      return Prism.languages.text;
+      return Prism.languages.text || { plain: true };
   }
 };
 
-// Highlight function
-const highlightCode = (code: string, engine: string) => {
-  const grammar = getGrammar(engine);
-  if (!grammar) return code;
-  return Prism.highlight(code, grammar, engine);
+// Highlight function with error handling
+const highlightCode = (code: string, engine: EngineType) => {
+  try {
+    const grammar = getGrammar(engine);
+    if (!grammar || 'plain' in grammar) {
+      return code;
+    }
+    return Prism.highlight(code, grammar, engine) || code;
+  } catch (error) {
+    // Fallback to plain text on error
+    console.warn('Syntax highlighting failed:', error);
+    return code;
+  }
 };
 
 export default function EditorPanel({ 
@@ -53,16 +80,26 @@ export default function EditorPanel({
   engine,
   onEngineChange,
 }: EditorProps) {
-  const [cursorLine, setCursorLine] = useState(1);
-  const [cursorCol, setCursorCol] = useState(1);
+  const [cursorLine, setCursorLine] = useState(DEFAULT_CURSOR_LINE);
+  const [cursorCol, setCursorCol] = useState(DEFAULT_CURSOR_COL);
 
+  // Calculate cursor position from editor's text selection
   const handleCursorChange = useCallback(() => {
-    // Calculate cursor position from code
-    if (!onCursorChange) return;
-    const lines = code.split('\n');
-    setCursorLine(lines.length);
-    setCursorCol(lines[lines.length - 1].length + 1);
-    onCursorChange(lines.length, lines[lines.length - 1].length + 1);
+    // react-simple-code-editor doesn't expose cursor position directly
+    // Using document.activeElement as a workaround
+    const activeElement = document.activeElement as HTMLTextAreaElement | null;
+    if (!activeElement || !onCursorChange) return;
+    
+    const cursorPosition = activeElement.selectionStart || 0;
+    const textBeforeCursor = code.slice(0, cursorPosition);
+    const lines = textBeforeCursor.split('\n');
+    
+    const line = lines.length;
+    const col = lines[lines.length - 1].length + 1;
+    
+    setCursorLine(line);
+    setCursorCol(col);
+    onCursorChange(line, col);
   }, [code, onCursorChange]);
 
   return (
@@ -73,7 +110,7 @@ export default function EditorPanel({
           <span className="text-sm font-medium text-[var(--text-primary)]">语法:</span>
           <select
             value={engine}
-            onChange={(e) => onEngineChange(e.target.value as typeof engine)}
+            onChange={(e) => onEngineChange(e.target.value as EngineType)}
             className="px-3 py-1 bg-[var(--surface-primary)] border border-[var(--border-color)] rounded text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--primary-color)]"
           >
             {engines.map((eng) => (
@@ -93,18 +130,19 @@ export default function EditorPanel({
         <Editor
           value={code}
           onValueChange={onChange}
-          highlight={(code) => highlightCode(code, engine)}
-          padding={16}
+          highlight={(value) => highlightCode(value, engine)}
+          padding={EDITOR_PADDING}
           onKeyUp={handleCursorChange}
           onClick={handleCursorChange}
           className="font-mono text-sm"
           style={{
-            fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
-            fontSize: 14,
+            fontFamily: EDITOR_FONT_FAMILY,
+            fontSize: EDITOR_FONT_SIZE,
             backgroundColor: 'var(--surface-primary)',
             color: 'var(--text-primary)',
             minHeight: '100%',
           }}
+          textareaClassName="focus:outline-none"
         />
       </div>
 
