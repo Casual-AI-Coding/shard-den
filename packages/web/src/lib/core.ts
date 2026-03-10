@@ -1,67 +1,260 @@
 // WASM bindings for ShardDen
-// This file loads the WASM module and exports tool classes
 
 import init, { JsonExtractor as WasmJsonExtractor, ping, version, render_diagram } from '@/../public/wasm/shard_den_wasm.js';
 
-let wasmReady = false;
+// Types
+export type WasmResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
 
-export async function initWasm(): Promise<void> {
-  if (wasmReady) return;
+export interface UmlRenderResult {
+  svg?: string;
+  error?: string;
+  engine: string;
+}
+
+export type WasmState = 'idle' | 'loading' | 'ready' | 'error';
+
+// Configuration
+const MAX_RETRIES = 3;
+const INITIAL_DELAY_MS = 500;
+const MAX_DELAY_MS = 4000;
+
+// State
+let wasmState: WasmState = 'idle';
+let wasmReady = false;
+let initPromise: Promise<void> | null = null;
+
+// Error Classes
+export class WasmInitError extends Error {
+  public readonly retries: number;
+  public readonly lastError: Error | unknown;
+
+  constructor(message: string, retries: number, lastError: Error | unknown) {
+    super(message);
+    this.name = 'WasmInitError';
+    this.retries = retries;
+    this.lastError = lastError;
+  }
+}
+
+export class WasmNotReadyError extends Error {
+  constructor() {
+    super('WASM not initialized. Call initWasm() first.');
+    this.name = 'WasmNotReadyError';
+  }
+}
+
+export class WasmOperationError extends Error {
+  public readonly operation: string;
+
+  constructor(operation: string, cause: Error | unknown) {
+    super(`WASM operation failed: ${operation}`, { cause });
+    this.name = 'WasmOperationError';
+    this.operation = operation;
+  }
+}
+
+// Core Functions
+function getRetryDelay(attempt: number): number {
+  const delay = INITIAL_DELAY_MS * Math.pow(2, attempt);
+  return Math.min(delay, MAX_DELAY_MS);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export async function initWasm(force = false): Promise<void> {
+  if (wasmReady && !force) {
+    return;
+  }
+
+  if (initPromise) {
+    return initPromise;
+  }
+
+  initPromise = doInitWasm(force);
   
-  // Load the real WASM module
-  await init();
-  wasmReady = true;
+  try {
+    await initPromise;
+  } catch {
+    wasmState = 'idle';
+    initPromise = null;
+    throw new Error('WASM init failed');
+  }
+}
+
+async function doInitWasm(force: boolean): Promise<void> {
+  if (wasmReady && !force) {
+    return;
+  }
+
+  wasmState = 'loading';
+  let lastError: Error | unknown = new Error('Unknown error');
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      await init();
+      
+      try {
+        ping();
+      } catch {
+        // ping might fail if WASM doesn't export it
+      }
+      
+      wasmReady = true;
+      wasmState = 'ready';
+      return;
+    } catch (error) {
+      lastError = error;
+      
+      console.warn(
+        `[WASM] Initialization attempt ${attempt + 1}/${MAX_RETRIES} failed:`,
+        error
+      );
+
+      if (attempt < MAX_RETRIES - 1) {
+        const delay = getRetryDelay(attempt);
+        console.log(`[WASM] Retrying in ${delay}ms...`);
+        await sleep(delay);
+      }
+    }
+  }
+
+  wasmState = 'error';
+  const errorMessage = lastError instanceof Error 
+    ? lastError.message 
+    : String(lastError);
+  
+  throw new WasmInitError(
+    `WASM initialization failed after ${MAX_RETRIES} attempts: ${errorMessage}`,
+    MAX_RETRIES,
+    lastError
+  );
+}
+
+export function getWasmState(): WasmState {
+  return wasmState;
+}
+
+export function isWasmReady(): boolean {
+  return wasmReady;
 }
 
 export function getWasm() {
   if (!wasmReady) {
-    throw new Error('WASM not initialized. Call initWasm() first.');
+    throw new WasmNotReadyError();
   }
   return {
-JsonExtractor: WasmJsonExtractor,
-ping,
-version,
-render_diagram,
-};
+    JsonExtractor: WasmJsonExtractor,
+    ping,
+    version,
+    render_diagram,
+  };
 }
 
-// Re-export tool classes - create new instance each time to avoid wasm-bindgen refcount bug
+export function tryGetWasm(): WasmResult<ReturnType<typeof getWasm>> {
+  if (!wasmReady) {
+    return { 
+      success: false, 
+      error: 'WASM not initialized. Call initWasm() first.' 
+    };
+  }
+  
+  try {
+    return { success: true, data: getWasm() };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return { success: false, error: message };
+  }
+}
+
+// JsonExtractor
 export const JsonExtractor = {
   async create() {
     await initWasm();
     const wasm = getWasm();
     return new wasm.JsonExtractor();
   },
-  
-  // Create and use a new extractor for each operation
-  async extract(json: string, paths: string, format: string): Promise<string> {
+
+  async extract(
+    json: string, 
+    paths: string, 
+    format: string
+  ): Promise<string> {
     await initWasm();
     const wasm = getWasm();
     const extractor = new wasm.JsonExtractor();
+    
     try {
       return extractor.extract_with_format(json, paths, format);
-    } finally {
-      // Clean up - let JS GC handle it
+    } catch (e) {
+      throw new WasmOperationError('extract', e instanceof Error ? e : new Error(String(e)));
     }
   },
-  
+
   async detect(json: string): Promise<string[]> {
     await initWasm();
     const wasm = getWasm();
     const extractor = new wasm.JsonExtractor();
+    
     try {
       const result = extractor.detect_paths(json);
       return JSON.parse(result);
-    } finally {
-      // Clean up
+    } catch (e) {
+      throw new WasmOperationError('detect_paths', e instanceof Error ? e : new Error(String(e)));
     }
   },
 };
 
+// UmlStyler
 export const UmlStyler = {
-  async render(engine: string, code: string, theme: string): Promise<any> {
+  async render(
+    engine: string, 
+    code: string, 
+    theme: string
+  ): Promise<UmlRenderResult> {
     await initWasm();
     const wasm = getWasm();
-    return wasm.render_diagram(engine, code, theme);
+    
+    try {
+      const result = wasm.render_diagram(engine, code, theme);
+      
+      if (typeof result === 'string') {
+        if (result.includes('<svg') || result.includes('<?xml')) {
+          return { svg: result, engine };
+        }
+        if (result.toLowerCase().includes('error') || result.toLowerCase().includes('fail')) {
+          return { error: result, engine };
+        }
+        return { svg: result, engine };
+      }
+      
+      return result as UmlRenderResult;
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      return { error: message, engine };
+    }
   },
 };
+
+export async function getVersion(): Promise<string> {
+  await initWasm();
+  const wasm = getWasm();
+  return wasm.version();
+}
+
+export async function healthCheck(): Promise<boolean> {
+  if (!wasmReady) {
+    return false;
+  }
+  
+  try {
+    const wasm = getWasm();
+    wasm.ping();
+    return true;
+  } catch {
+    return false;
+  }
+}

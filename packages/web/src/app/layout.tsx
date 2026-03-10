@@ -1,12 +1,45 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Outfit, Fraunces, JetBrains_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { LayoutProvider } from '@/lib/layout-context';
 import { ClientLayout } from '@/components/ClientLayout';
+import { ClientErrorBoundary } from '@/components/ClientErrorBoundary';
 import '../styles/globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
-const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'] });
+/* ========================================
+   Font Strategy - Distinctive & Cohesive
+   
+   Primary (Outfit): Modern geometric sans
+   - Distinctive but readable
+   - Good for body text & UI
+   
+   Display (Fraunces): Variable serif
+   - Unique character for headings
+   - Adds warmth & personality
+   
+   Mono (JetBrains): Developer-focused
+   - Already excellent for code
+   - Keep for technical credibility
+   ======================================== */
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-outfit',
+  display: 'swap',
+});
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-fraunces',
+  display: 'swap',
+  axes: ['SOFT', 'WONK', 'opsz'], // Variable font features
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-jetbrains',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: `ShardDen (砾穴) - Developer Toolkit`,
@@ -26,10 +59,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <body className={`${inter.className} ${jetbrainsMono.className}`}>
+      <body className={`
+        ${outfit.variable} 
+        ${fraunces.variable} 
+        ${jetbrainsMono.variable}
+        font-sans
+      `}>
+        {/* Skip link for keyboard navigation - WCAG requirement */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[var(--accent)] focus:text-white focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2"
+        >
+          跳转到主要内容
+        </a>
         <ThemeProvider>
           <LayoutProvider>
-            <ClientLayout>{children}</ClientLayout>
+            <ClientErrorBoundary>
+              <ClientLayout>{children}</ClientLayout>
+            </ClientErrorBoundary>
           </LayoutProvider>
         </ThemeProvider>
       </body>

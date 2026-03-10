@@ -2,64 +2,377 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CSS Custom Properties for Theme System */
-:root {
-  /* Default: Dark theme */
-  --bg: #0F172A;
-  --surface: #1E293B;
-  --text: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --accent: #22C55E;
-  --border: #334155;
-  --hover: #334155;
-}
+/* ========================================
+   ShardDen Design System - OKLCH Color Tokens
+   去除 AI Slop，建立独特视觉识别
+   ======================================== */
 
-/* Light Theme */
+/* 
+   ========================================
+   Theme: Light (温暖米白 + 赭石橙)
+   适合: 日常使用、文档、阅读场景
+   特点: 温暖、舒适、传统但现代
+   ======================================== */
+:root,
 .theme-light {
-  --bg: #FFFFFF;
-  --surface: #F8FAFC;
-  --text: #0F172A;
-  --text-secondary: #475569;
-  --accent: #22C55E;
-  --border: #E2E8F0;
-  --hover: #F1F5F9;
+  /* Background layers - warm ivory base */
+  --bg-base: oklch(98% 0.015 45);
+  --bg-raised: oklch(96% 0.015 45);
+  --bg-surface: oklch(94% 0.02 45);
+  --bg-embedded: oklch(90% 0.025 45);
+
+  /* Text - warm charcoal */
+  --text-primary: oklch(25% 0.04 40);
+  --text-secondary: oklch(45% 0.035 40);
+  --text-tertiary: oklch(60% 0.03 40);
+
+  /* Accent - burnt sienna/terracotta */
+  --accent: oklch(55% 0.14 30);
+  --accent-hover: oklch(48% 0.16 28);
+  --accent-muted: oklch(70% 0.08 35);
+  --accent-foreground: oklch(98% 0.02 45);
+
+  /* Secondary - clay/bronze */
+  --secondary: oklch(42% 0.1 25);
+  --secondary-hover: oklch(35% 0.12 22);
+  --secondary-muted: oklch(78% 0.04 30);
+
+  /* Semantic colors */
+  --success: oklch(58% 0.12 150);
+  --success-bg: oklch(92% 0.04 150);
+  --error: oklch(52% 0.14 25);
+  --error-bg: oklch(92% 0.05 25);
+  --warning: oklch(68% 0.12 65);
+  --warning-bg: oklch(92% 0.04 65);
+  --info: oklch(62% 0.1 240);
+  --info-bg: oklch(92% 0.03 240);
+
+  /* Borders - warm neutrals */
+  --border: oklch(80% 0.02 45);
+  --border-strong: oklch(65% 0.03 40);
+  
+  /* Interactive states */
+  --hover: oklch(88% 0.02 48);
+  --active: oklch(82% 0.03 45);
+  --focus: oklch(55% 0.14 30);
+  --focus-ring: oklch(55% 0.14 30 / 0.4);
+
+  /* Shadows - warm undertone */
+  --shadow-sm: oklch(0 0 0 / 0.03), 0 1px 2px oklch(25% 0.04 40 / 0.06);
+  --shadow-md: oklch(0 0 0 / 0.04), 0 4px 6px oklch(25% 0.04 40 / 0.08), 0 2px 4px oklch(25% 0.04 40 / 0.04);
+  --shadow-lg: oklch(0 0 0 / 0.05), 0 10px 15px oklch(25% 0.04 40 / 0.1), 0 4px 6px oklch(25% 0.04 40 / 0.05);
 }
 
-/* Dark Theme */
+/* 
+   ========================================
+   Theme: Dark (深靛蓝 + 珊瑚色)
+   适合: 夜间使用、创意工作
+   特点: 深邃、神秘、活力对比
+   ======================================== */
 .theme-dark {
-  --bg: #0F172A;
-  --surface: #1E293B;
-  --text: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --accent: #22C55E;
-  --border: #334155;
-  --hover: #334155;
+  /* Background layers - deep indigo base */
+  --bg-base: oklch(18% 0.04 265);
+  --bg-raised: oklch(22% 0.045 265);
+  --bg-surface: oklch(26% 0.05 265);
+  --bg-embedded: oklch(32% 0.055 265);
+
+  /* Text - soft blue-gray */
+  --text-primary: oklch(90% 0.015 265);
+  --text-secondary: oklch(70% 0.02 265);
+  --text-tertiary: oklch(55% 0.025 265);
+
+  /* Accent - coral/salmon */
+  --accent: oklch(68% 0.15 15);
+  --accent-hover: oklch(75% 0.18 18);
+  --accent-muted: oklch(45% 0.08 15);
+  --accent-foreground: oklch(20% 0.03 265);
+
+  /* Secondary - rose/mauve */
+  --secondary: oklch(55% 0.1 340);
+  --secondary-hover: oklch(62% 0.12 345);
+  --secondary-muted: oklch(35% 0.06 340);
+
+  /* Semantic colors */
+  --success: oklch(72% 0.12 160);
+  --success-bg: oklch(28% 0.05 165);
+  --error: oklch(65% 0.15 20);
+  --error-bg: oklch(28% 0.06 20);
+  --warning: oklch(75% 0.12 70);
+  --warning-bg: oklch(32% 0.05 70);
+  --info: oklch(70% 0.1 250);
+  --info-bg: oklch(28% 0.05 250);
+
+  /* Borders - indigo tints */
+  --border: oklch(38% 0.04 265);
+  --border-strong: oklch(50% 0.05 265);
+  
+  /* Interactive states */
+  --hover: oklch(35% 0.05 265);
+  --active: oklch(40% 0.055 265);
+  --focus: oklch(68% 0.15 15);
+  --focus-ring: oklch(68% 0.15 15 / 0.3);
+
+  /* Shadows - deep depth */
+  --shadow-sm: oklch(0 0 0 / 0.3), 0 1px 2px oklch(10% 0.04 265 / 0.2);
+  --shadow-md: oklch(0 0 0 / 0.4), 0 4px 6px oklch(10% 0.04 265 / 0.25), 0 2px 4px oklch(10% 0.04 265 / 0.15);
+  --shadow-lg: oklch(0 0 0 / 0.5), 0 10px 15px oklch(10% 0.04 265 / 0.3), 0 4px 6px oklch(10% 0.04 265 / 0.2);
 }
 
-/* Tech Theme */
+/* 
+   ========================================
+   Theme: Tech (暖黑 + 电光琥珀)
+   适合: 开发者工具、技术文档
+   特点: 工业感、高对比、代码友好
+   ======================================== */
 .theme-tech {
-  --bg: #0A0A0A;
-  --surface: #141414;
-  --text: #00FF00;
-  --text-secondary: #00AA00;
-  --accent: #00FF00;
-  --border: #1A1A1A;
-  --hover: #1F1F1F;
+  /* Background layers - warm black */
+  --bg-base: oklch(12% 0.025 35);
+  --bg-raised: oklch(16% 0.03 35);
+  --bg-surface: oklch(20% 0.035 35);
+  --bg-embedded: oklch(26% 0.04 35);
+
+  /* Text - warm white */
+  --text-primary: oklch(96% 0.015 45);
+  --text-secondary: oklch(72% 0.02 40);
+  --text-tertiary: oklch(55% 0.025 35);
+
+  /* Accent - electric amber */
+  --accent: oklch(72% 0.18 50);
+  --accent-hover: oklch(80% 0.22 55);
+  --accent-muted: oklch(42% 0.08 45);
+  --accent-foreground: oklch(15% 0.025 35);
+
+  /* Secondary - copper/bronze */
+  --secondary: oklch(58% 0.12 25);
+  --secondary-hover: oklch(65% 0.15 30);
+  --secondary-muted: oklch(35% 0.05 30);
+
+  /* Semantic colors */
+  --success: oklch(75% 0.15 145);
+  --success-bg: oklch(25% 0.04 150);
+  --error: oklch(68% 0.16 25);
+  --error-bg: oklch(25% 0.05 25);
+  --warning: oklch(78% 0.14 60);
+  --warning-bg: oklch(28% 0.04 65);
+  --info: oklch(72% 0.12 230);
+  --info-bg: oklch(25% 0.04 235);
+
+  /* Borders - warm neutrals */
+  --border: oklch(32% 0.03 35);
+  --border-strong: oklch(45% 0.04 35);
+  
+  /* Interactive states */
+  --hover: oklch(30% 0.035 38);
+  --active: oklch(35% 0.04 40);
+  --focus: oklch(72% 0.18 50);
+  --focus-ring: oklch(72% 0.18 50 / 0.35);
+
+  /* Shadows - sharp edges */
+  --shadow-sm: oklch(0 0 0 / 0.4), 0 1px 2px oklch(5% 0.02 35 / 0.3);
+  --shadow-md: oklch(0 0 0 / 0.5), 0 4px 6px oklch(5% 0.02 35 / 0.35), 0 2px 4px oklch(5% 0.02 35 / 0.2);
+  --shadow-lg: oklch(0 0 0 / 0.6), 0 10px 15px oklch(5% 0.02 35 / 0.4), 0 4px 6px oklch(5% 0.02 35 / 0.25);
 }
 
-/* Base styles */
+/* 
+   ========================================
+   Semantic Aliases - 语义化别名
+   提供统一的接口给组件使用
+   ======================================== */
+:root {
+  /* 基础语义映射 - 兼容旧代码 */
+  --bg: var(--bg-base);
+  --surface: var(--bg-surface);
+  --text: var(--text-primary);
+  --text-secondary: var(--text-secondary);
+  --text-muted: var(--text-secondary);
+  --accent-color: var(--accent);
+  --border-color: var(--border);
+  
+  /* 动画时长 */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  
+  /* 圆角系统 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+}
+
+/* 
+   ========================================
+   Base Styles - 基础样式
+   ======================================== */
+html {
+  color-scheme: light dark;
+}
+
 body {
-  background-color: var(--bg);
-  color: var(--text);
-  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-outfit), system-ui, sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Responsive font size using fluid typography */
+  font-size: clamp(0.875rem, 0.8125rem + 0.3125vw, 1rem);
 }
 
-/* Tech theme specific overrides */
+/* Tech theme uses monospace */
 .theme-tech body {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
 }
 
-/* Toast animation */
+/* Headings use display font */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+/* Responsive heading sizes */
+h1, .text-4xl {
+  font-size: clamp(1.75rem, 1.5rem + 1.25vw, 2.5rem);
+  line-height: 1.2;
+}
+
+h2, .text-3xl {
+  font-size: clamp(1.5rem, 1.25rem + 1.25vw, 2rem);
+  line-height: 1.25;
+}
+
+h3, .text-2xl {
+  font-size: clamp(1.25rem, 1.125rem + 0.625vw, 1.5rem);
+  line-height: 1.3;
+}
+
+h4, .text-xl {
+  font-size: clamp(1.125rem, 1rem + 0.625vw, 1.25rem);
+  line-height: 1.35;
+}
+
+/* Prevent horizontal scroll on mobile */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Ensure touch-friendly spacing on mobile */
+@media (max-width: 639px) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* 
+   ========================================
+   Interactive Elements - 交互元素
+   ======================================== */
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color var(--duration-fast) ease;
+}
+
+a:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+/* Focus states - 使用 CSS 变量 */
+*:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* 按钮焦点状态 */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--focus-ring);
+}
+
+/* 链接焦点状态 */
+a:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  text-decoration: underline;
+}
+
+/* 表单元素焦点状态 */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+  box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+/* Skip link styles - visible when focused */
+.skip-link:focus-visible {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 9999;
+  padding: 0.75rem 1rem;
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* 
+   ========================================
+   Scrollbar Styling - 滚动条
+   ======================================== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-embedded);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-embedded);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) var(--bg-embedded);
+}
+
+/* 
+   ========================================
+   Selection - 选中文本
+   ======================================== */
+::selection {
+  background-color: var(--accent-muted);
+  color: var(--accent-foreground);
+}
+
+/* 
+   ========================================
+   Animations - 动画
+   ======================================== */
 @keyframes slide-in {
   from {
     transform: translateX(100%);
@@ -71,6 +384,139 @@ body {
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .animate-slide-in {
   animation: slide-in 0.3s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out forwards;
+}
+
+/* 
+   ========================================
+   Reduced Motion - 减少动画
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 
+   ========================================
+   Utility Classes - 工具类
+   ======================================== */
+/* 文本省略 */
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 链接样式 */
+.link {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color var(--duration-fast) ease;
+}
+
+.link:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+/* 卡片样式 */
+.card {
+  background-color: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--radius-lg);
+}
+
+/* 按钮基础 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  transition: all var(--duration-fast) ease;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--accent-foreground);
+}
+
+.btn-secondary:hover {
+  background-color: var(--secondary-hover);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text-primary);
+}
+
+.btn-ghost:hover {
+  background-color: var(--hover);
+}
+
+/* 输入框 */
+.input {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.625rem 1rem;
+  color: var(--text-primary);
+  transition: border-color var(--duration-fast) ease;
+}
+
+.input:focus {
+  border-color: var(--focus);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.input::placeholder {
+  color: var(--text-tertiary);
 }
