@@ -1,6 +1,13 @@
 'use client';
 
-import React, { useRef, useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
+import Editor from 'react-simple-code-editor';
+import Prism from 'prismjs';
+
+// Import Prism languages
+import 'prismjs/components/prism-markdown';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/themes/prism-tomorrow.css';
 
 interface EditorProps {
   code: string;
@@ -18,6 +25,27 @@ const engines = [
   { id: 'wavedrom', name: 'WaveDrom', icon: '〰️' },
 ];
 
+// Get Prism grammar based on engine
+const getGrammar = (engine: string) => {
+  switch (engine) {
+    case 'mermaid':
+    case 'plantuml':
+    case 'd2':
+    case 'graphviz':
+    case 'wavedrom':
+      return Prism.languages.markdown || Prism.languages.text;
+    default:
+      return Prism.languages.text;
+  }
+};
+
+// Highlight function
+const highlightCode = (code: string, engine: string) => {
+  const grammar = getGrammar(engine);
+  if (!grammar) return code;
+  return Prism.highlight(code, grammar, engine);
+};
+
 export default function EditorPanel({ 
   code, 
   onChange, 
@@ -25,51 +53,17 @@ export default function EditorPanel({
   engine,
   onEngineChange,
 }: EditorProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [cursorLine, setCursorLine] = useState(1);
   const [cursorCol, setCursorCol] = useState(1);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newCode = e.target.value;
-    onChange(newCode);
-  }, [onChange]);
-
   const handleCursorChange = useCallback(() => {
-    const textarea = textareaRef.current;
-    if (!textarea || !onCursorChange) return;
-
-    const cursorPosition = textarea.selectionStart;
-    const textBeforeCursor = textarea.value.substring(0, cursorPosition);
-    const lines = textBeforeCursor.split('\n');
-    const line = lines.length;
-    const col = lines[lines.length - 1].length + 1;
-
-    setCursorLine(line);
-    setCursorCol(col);
-    onCursorChange(line, col);
-  }, [onCursorChange]);
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const textarea = e.currentTarget;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newValue = textarea.value.substring(0, start) + '  ' + textarea.value.substring(end);
-      
-      // Create a synthetic change event
-      const event = {
-        target: { value: newValue }
-      } as React.ChangeEvent<HTMLTextAreaElement>;
-      
-      handleChange(event);
-      
-      // Set cursor position after the inserted tabs
-      requestAnimationFrame(() => {
-        textarea.selectionStart = textarea.selectionEnd = start + 2;
-      });
-    }
-  }, [handleChange]);
+    // Calculate cursor position from code
+    if (!onCursorChange) return;
+    const lines = code.split('\n');
+    setCursorLine(lines.length);
+    setCursorCol(lines[lines.length - 1].length + 1);
+    onCursorChange(lines.length, lines[lines.length - 1].length + 1);
+  }, [code, onCursorChange]);
 
   return (
     <div className="h-full flex flex-col bg-[var(--surface-primary)]">
@@ -95,21 +89,22 @@ export default function EditorPanel({
       </div>
 
       {/* Editor Container */}
-      <div className="flex-1 relative">
-        <textarea
-          ref={textareaRef}
+      <div className="flex-1 relative overflow-auto">
+        <Editor
           value={code}
-          onChange={handleChange}
+          onValueChange={onChange}
+          highlight={(code) => highlightCode(code, engine)}
+          padding={16}
           onKeyUp={handleCursorChange}
           onClick={handleCursorChange}
-          onKeyDown={handleKeyDown}
-          className="w-full h-full p-4 resize-none outline-none bg-[var(--surface-primary)] text-[var(--text-primary)] font-mono text-sm leading-6 border-none"
-          style={{ 
+          className="font-mono text-sm"
+          style={{
             fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
-            tabSize: 2,
+            fontSize: 14,
+            backgroundColor: 'var(--surface-primary)',
+            color: 'var(--text-primary)',
+            minHeight: '100%',
           }}
-          spellCheck={false}
-          placeholder="输入图表代码..."
         />
       </div>
 
