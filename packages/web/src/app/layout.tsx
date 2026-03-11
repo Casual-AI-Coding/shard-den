@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Outfit, Fraunces, JetBrains_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { LayoutProvider } from '@/lib/layout-context';
@@ -44,12 +44,20 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: `ShardDen (砾穴) - Developer Toolkit`,
   description: 'A modular developer toolkit platform',
+  manifest: '/manifest.json',
   icons: [
     { url: '/favicon.ico', sizes: 'any' },
     { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
     { url: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
     { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png', rel: 'apple-touch-icon' },
   ],
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#22c55e',
 };
 
 export default function RootLayout({

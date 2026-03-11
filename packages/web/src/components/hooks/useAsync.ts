@@ -8,21 +8,19 @@ export type AsyncState<T> = {
   data: T | null;
 };
 
-export type AsyncActions<T, Fn extends (...args: unknown[]) => Promise<T>> = {
-  execute: (...args: Parameters<Fn>) => Promise<T | undefined>;
+export type AsyncActions<T, Args extends unknown[] = unknown[]> = {
+  execute: (...args: Args) => Promise<T | undefined>;
   reset: () => void;
   setData: (data: T) => void;
   setError: (error: string | null) => void;
 };
 
-export type UseAsyncReturn<T, Fn extends (...args: unknown[]) => Promise<T>> = AsyncState<T> & AsyncActions<Fn>;
+export type UseAsyncReturn<T, Args extends unknown[] = unknown[]> = AsyncState<T> & AsyncActions<T, Args>;
 
-type PromiseFunction<T> = (...args: Parameters<T>) => Promise<T>;
-
-export function useAsync<T, Fn extends (...args: Parameters<Fn>) => Promise<T>>(
-  asyncFunction: Fn,
+export function useAsync<T, Args extends unknown[] = unknown[]>(
+  asyncFunction: (...args: Args) => Promise<T>,
   immediate = true
-): UseAsyncReturn<T, Fn> {
+): UseAsyncReturn<T, Args> {
   const [state, setState] = useState<AsyncState<T>>({
     loading: false,
     error: null,
@@ -30,7 +28,7 @@ export function useAsync<T, Fn extends (...args: Parameters<Fn>) => Promise<T>>(
   });
 
   const execute = useCallback(
-    async (...args: Parameters<Fn>): Promise<T | undefined> => {
+    async (...args: Args): Promise<T | undefined> => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const result = await asyncFunction(...args);
@@ -57,11 +55,11 @@ export function useAsync<T, Fn extends (...args: Parameters<Fn>) => Promise<T>>(
     setState((prev) => ({ ...prev, error }));
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
     if (immediate) {
-      execute();
+      (execute as (...args: unknown[]) => Promise<T | undefined>)();
     }
-  }, [immediate]);
+  }, [immediate, execute]);
 
   return {
     ...state,

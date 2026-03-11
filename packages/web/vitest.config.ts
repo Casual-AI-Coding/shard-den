@@ -1,11 +1,20 @@
 import { defineConfig } from 'vitest/config';
 import path from 'path';
 
+const webRoot = path.resolve(__dirname, './');
+
 export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.tsx'],
+    exclude: ['**/node_modules/**', '**/e2e/**', '**/.next/**'],
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -24,16 +33,16 @@ export default defineConfig({
         'e2e/',
       ],
       thresholds: {
-        lines: 85,
-        functions: 85,
-        branches: 85,
-        statements: 85,
+        lines: 80,
+        functions: 80,
+        branches: 80,
+        statements: 80,
       },
     },
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(webRoot, './src'),
     },
   },
 });

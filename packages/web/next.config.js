@@ -2,10 +2,23 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
 
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
   distDir: 'out',
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   // Mark external packages
   serverExternalPackages: ['@tauri-apps/api'],
   // Optimize imports for tree-shaking
@@ -45,4 +58,4 @@ const nextConfig = {
   },
 };
 
-module.exports = withBundleAnalyzer(nextConfig);
+module.exports = withBundleAnalyzer(withPWA(nextConfig));

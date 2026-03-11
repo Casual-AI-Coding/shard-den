@@ -2,76 +2,54 @@
 
 import { useCallback, useRef, useState } from 'react';
 
+export interface FileError {
+  code: 'SIZE_EXCEEDED' | 'TYPE_MISMATCH' | 'READ_ERROR' | 'NETWORK_ERROR' | 'TIMEOUT' | 'UNKNOWN';
+  message: string;
+  details?: string;
+}
+
+export interface FileValidationResult {
+  valid: boolean;
+  error?: FileError;
+}
+
 export interface FileImportOptions {
-  /** 接受的文件类型 */
   accept?: string;
-  /** 是否允许多选 */
   multiple?: boolean;
-  /** 文件读取完成回调 */
+  maxFileSize?: number;
+  allowedTypes?: string[];
+  urlTimeout?: number;
   onFileRead?: (content: string, file: File) => void;
-  /** 错误回调 */
   onError?: (error: string) => void;
 }
 
 export interface FileExportOptions {
-  /** 文件内容 */
   content: string;
-  /** 文件名 */
   filename: string;
-  /** MIME 类型 */
   mimeType?: string;
 }
 
 export interface UseFileOperationsReturn {
-  /** 触发文件选择 */
   selectFile: () => void;
-  /** 导出文件 */
   exportFile: (options: FileExportOptions) => void;
-  /** 从 URL 导入 */
   importFromUrl: (url: string) => Promise<string | null>;
-  /** 读取文件为文本 */
   readFileAsText: (file: File) => Promise<string | null>;
-  /** 文件输入 ref (用于触发文件选择) */
+  validateFile: (file: File) => FileValidationResult;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
-  /** 导入状态 */
   isImporting: boolean;
-  /** 导出状态 */
   isExporting: boolean;
+  lastError: FileError | null;
 }
 
-/**
- * 文件操作 Hook
- * 
- * 提供文件导入导出功能，包括：
- * - 文件选择和读取
- * - 从 URL 获取内容
- * - 文件下载
- * 
- * @example
- * ```tsx
- * const { selectFile, exportFile, importFromUrl, fileInputRef } = useFileOperations({
- *   accept: '.json,.txt',
- *   onFileRead: (content) => setInput(content),
- *   onError: (error) => showError(error)
- * });
- * 
- * return (
- *   <input 
- *     ref={fileInputRef} 
- *     type="file" 
- *     accept=".json,.txt"
- *     className="hidden"
- *     onChange={handleFileChange}
- *   />
- * );
- * ```
- */
 export function useFileOperations(
   options: FileImportOptions = {}
 ): UseFileOperationsReturn {
   const {
     accept = '*/*',
     multiple = false,
+    maxFileSize = 10 * 1024 * 1024,
+    allowedTypes = [],
+    urlTimeout = 30000,
     onFileRead,
     onError
   } = options;
@@ -79,14 +57,53 @@ export function useFileOperations(
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [lastError, setLastError] = useState<FileError | null>(null);
 
-  // 触发文件选择
+  const validateFile = useCallback((file: File): FileValidationResult => {
+    if (maxFileSize && file.size > maxFileSize) {
+      const error: FileError = {
+        code: 'SIZE_EXCEEDED',
+        message: `文件大小超过限制 (最大 ${Math.round(maxFileSize / 1024 / 1024)}MB)`,
+        details: `当前文件大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`
+      };
+      setLastError(error);
+      return { valid: false, error };
+    }
+
+    if (allowedTypes.length > 0) {
+      const fileType = file.type;
+      const fileName = file.name.toLowerCase();
+      const isValidType = allowedTypes.some(type => {
+        const t = type.toLowerCase();
+        return fileType === t || fileName.endsWith(t) || t === '*/*';
+      });
+      
+      if (!isValidType) {
+        const error: FileError = {
+          code: 'TYPE_MISMATCH',
+          message: '不支持的文件类型',
+          details: `允许的类型: ${allowedTypes.join(', ')}`
+        };
+        setLastError(error);
+        return { valid: false, error };
+      }
+    }
+
+    setLastError(null);
+    return { valid: true };
+  }, [maxFileSize, allowedTypes]);
+
   const selectFile = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
 
-  // 读取文件为文本
   const readFileAsText = useCallback(async (file: File): Promise<string | null> => {
+    const validation = validateFile(file);
+    if (!validation.valid) {
+      onError?.(validation.error?.message || '文件验证失败');
+      return null;
+    }
+
     return new Promise((resolve) => {
       const reader = new FileReader();
       
@@ -95,48 +112,86 @@ export function useFileOperations(
         if (typeof content === 'string') {
           resolve(content);
         } else {
+          const error: FileError = {
+            code: 'READ_ERROR',
+            message: '文件内容读取失败'
+          };
+          setLastError(error);
+          onError?.(error.message);
           resolve(null);
         }
       };
       
       reader.onerror = () => {
-        onError?.('文件读取失败');
+        const error: FileError = {
+          code: 'READ_ERROR',
+          message: '文件读取失败'
+        };
+        setLastError(error);
+        onError?.(error.message);
         resolve(null);
       };
       
       reader.readAsText(file);
     });
-  }, [onError]);
+  }, [validateFile, onError]);
 
-  // 从 URL 导入
   const importFromUrl = useCallback(async (url: string): Promise<string | null> => {
     setIsImporting(true);
+    setLastError(null);
+    
     try {
-      const response = await fetch(url);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), urlTimeout);
+
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const error: FileError = {
+          code: 'NETWORK_ERROR',
+          message: `HTTP ${response.status}: ${response.statusText}`,
+          details: url
+        };
+        setLastError(error);
+        onError?.(error.message);
+        return null;
       }
+
       const text = await response.text();
       return text;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'URL 导入失败';
-      onError?.(message);
+      const error: FileError = {
+        code: err instanceof Error && err.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK_ERROR',
+        message: err instanceof Error && err.name === 'AbortError' 
+          ? `请求超时 (${urlTimeout / 1000}秒)` 
+          : 'URL 导入失败',
+        details: err instanceof Error ? err.message : undefined
+      };
+      setLastError(error);
+      onError?.(error.message);
       return null;
     } finally {
       setIsImporting(false);
     }
-  }, [onError]);
+  }, [urlTimeout, onError]);
 
-  // 导出文件
   const exportFile = useCallback((options: FileExportOptions) => {
     const { content, filename, mimeType = 'text/plain;charset=utf-8' } = options;
     
     if (!content) {
-      onError?.('没有内容可导出');
+      const error: FileError = {
+        code: 'UNKNOWN',
+        message: '没有内容可导出'
+      };
+      setLastError(error);
+      onError?.(error.message);
       return;
     }
 
     setIsExporting(true);
+    setLastError(null);
+    
     try {
       const blob = new Blob([content], { type: mimeType });
       const url = URL.createObjectURL(blob);
@@ -151,8 +206,13 @@ export function useFileOperations(
       
       URL.revokeObjectURL(url);
     } catch (err) {
-      const message = err instanceof Error ? err.message : '文件导出失败';
-      onError?.(message);
+      const error: FileError = {
+        code: 'UNKNOWN',
+        message: '文件导出失败',
+        details: err instanceof Error ? err.message : undefined
+      };
+      setLastError(error);
+      onError?.(error.message);
     } finally {
       setIsExporting(false);
     }
@@ -163,8 +223,10 @@ export function useFileOperations(
     exportFile,
     importFromUrl,
     readFileAsText,
+    validateFile,
     fileInputRef,
     isImporting,
-    isExporting
+    isExporting,
+    lastError
   };
 }

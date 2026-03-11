@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Header } from '@/components/Header';
 import { HelpButton } from '@/components/ui/HelpButton';
 import { StatusBar } from '@/components/tools/StatusBar';
@@ -98,6 +97,13 @@ export default function JsonExtractorPage() {
 
   // 持久化 paths
   useEffect(() => { if (paths) sessionStorage.setItem('json-extractor-paths', paths); }, [paths]);
+
+  // 点击外部关闭右键菜单
+  useEffect(() => {
+    const handleClick = () => setContextMenu(null);
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
 
   const handleShowToast = useCallback((type: 'success' | 'error' | 'info' | 'warning', message: string) => {
     if (type === 'success') success(message);
@@ -249,13 +255,6 @@ export default function JsonExtractorPage() {
     }
     setContextMenu(null);
   }, [contextMenu, input, copyToClipboard, success]);
-
-  // 点击外部关闭右键菜单
-  useEffect(() => {
-    const handleClick = () => setContextMenu(null);
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
-  }, []);
 
   return (
     <>

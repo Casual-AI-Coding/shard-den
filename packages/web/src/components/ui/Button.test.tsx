@@ -2,17 +2,11 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Button, IconButton, ButtonVariant, ButtonSize } from './Button';
+import { Button, IconButton } from './Button';
 
-// Cleanup after each test
 afterEach(() => {
   cleanup();
 });
-
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import { Button, IconButton, ButtonVariant, ButtonSize } from './Button';
 
 describe('Button Component', () => {
   describe('Rendering', () => {
@@ -89,7 +83,6 @@ describe('Button Component', () => {
     it('calls onClick when clicked', () => {
       const handleClick = vi.fn();
       render(<Button onClick={handleClick}>Click me</Button>);
-      
       fireEvent.click(screen.getByRole('button'));
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
@@ -97,7 +90,6 @@ describe('Button Component', () => {
     it('does not call onClick when disabled', () => {
       const handleClick = vi.fn();
       render(<Button disabled onClick={handleClick}>Disabled</Button>);
-      
       fireEvent.click(screen.getByRole('button'));
       expect(handleClick).not.toHaveBeenCalled();
     });
@@ -105,7 +97,6 @@ describe('Button Component', () => {
     it('does not call onClick when loading', () => {
       const handleClick = vi.fn();
       render(<Button isLoading onClick={handleClick}>Loading</Button>);
-      
       fireEvent.click(screen.getByRole('button'));
       expect(handleClick).not.toHaveBeenCalled();
     });
@@ -114,7 +105,6 @@ describe('Button Component', () => {
   describe('Loading State', () => {
     it('shows loading spinner when isLoading is true', () => {
       render(<Button isLoading>Loading</Button>);
-      // The button should have a loading spinner (svg element with animate-spin)
       const button = screen.getByRole('button');
       expect(button.querySelector('.animate-spin')).toBeInTheDocument();
     });
@@ -130,11 +120,6 @@ describe('Button Component', () => {
       expect(button).toBeDisabled();
       expect(button.className).toMatch(/opacity-50/);
     });
-      render(<Button isLoading>Loading</Button>);
-      const button = screen.getByRole('button');
-      expect(button).toBeDisabled();
-      expect(button).toHaveClass('opacity-50');
-    });
   });
 
   describe('Disabled State', () => {
@@ -146,9 +131,6 @@ describe('Button Component', () => {
     it('applies disabled cursor style', () => {
       render(<Button disabled>Disabled</Button>);
       expect(screen.getByRole('button').className).toMatch(/cursor-not-allowed/);
-    });
-      render(<Button disabled>Disabled</Button>);
-      expect(screen.getByRole('button')).toHaveClass('cursor-not-allowed');
     });
   });
 
@@ -219,7 +201,6 @@ describe('IconButton Component', () => {
       const handleClick = vi.fn();
       const icon = <span>★</span>;
       render(<IconButton icon={icon} label="Star" onClick={handleClick} />);
-      
       fireEvent.click(screen.getByRole('button'));
       expect(handleClick).toHaveBeenCalledTimes(1);
     });

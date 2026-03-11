@@ -9,58 +9,69 @@ export interface ToolState<TInput = string, TOutput = string> {
   isLoading: boolean;
 }
 
+export interface ValidationRule<T> {
+  validate: (value: T) => boolean;
+  message: string;
+}
+
+export interface ValidationResult {
+  valid: boolean;
+  error?: string;
+}
+
 export interface UseToolStateOptions<TInput, TOutput> {
-  /** 初始输入值 */
   initialInput?: TInput;
-  /** 输入变化时是否保存到 sessionStorage */
   persistToSessionStorage?: boolean;
-  /** sessionStorage 的键名 */
   sessionStorageKey?: string;
+  maxLength?: number;
+  validationRules?: ValidationRule<TInput>[];
+  allowEmpty?: boolean;
+  onInputChange?: (input: TInput) => void;
 }
 
 export interface UseToolStateReturn<TInput, TOutput> extends ToolState<TInput, TOutput> {
-  /** 设置输入 */
   setInput: (input: TInput) => void;
-  /** 设置输出 */
   setOutput: (output: TOutput) => void;
-  /** 设置错误 */
   setError: (error: string | null) => void;
-  /** 设置加载状态 */
   setIsLoading: (loading: boolean) => void;
-  /** 重置所有状态 */
   reset: () => void;
-  /** 批量更新状态 */
   setState: (state: Partial<ToolState<TInput, TOutput>>) => void;
+  validate: () => ValidationResult;
+  inputLength: number;
 }
 
-/**
- * 统一的工具状态管理 Hook
- * 
- * 提供工具页面的通用状态管理，包括：
- * - input: 输入内容
- * - output: 输出结果
- * - error: 错误信息
- * - isLoading: 加载状态
- * 
- * @example
- * ```tsx
- * const { input, output, error, isLoading, setInput, setOutput, setError, setIsLoading, reset } = useToolState({
- *   initialInput: '',
- *   persistToSessionStorage: true,
- *   sessionStorageKey: 'my-tool-input'
- * });
- * ```
- */
 export function useToolState<TInput = string, TOutput = string>(
   options: UseToolStateOptions<TInput, TOutput> = {}
 ): UseToolStateReturn<TInput, TOutput> {
   const {
     initialInput = '' as TInput,
     persistToSessionStorage = false,
-    sessionStorageKey = 'tool-input'
+    sessionStorageKey = 'tool-input',
+    maxLength,
+    validationRules = [],
+    allowEmpty = true,
+    onInputChange
   } = options;
 
-  // 初始化状态 - 支持 sessionStorage
+  const validateInput = useCallback((value: TInput): ValidationResult => {
+    if (!allowEmpty && (value === '' || value === null || value === undefined)) {
+      return { valid: false, error: '输入不能为空' };
+    }
+
+    const stringValue = String(value);
+    if (maxLength !== undefined && stringValue.length > maxLength) {
+      return { valid: false, error: `输入不能超过 ${maxLength} 个字符` };
+    }
+
+    for (const rule of validationRules) {
+      if (!rule.validate(value)) {
+        return { valid: false, error: rule.message };
+      }
+    }
+
+    return { valid: true };
+  }, [allowEmpty, maxLength, validationRules]);
+
   const getInitialInput = (): TInput => {
     if (persistToSessionStorage && typeof window !== 'undefined') {
       const stored = sessionStorage.getItem(sessionStorageKey);
@@ -74,15 +85,27 @@ export function useToolState<TInput = string, TOutput = string>(
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 设置输入并可选地持久化
+  const inputLength = String(input).length;
+
   const setInput = useCallback((newInput: TInput) => {
+    const validation = validateInput(newInput);
+    if (!validation.valid) {
+      setError(validation.error || '输入验证失败');
+    } else {
+      setError(null);
+    }
+
     setInputState(newInput);
     if (persistToSessionStorage && typeof window !== 'undefined') {
       sessionStorage.setItem(sessionStorageKey, String(newInput));
     }
-  }, [persistToSessionStorage, sessionStorageKey]);
+    onInputChange?.(newInput);
+  }, [persistToSessionStorage, sessionStorageKey, validateInput, onInputChange]);
 
-  // 重置所有状态
+  const validate = useCallback(() => {
+    return validateInput(input);
+  }, [input, validateInput]);
+
   const reset = useCallback(() => {
     setInputState(initialInput);
     setOutput('' as TOutput);
@@ -93,13 +116,20 @@ export function useToolState<TInput = string, TOutput = string>(
     }
   }, [initialInput, persistToSessionStorage, sessionStorageKey]);
 
-  // 批量更新状态
   const setState = useCallback((state: Partial<ToolState<TInput, TOutput>>) => {
-    if (state.input !== undefined) setInputState(state.input);
+    if (state.input !== undefined) {
+      const validation = validateInput(state.input);
+      if (!validation.valid) {
+        setError(validation.error || '输入验证失败');
+      } else {
+        setError(null);
+      }
+      setInputState(state.input);
+    }
     if (state.output !== undefined) setOutput(state.output);
     if (state.error !== undefined) setError(state.error);
     if (state.isLoading !== undefined) setIsLoading(state.isLoading);
-  }, []);
+  }, [validateInput]);
 
   return {
     input,
@@ -111,6 +141,8 @@ export function useToolState<TInput = string, TOutput = string>(
     setError,
     setIsLoading,
     reset,
-    setState
+    setState,
+    validate,
+    inputLength
   };
 }

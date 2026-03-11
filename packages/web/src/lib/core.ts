@@ -65,8 +65,16 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export async function initWasm(force = false): Promise<void> {
+export async function initWasm(options: {
+  force?: boolean;
+  onReady?: () => void;
+  onError?: (error: WasmInitError) => void;
+  onRetry?: (attempt: number, maxRetries: number) => void;
+} = {}): Promise<void> {
+  const { force = false, onReady, onError, onRetry } = options;
+  
   if (wasmReady && !force) {
+    onReady?.();
     return;
   }
 
@@ -74,18 +82,23 @@ export async function initWasm(force = false): Promise<void> {
     return initPromise;
   }
 
-  initPromise = doInitWasm(force);
+  initPromise = doInitWasm(force, onRetry);
   
   try {
     await initPromise;
-  } catch {
+    onReady?.();
+  } catch (err) {
     wasmState = 'idle';
     initPromise = null;
-    throw new Error('WASM init failed');
+    const error = err instanceof WasmInitError 
+      ? err 
+      : new WasmInitError('WASM init failed', 0, err);
+    onError?.(error);
+    throw error;
   }
 }
 
-async function doInitWasm(force: boolean): Promise<void> {
+async function doInitWasm(force: boolean, onRetry?: (attempt: number, maxRetries: number) => void): Promise<void> {
   if (wasmReady && !force) {
     return;
   }
@@ -94,6 +107,8 @@ async function doInitWasm(force: boolean): Promise<void> {
   let lastError: Error | unknown = new Error('Unknown error');
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    onRetry?.(attempt + 1, MAX_RETRIES);
+    
     try {
       await init();
       
@@ -209,12 +224,13 @@ export const JsonExtractor = {
 };
 
 // UmlStyler
+// Returns string ('FrontendJS' for client, error message) or { ServerURL } for server rendering
 export const UmlStyler = {
   async render(
     engine: string, 
     code: string, 
     theme: string
-  ): Promise<UmlRenderResult> {
+  ): Promise<string | { ServerURL: string }> {
     await initWasm();
     const wasm = getWasm();
     
@@ -222,19 +238,14 @@ export const UmlStyler = {
       const result = wasm.render_diagram(engine, code, theme);
       
       if (typeof result === 'string') {
-        if (result.includes('<svg') || result.includes('<?xml')) {
-          return { svg: result, engine };
-        }
-        if (result.toLowerCase().includes('error') || result.toLowerCase().includes('fail')) {
-          return { error: result, engine };
-        }
-        return { svg: result, engine };
+        return result;
       }
       
-      return result as UmlRenderResult;
+      // Object with ServerURL property for server-side rendering
+      return result as { ServerURL: string };
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      return { error: message, engine };
+      return message;
     }
   },
 };
