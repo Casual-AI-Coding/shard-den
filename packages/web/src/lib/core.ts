@@ -20,6 +20,20 @@ const MAX_RETRIES = 3;
 const INITIAL_DELAY_MS = 500;
 const MAX_DELAY_MS = 4000;
 
+export interface WasmInitOptions {
+  /** 强制重新初始化 */
+  force?: boolean;
+  /** 初始化成功回调 */
+  onReady?: () => void;
+  /** 初始化失败回调 */
+  onError?: (error: WasmInitError) => void;
+  /** 重试回调 */
+  onRetry?: (attempt: number, maxRetries: number) => void;
+}
+const MAX_RETRIES = 3;
+const INITIAL_DELAY_MS = 500;
+const MAX_DELAY_MS = 4000;
+
 // State
 let wasmState: WasmState = 'idle';
 let wasmReady = false;
@@ -65,7 +79,33 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export async function initWasm(force = false): Promise<void> {
+export async function initWasm(options: WasmInitOptions = {}): Promise<void> {
+  const { force = false, onReady, onError, onRetry } = options;
+  
+  if (wasmReady && !force) {
+    onReady?.();
+    return;
+  }
+
+  if (initPromise) {
+    return initPromise;
+  }
+
+  initPromise = doInitWasm(force, onRetry);
+  
+  try {
+    await initPromise;
+    onReady?.();
+  } catch (err) {
+    wasmState = 'idle';
+    initPromise = null;
+    const error = err instanceof WasmInitError 
+      ? err 
+      : new WasmInitError('WASM init failed', 0, err);
+    onError?.(error);
+    throw error;
+  }
+}
   if (wasmReady && !force) {
     return;
   }
@@ -85,7 +125,7 @@ export async function initWasm(force = false): Promise<void> {
   }
 }
 
-async function doInitWasm(force: boolean): Promise<void> {
+async function doInitWasm(force: boolean, onRetry?: (attempt: number, maxRetries: number) => void): Promise<void> {
   if (wasmReady && !force) {
     return;
   }

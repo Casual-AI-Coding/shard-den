@@ -54,6 +54,12 @@ export function useDiagramRenderer() {
     const mermaidTheme = MERMAID_THEMES[theme] || 'default';
     mermaid.initialize({
       startOnLoad: false,
+      theme: mermaidTheme as Parameters<typeof mermaid.initialize>[0]['theme'],
+      securityLevel: 'loose',
+    });
+    const mermaidTheme = MERMAID_THEMES[theme] || 'default';
+    mermaid.initialize({
+      startOnLoad: false,
       theme: mermaidTheme as any,
       securityLevel: 'loose',
     });
@@ -138,7 +144,9 @@ export function useDiagramRenderer() {
         if (complexityResult.isComplex) {
           try {
             svg = await renderWithWorker(code, theme);
-          } catch (err: any) {
+          } catch (err: unknown) {
+            const error = err instanceof Error ? err : new Error(String(err));
+            if (error.message === 'TIMEOUT') {
             if (err.message === 'TIMEOUT') {
                // Fallback to main thread with simplified flag
                setRenderResult(prev => ({ ...prev, isSimplified: true, error: '图表较大，渲染时间较长，已显示简化版' }));
@@ -153,7 +161,8 @@ export function useDiagramRenderer() {
         } else {
           svg = await renderOnMainThread(code, theme);
         }
-      } else if (typeof hint === 'object' && 'ServerURL' in hint) {
+      } else if (typeof hint === 'object' && hint !== null && 'ServerURL' in hint) {
+         const url = (hint as { ServerURL: string }).ServerURL;
          const url = (hint as any).ServerURL;
          const response = await fetch(url);
          if (!response.ok) throw new Error(`Server rendering failed: ${response.statusText}`);
@@ -164,7 +173,10 @@ export function useDiagramRenderer() {
       }
       
       setRenderResult(prev => ({ ...prev, svg, error: null }));
-    } catch (err: any) {
+    } catch (err: unknown) {
+      console.error('Render error:', err);
+      const error = err instanceof Error ? err : new Error(String(err));
+      const errMsg = error.message || 'Render failed';
       console.error('Render error:', err);
       const errMsg = err.message || 'Render failed';
       setRenderResult(prev => ({ ...prev, error: errMsg, svg: '' }));
