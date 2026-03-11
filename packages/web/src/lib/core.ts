@@ -30,9 +30,6 @@ export interface WasmInitOptions {
   /** 重试回调 */
   onRetry?: (attempt: number, maxRetries: number) => void;
 }
-const MAX_RETRIES = 3;
-const INITIAL_DELAY_MS = 500;
-const MAX_DELAY_MS = 4000;
 
 // State
 let wasmState: WasmState = 'idle';
@@ -106,24 +103,6 @@ export async function initWasm(options: WasmInitOptions = {}): Promise<void> {
     throw error;
   }
 }
-  if (wasmReady && !force) {
-    return;
-  }
-
-  if (initPromise) {
-    return initPromise;
-  }
-
-  initPromise = doInitWasm(force);
-  
-  try {
-    await initPromise;
-  } catch {
-    wasmState = 'idle';
-    initPromise = null;
-    throw new Error('WASM init failed');
-  }
-}
 
 async function doInitWasm(force: boolean, onRetry?: (attempt: number, maxRetries: number) => void): Promise<void> {
   if (wasmReady && !force) {
@@ -134,6 +113,9 @@ async function doInitWasm(force: boolean, onRetry?: (attempt: number, maxRetries
   let lastError: Error | unknown = new Error('Unknown error');
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    // 调用重试回调
+    onRetry?.(attempt + 1, MAX_RETRIES);
+    
     try {
       await init();
       

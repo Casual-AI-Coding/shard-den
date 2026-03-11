@@ -57,12 +57,6 @@ export function useDiagramRenderer() {
       theme: mermaidTheme as Parameters<typeof mermaid.initialize>[0]['theme'],
       securityLevel: 'loose',
     });
-    const mermaidTheme = MERMAID_THEMES[theme] || 'default';
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: mermaidTheme as any,
-      securityLevel: 'loose',
-    });
     const id = `mermaid-${Date.now()}-${++renderCountRef.current}`;
     const { svg } = await mermaid.render(id, code);
     return svg;
@@ -147,12 +141,8 @@ export function useDiagramRenderer() {
           } catch (err: unknown) {
             const error = err instanceof Error ? err : new Error(String(err));
             if (error.message === 'TIMEOUT') {
-            if (err.message === 'TIMEOUT') {
                // Fallback to main thread with simplified flag
                setRenderResult(prev => ({ ...prev, isSimplified: true, error: '图表较大，渲染时间较长，已显示简化版' }));
-               // Try to render on main thread anyway, it might freeze UI briefly but better than nothing?
-               // Or maybe we don't render on main thread if worker timed out?
-               // Preview.tsx logic was: setIsSimplified(true) -> renderOnMainThread().
                svg = await renderOnMainThread(code, theme);
             } else {
                throw err;
@@ -163,7 +153,6 @@ export function useDiagramRenderer() {
         }
       } else if (typeof hint === 'object' && hint !== null && 'ServerURL' in hint) {
          const url = (hint as { ServerURL: string }).ServerURL;
-         const url = (hint as any).ServerURL;
          const response = await fetch(url);
          if (!response.ok) throw new Error(`Server rendering failed: ${response.statusText}`);
          svg = await response.text();
@@ -177,8 +166,6 @@ export function useDiagramRenderer() {
       console.error('Render error:', err);
       const error = err instanceof Error ? err : new Error(String(err));
       const errMsg = error.message || 'Render failed';
-      console.error('Render error:', err);
-      const errMsg = err.message || 'Render failed';
       setRenderResult(prev => ({ ...prev, error: errMsg, svg: '' }));
     } finally {
       setIsRendering(false);
